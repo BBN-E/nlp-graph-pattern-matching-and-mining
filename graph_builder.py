@@ -7,6 +7,10 @@ from serif.theory.event_mention import EventMention
 from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
+from constants import NodeTypes, EdgeTypes, \
+    BasicNodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
+    BasicEdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
+
 
 class GraphBuilder():
 
@@ -20,8 +24,8 @@ class GraphBuilder():
         '''
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
-        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
-        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
+        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
+        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
 
         # compose into one document-level networkx DiGraph
         G = nx.algorithms.operators.compose_all([document_level_modal_dependencies_graph] + \
@@ -46,34 +50,33 @@ class GraphBuilder():
             # create parent node
             parent_mtrm_feats = self.modal_temporal_relation_mention_to_feats(parent_mtrm)
             parent_mtrm_id = parent_mtrm_feats['id']
-            G.add_node(parent_mtrm_id,
-                       modal_node_type=parent_mtrm_feats['modal_node_type'])
+            G.add_node(parent_mtrm_id, **{k:v for k,v in parent_mtrm_feats.items() if type(v)==str})
 
             # connect parent node to all of its tokens
             parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
             G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
-                             label='part_of',
-                             edge_type='constituent_token')
+                             **{BasicEdgeAttrs.label: EdgeTypes.constituent_token,
+                                BasicEdgeAttrs.edge_type: EdgeTypes.constituent_token})
+
 
             for child_mtrm in parent_mtrm.children:
 
                 # create child node
                 child_mtrm_feats = self.modal_temporal_relation_mention_to_feats(child_mtrm)
                 child_mtrm_id = child_mtrm_feats['id']
-                G.add_node(child_mtrm_id,
-                           modal_node_type=child_mtrm_feats['modal_node_type'])
+                G.add_node(child_mtrm_id, **{k:v for k,v in child_mtrm_feats.items() if type(v)==str})
 
                 # connect child node to all of its tokens
                 child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
                 G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
-                                 label='part_of',
-                                 edge_type='constituent_token')
+                                 **{BasicEdgeAttrs.label: EdgeTypes.constituent_token,
+                                    BasicEdgeAttrs.edge_type: EdgeTypes.constituent_token})
 
                 # modal dependency edge between parent and child nodes
                 G.add_edge(parent_mtrm_id, child_mtrm_id,
-                           label=child_mtrm_feats['modal_relation'],
-                           modal_relation=child_mtrm_feats['modal_relation'],
-                           edge_type='modal_dependency')
+                           **{BasicEdgeAttrs.label: child_mtrm_feats[ModalNodeAttrs.modal_relation],
+                              ModalEdgeAttrs.modal_relation: child_mtrm_feats[ModalNodeAttrs.modal_relation],
+                              BasicEdgeAttrs.edge_type: EdgeTypes.modal})
 
         return G
 
@@ -93,22 +96,16 @@ class GraphBuilder():
 
             parent_feats = self.token_to_feats(token.head)
             parent_id = parent_feats['id']
-            G.add_node(parent_id,
-                       text=parent_feats['text'],
-                       upos=parent_feats['upos'],
-                       xpos=parent_feats['xpos'],
-                       index_in_doc=parent_feats['index_in_doc'])
+            G.add_node(parent_id, **parent_feats)
 
             child_feats = self.token_to_feats(token)
             child_id = child_feats['id']
-            G.add_node(child_id,
-                       text=child_feats['text'],
-                       upos=child_feats['upos'],
-                       xpos=child_feats['xpos'],
-                       index_in_doc=child_feats['index_in_doc'])
+            G.add_node(child_id, **child_feats)
 
-            dep_rel = token.dep_rel
-            G.add_edge(parent_id, child_id, label=dep_rel, edge_type='syntax', dep_rel=dep_rel)
+            G.add_edge(parent_id, child_id,
+                       **{BasicEdgeAttrs.label: token.dep_rel,
+                          SyntaxEdgeAttrs.dep_rel: token.dep_rel,
+                          BasicEdgeAttrs.edge_type: EdgeTypes.syntax})
 
         return G
 
@@ -118,11 +115,11 @@ class GraphBuilder():
         :return: dict
         '''
 
-        feats = {'id': token.text + "_" + token.id,
-                 'text': token.text,
-                 'upos': token.upos,
-                 'xpos': token.xpos,
-                 'index_in_doc': "_".join([str(token.sentence.sent_no), str(token.index()), str(token.index())])}
+        feats = {BasicNodeAttrs.id: token.text + "_" + token.id,
+                 TokenNodeAttrs.text: token.text,
+                 TokenNodeAttrs.upos: token.upos,
+                 TokenNodeAttrs.xpos: token.xpos,
+                 TokenNodeAttrs.index_in_doc: "_".join([str(token.sentence.sent_no), str(token.index()), str(token.index())])}
 
         return feats
 
@@ -185,15 +182,19 @@ class GraphBuilder():
             raise TypeError
 
         feats = {
-            'id': mtra.id,  # TODO or mtrm.id + mtra.id ?
-            'special_name': special_name,
-            'mention': mention,
-            'event_mention': event_mention,
-            'value_mention': value_mention,
-            'sentence': sentence,
-            'tokens': tokens,
-            'modal_node_type': mtra.modal_temporal_node_type,  # Event, Conceiver
-            'modal_relation': mtra.relation_type  # pos, neg, pn
+
+            BasicNodeAttrs.id: mtra.id,  # TODO or mtrm.id + mtra.id ?
+
+            ModalNodeAttrs.special_name: special_name,
+            ModalNodeAttrs.mention: mention,
+            ModalNodeAttrs.event_mention: event_mention,
+            ModalNodeAttrs.value_mention: value_mention,
+
+            ModalNodeAttrs.sentence: sentence,
+            ModalNodeAttrs.tokens: tokens,
+
+            ModalNodeAttrs.modal_node_type: mtra.modal_temporal_node_type,  # Event, Conceiver
+            ModalNodeAttrs.modal_relation: mtra.relation_type  # pos, neg, pn
         }
 
         return feats
