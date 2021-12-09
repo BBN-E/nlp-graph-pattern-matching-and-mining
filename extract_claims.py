@@ -13,7 +13,7 @@ def extract_claims(serifxml_path):
 
     Builder = GraphBuilder()
     document_graph = Builder.convert_serif_doc_to_networkx(serif_doc)
-    Builder.visualize_networkx_graph(document_graph)
+    # Builder.visualize_networkx_graph(document_graph)
 
     Factory = DiGraphMatcherFactory()
     pattern_graph, node_match, edge_match = Factory.ccomp_pattern()
