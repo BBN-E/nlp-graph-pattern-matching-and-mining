@@ -1,3 +1,6 @@
+#####################################################
+######     Constants for Document Graph        ######
+#####################################################
 
 
 class NodeTypes():
@@ -13,16 +16,16 @@ class EdgeTypes():
     constituent_token = 'constituent_token'
 
 
-####################################################
+#####################################################
 
 
-class BasicNodeAttrs():
+class NodeAttrs():
 
     id = 'id'
     node_type = 'node_type'
 
 
-class TokenNodeAttrs():
+class TokenNodeAttrs(NodeAttrs):
 
     text = 'text'
     upos = 'upos'
@@ -30,7 +33,7 @@ class TokenNodeAttrs():
     index_in_doc = 'index_in_doc'
 
 
-class ModalNodeAttrs():
+class ModalNodeAttrs(NodeAttrs):
 
     special_name = 'special_name'
     mention = 'mention'
@@ -42,20 +45,87 @@ class ModalNodeAttrs():
     modal_relation = 'modal_relation'  # relation attr but stored here because ModalTemporalRelationMention stores it
 
 
-####################################################
+#####################################################
 
 
-class BasicEdgeAttrs():
+class EdgeAttrs():
 
     label = 'label'  # PyVis will visualize 'label' value on edge
     edge_type = 'edge_type'
 
 
-class SyntaxEdgeAttrs():
+class SyntaxEdgeAttrs(EdgeAttrs):
 
     dep_rel = 'dep_rel'
 
 
-class ModalEdgeAttrs():
+class ModalEdgeAttrs(EdgeAttrs):
 
     modal_relation = 'modal_relation'
+
+
+class ConstituentTokenEdgeAttrs(EdgeAttrs):
+
+    pass
+
+
+#####################################################
+######     Constants for Pattern Graphs        ######
+#####################################################
+
+
+class PatternNodeIDs():
+
+    pass
+
+
+class PatternModalNodeIDs(PatternNodeIDs):
+
+    CONCEIVER_NODE_ID = 'CONCEIVER_NODE'
+    EVENT_NODE_ID = 'EVENT_NODE'
+
+
+class PatternTokenNodeIDs(PatternNodeIDs):
+
+    SIP_TOKEN_NODE_ID = 'SIP'
+    CONCEIVER_TOKEN_NODE_ID = 'CONCEIVER_TOKEN'
+    EVENT_TOKEN_NODE_ID = 'EVENT_TOKEN'
+
+
+#####################################################
+
+
+class PatternNodes():
+
+    pass
+
+
+class PatternModalNodes(PatternNodes):
+
+    CONCEIVER_NODE = (PatternModalNodeIDs.CONCEIVER_NODE_ID,
+                      {ModalNodeAttrs.modal_node_type: 'Conceiver'})
+    EVENT_NODE = (PatternModalNodeIDs.EVENT_NODE_ID,
+                  {ModalNodeAttrs.modal_node_type: 'Event'})
+
+
+class PatternTokenNodes(PatternNodes):
+
+    SIP_TOKEN_NODE = (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID,
+                      {TokenNodeAttrs.upos: 'VERB'})
+    CONCEIVER_TOKEN_NODE = (PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID, {})
+    EVENT_TOKEN_NODE = (PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID, {})
+
+
+class PatternEdges():
+
+    # links conceiver meta-node to event meta-node
+    CONCEIVER_EVENT_EDGE = (PatternModalNodeIDs.CONCEIVER_NODE_ID, PatternModalNodeIDs.EVENT_NODE_ID,
+                            {EdgeAttrs.edge_type: EdgeTypes.modal})
+
+    # links conceiver meta-node to conceiver token
+    CONCEIVER_TOKEN_EDGE = (PatternModalNodeIDs.CONCEIVER_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
+                            {EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+
+    # links event meta-node to event token
+    EVENT_TOKEN_EDGE = (PatternModalNodeIDs.EVENT_NODE_ID, PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                        {EdgeAttrs.edge_type: EdgeTypes.constituent_token})
