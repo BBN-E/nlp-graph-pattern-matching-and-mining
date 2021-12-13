@@ -24,8 +24,8 @@ class GraphBuilder():
         '''
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
-        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
-        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
+        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
+        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
 
         # compose into one document-level networkx DiGraph
         G = nx.algorithms.operators.compose_all([document_level_modal_dependencies_graph] + \
