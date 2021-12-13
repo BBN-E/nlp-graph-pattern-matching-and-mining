@@ -8,8 +8,8 @@ from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
 from constants import NodeTypes, EdgeTypes, \
-    BasicNodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
-    BasicEdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
+    NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
+    EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
 
 
 class GraphBuilder():
@@ -25,6 +25,7 @@ class GraphBuilder():
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
         sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
+        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
 
         # compose into one document-level networkx DiGraph
         G = nx.algorithms.operators.compose_all([document_level_modal_dependencies_graph] + \
@@ -54,9 +55,8 @@ class GraphBuilder():
             # connect parent node to all of its tokens
             parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
             G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
-                             **{BasicEdgeAttrs.label: EdgeTypes.constituent_token,
-                                BasicEdgeAttrs.edge_type: EdgeTypes.constituent_token})
-
+                             **{EdgeAttrs.label: EdgeTypes.constituent_token,
+                                EdgeAttrs.edge_type: EdgeTypes.constituent_token})
 
             for child_mtrm in parent_mtrm.children:
 
@@ -68,14 +68,14 @@ class GraphBuilder():
                 # connect child node to all of its tokens
                 child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
                 G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
-                                 **{BasicEdgeAttrs.label: EdgeTypes.constituent_token,
-                                    BasicEdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                                 **{EdgeAttrs.label: EdgeTypes.constituent_token,
+                                    EdgeAttrs.edge_type: EdgeTypes.constituent_token})
 
                 # modal dependency edge between parent and child nodes
                 G.add_edge(parent_mtrm_id, child_mtrm_id,
-                           **{BasicEdgeAttrs.label: child_mtrm_feats[ModalNodeAttrs.modal_relation],
+                           **{EdgeAttrs.label: child_mtrm_feats[ModalNodeAttrs.modal_relation],
                               ModalEdgeAttrs.modal_relation: child_mtrm_feats[ModalNodeAttrs.modal_relation],
-                              BasicEdgeAttrs.edge_type: EdgeTypes.modal})
+                              EdgeAttrs.edge_type: EdgeTypes.modal})
 
         return G
 
@@ -102,9 +102,9 @@ class GraphBuilder():
             G.add_node(child_id, **child_feats)
 
             G.add_edge(parent_id, child_id,
-                       **{BasicEdgeAttrs.label: token.dep_rel,
+                       **{EdgeAttrs.label: token.dep_rel,
                           SyntaxEdgeAttrs.dep_rel: token.dep_rel,
-                          BasicEdgeAttrs.edge_type: EdgeTypes.syntax})
+                          EdgeAttrs.edge_type: EdgeTypes.syntax})
 
         return G
 
@@ -114,7 +114,7 @@ class GraphBuilder():
         :return: dict
         '''
 
-        feats = {BasicNodeAttrs.id: token.text + "_" + token.id,
+        feats = {NodeAttrs.id: token.text + "_" + token.id,
                  TokenNodeAttrs.text: token.text,
                  TokenNodeAttrs.upos: token.upos,
                  TokenNodeAttrs.xpos: token.xpos,
@@ -182,7 +182,7 @@ class GraphBuilder():
 
         feats = {
 
-            BasicNodeAttrs.id: mtra.id,  # TODO or mtrm.id + mtra.id ?
+            NodeAttrs.id: mtra.id,  # TODO or mtrm.id + mtra.id ?
 
             ModalNodeAttrs.special_name: special_name,
             ModalNodeAttrs.mention: mention,
