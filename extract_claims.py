@@ -17,14 +17,21 @@ def extract_claims(serifxml_path, visualize=False):
         GB.visualize_networkx_graph(document_graph)
 
     Factory = DiGraphMatcherFactory()
-    pattern_graph, node_match, edge_match = Factory.ccomp_pattern()
 
-    matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
-                                                       node_match=node_match,
-                                                       edge_match=edge_match)
-    subgraph_matches = [g for g in matcher.subgraph_isomorphisms_iter()]
+    all_matches = dict()
+    for pattern_id, pattern in Factory.patterns.items():
 
-    return subgraph_matches
+        pattern_graph, node_match, edge_match = pattern()
+
+        matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
+                                                           node_match=node_match,
+                                                           edge_match=edge_match)
+        matches = [g for g in matcher.subgraph_isomorphisms_iter()]
+        for i,m in enumerate(matches):
+            print(pattern_id, '\t', i, '\t', m)
+        all_matches[pattern_id] = matches
+
+    return all_matches
 
 
 def main(args):
