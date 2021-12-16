@@ -23,13 +23,13 @@ def extract_claims(serifxml_path, visualize=False):
                                                        node_match=node_match,
                                                        edge_match=edge_match)
     subgraph_matches = [g for g in matcher.subgraph_isomorphisms_iter()]
+
     return subgraph_matches
 
 
 def main(args):
 
     matches = extract_claims(args.input, visualize=args.visualize)
-    print(matches)
 
 
 if __name__ == '__main__':
