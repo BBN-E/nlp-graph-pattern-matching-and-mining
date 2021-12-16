@@ -83,6 +83,7 @@ class PatternModalNodeIDs(PatternNodeIDs):
 
     CONCEIVER_NODE_ID = 'CONCEIVER_NODE'
     EVENT_NODE_ID = 'EVENT_NODE'
+    EVENT_SIP_NODE_ID = 'EVENT_SIP_NODE'
 
 
 class PatternTokenNodeIDs(PatternNodeIDs):
@@ -90,6 +91,7 @@ class PatternTokenNodeIDs(PatternNodeIDs):
     SIP_TOKEN_NODE_ID = 'SIP'
     CONCEIVER_TOKEN_NODE_ID = 'CONCEIVER_TOKEN'
     EVENT_TOKEN_NODE_ID = 'EVENT_TOKEN'
+    CCOMP_TOKEN_NODE_ID = 'CCOMP_TOKEN'  # token that has incoming ccomp relation (could be the same as event token)
 
 
 #####################################################
@@ -103,17 +105,25 @@ class PatternNodes():
 class PatternModalNodes(PatternNodes):
 
     CONCEIVER_NODE = (PatternModalNodeIDs.CONCEIVER_NODE_ID,
-                      {ModalNodeAttrs.modal_node_type: 'Conceiver'})
+                      {NodeAttrs.node_type: NodeTypes.modal, ModalNodeAttrs.modal_node_type: 'Conceiver'})
+
     EVENT_NODE = (PatternModalNodeIDs.EVENT_NODE_ID,
-                  {ModalNodeAttrs.modal_node_type: 'Event'})
+                  {NodeAttrs.node_type: NodeTypes.modal, ModalNodeAttrs.modal_node_type: 'Event'})
 
 
 class PatternTokenNodes(PatternNodes):
 
     SIP_TOKEN_NODE = (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID,
-                      {TokenNodeAttrs.upos: 'VERB'})
-    CONCEIVER_TOKEN_NODE = (PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID, {})
-    EVENT_TOKEN_NODE = (PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID, {})
+                      {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.upos: 'VERB'})
+
+    CONCEIVER_TOKEN_NODE = (PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
+                            {NodeAttrs.node_type: NodeTypes.token})
+
+    EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                        {NodeAttrs.node_type: NodeTypes.token})
+
+    CCOMP_TOKEN_NODE = (PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,
+                        {NodeAttrs.node_type: NodeTypes.token})  # may be same as event token
 
 
 class PatternEdges():

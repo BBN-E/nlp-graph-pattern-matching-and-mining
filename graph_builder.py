@@ -87,7 +87,7 @@ class GraphBuilder():
 
         G = nx.DiGraph()
 
-        for token in serif_sentence.token_sequence:
+        for i, token in enumerate(serif_sentence.token_sequence):
 
             if token.head == None:  # root token, can't be child
                 assert token.dep_rel == 'root'
@@ -115,6 +115,7 @@ class GraphBuilder():
         '''
 
         feats = {NodeAttrs.id: token.text + "_" + token.id,
+                 NodeAttrs.node_type: NodeTypes.token,
                  TokenNodeAttrs.text: token.text,
                  TokenNodeAttrs.upos: token.upos,
                  TokenNodeAttrs.xpos: token.xpos,
@@ -183,6 +184,7 @@ class GraphBuilder():
         feats = {
 
             NodeAttrs.id: mtra.id,  # TODO or mtrm.id + mtra.id ?
+            NodeAttrs.node_type: NodeTypes.modal,
 
             ModalNodeAttrs.special_name: special_name,
             ModalNodeAttrs.mention: mention,
