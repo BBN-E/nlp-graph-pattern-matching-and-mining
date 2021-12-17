@@ -18,6 +18,7 @@ class DiGraphMatcherFactory():
 
         self.patterns = {'ccomp': self.ccomp_pattern,
                          'relaxed_ccomp': self.relaxed_ccomp_pattern,
+                         'relaxed_ccomp_one_hop': self.relaxed_ccomp_one_hop_pattern,
                          'according_to': self.according_to_pattern}
 
 
@@ -59,6 +60,33 @@ class DiGraphMatcherFactory():
             # SIP -(ccomp)-> EventToken
             (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID, PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
              {EdgeAttrs.edge_type: EdgeTypes.syntax, SyntaxEdgeAttrs.dep_rel: 'ccomp'})
+        ])
+
+        return pattern, node_modal_type_and_upos_match, edge_syntactic_relation_match
+
+
+    def relaxed_ccomp_one_hop_pattern(self):
+
+        pattern = self.build_basic_claim_pattern()
+
+        pattern.add_nodes_from([
+            PatternTokenNodes.SIP_TOKEN_NODE,
+            PatternTokenNodes.CCOMP_TOKEN_NODE  # parent of event token
+        ])
+
+        pattern.add_edges_from([
+
+            # SIP -(nsubj)-> ConceiverToken
+            (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
+             {EdgeAttrs.edge_type: EdgeTypes.syntax, SyntaxEdgeAttrs.dep_rel: 'nsubj'}),
+
+            # SIP -(ccomp)-> ccompToken
+            (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID, PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,
+             {EdgeAttrs.edge_type: EdgeTypes.syntax, SyntaxEdgeAttrs.dep_rel: 'ccomp'}),
+
+            # ccompToken -()-> EventToken
+            (PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID, PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+             {EdgeAttrs.edge_type: EdgeTypes.syntax})
         ])
 
         return pattern, node_modal_type_and_upos_match, edge_syntactic_relation_match
