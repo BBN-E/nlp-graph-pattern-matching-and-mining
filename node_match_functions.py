@@ -7,6 +7,9 @@ def node_type_match(n1, n2):
 def node_modal_type_match(n1, n2):
     if not node_type_match(n1, n2):
         return False
+    if ((ModalNodeAttrs.modal_node_type in n1) and (ModalNodeAttrs.modal_node_type not in n2)) or \
+       ((ModalNodeAttrs.modal_node_type in n2) and (ModalNodeAttrs.modal_node_type not in n1)):
+        return True  # if one of the nodes is underspecified in modal node type, then the modal node types match
     return n1.get(ModalNodeAttrs.modal_node_type, None) == n2.get(ModalNodeAttrs.modal_node_type, None)  # Conceiver, Event
 
 def node_upos_match(n1, n2):
