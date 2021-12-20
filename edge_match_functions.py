@@ -7,6 +7,9 @@ def edge_type_match(e1, e2):
 def edge_modal_relation_match(e1, e2):
     if not edge_type_match(e1, e2):
         return False
+    if ((ModalEdgeAttrs.modal_relation in e1) and (ModalEdgeAttrs.modal_relation not in e2)) or \
+       ((ModalEdgeAttrs.modal_relation in e2) and (ModalEdgeAttrs.modal_relation not in e1)):
+        return True  # if one of the edges is underspecified in modal relation, then the modal relations match
     return e1.get(ModalEdgeAttrs.modal_relation, None) == e2.get(ModalEdgeAttrs.modal_relation, None)  # nsubj, ccomp etc.
 
 def edge_syntactic_relation_match(e1, e2):

@@ -1,3 +1,4 @@
+import os
 import argparse
 import networkx as nx
 
@@ -36,7 +37,14 @@ def extract_claims(serifxml_path, visualize=False):
 
 def main(args):
 
-    matches = extract_claims(args.input, visualize=args.visualize)
+    if args.list:
+        with open(args.input, 'r') as f:
+            serifxml_paths = [l.strip() for l in f.readlines() if l.strip()]
+    else:
+        serifxml_paths = [args.input]
+
+    for serifxml_path in serifxml_paths:
+        matches = extract_claims(serifxml_path, visualize=args.visualize)
 
 
 if __name__ == '__main__':
@@ -45,6 +53,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
+    parser.add_argument('-l', '--list', action='store_true', help='input is list of serifxmls rather than serifxml path')
     parser.add_argument('-v', '--visualize', action='store_true')
     args = parser.parse_args()
 
