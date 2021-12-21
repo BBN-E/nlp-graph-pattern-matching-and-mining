@@ -13,6 +13,7 @@ def extract_claims(serifxml_path, all_matches, stats, visualize=False):
 
     print(serifxml_path)
     serif_doc = serifxml3.Document(serifxml_path)
+    docid = serif_doc.docid
 
     GB = GraphBuilder()
     document_graph = GB.convert_serif_doc_to_networkx(serif_doc)
@@ -33,6 +34,8 @@ def extract_claims(serifxml_path, all_matches, stats, visualize=False):
         # TODO create on-match-filter API that is not ad-hoc
         ###########################################################################################################
         if pattern_id == 'relaxed_ccomp':
+            all_matches['unfiltered_relaxed_ccomp'][docid].extend(matches)
+            stats['unfiltered_relaxed_ccomp'] += len(matches)
             from on_match_filters import is_ancestor
             matches = [m for m in matches if is_ancestor(isomorphism_dict=m, document_graph=document_graph,
                                                          ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
@@ -42,7 +45,7 @@ def extract_claims(serifxml_path, all_matches, stats, visualize=False):
 
         matches = list(map(dict, set(tuple(sorted(m.items())) for m in matches)))  # deduplicate (sanity check)
 
-        all_matches[pattern_id].extend(matches)
+        all_matches[pattern_id][docid].extend(matches)
         stats[pattern_id] += len(matches)
 
     return all_matches, stats
@@ -57,7 +60,7 @@ def main(args):
         serifxml_paths = [args.input]
 
     stats = defaultdict(int)
-    all_matches = defaultdict(list)
+    all_matches = defaultdict(lambda: defaultdict(list))
     for serifxml_path in serifxml_paths:
         all_matches, stats = extract_claims(serifxml_path, all_matches=all_matches, stats=stats, visualize=args.visualize)
 
@@ -69,7 +72,12 @@ def main(args):
 
 if __name__ == '__main__':
 
-    # PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python/ python3 /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/modal.serifxml/reuters_3003584698.xml
+    # PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python
+    # python3 \
+    # /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py \
+    # - i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.train \
+    # - l \
+    # - o /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/output/train.json
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
