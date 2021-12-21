@@ -30,6 +30,9 @@ class GraphBuilder():
         # compose into one document-level networkx DiGraph
         G = nx.algorithms.operators.compose_all([document_level_modal_dependencies_graph] + \
                                                 sentence_level_dependency_syntax_graphs)
+
+        assert nx.algorithms.dag.is_directed_acyclic_graph(G)
+
         return G
 
     def modal_dependency_parse_to_networkx(self, serif_doc):
