@@ -7,13 +7,13 @@ import serifxml3
 
 from graph_builder import GraphBuilder
 from digraph_matcher_factory import DiGraphMatcherFactory
+from match_wrapper import MatchWrapper, MatchCorpus
 
 
-def extract_claims(serifxml_path, all_matches, stats, visualize=False):
+def extract_claims(serifxml_path, visualize=False):
 
     print(serifxml_path)
     serif_doc = serifxml3.Document(serifxml_path)
-    docid = serif_doc.docid
 
     GB = GraphBuilder()
     document_graph = GB.convert_serif_doc_to_networkx(serif_doc)
@@ -22,33 +22,30 @@ def extract_claims(serifxml_path, all_matches, stats, visualize=False):
 
     Factory = DiGraphMatcherFactory()
 
+    matches = []
     for pattern_id, pattern in Factory.patterns.items():
 
         pattern_graph, node_match, edge_match = pattern()
 
-        matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
-                                                           node_match=node_match,
-                                                           edge_match=edge_match)
-        matches = [g for g in matcher.subgraph_isomorphisms_iter()]
+        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
+                                                                   node_match=node_match,
+                                                                   edge_match=edge_match)
+        pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
 
         # TODO create on-match-filter API that is not ad-hoc
         ###########################################################################################################
         if pattern_id == 'relaxed_ccomp':
-            all_matches['unfiltered_relaxed_ccomp'][docid].extend(matches)
-            stats['unfiltered_relaxed_ccomp'] += len(matches)
             from on_match_filters import is_ancestor
-            matches = [m for m in matches if is_ancestor(isomorphism_dict=m, document_graph=document_graph,
-                                                         ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
+            pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_to_pattern=m, document_graph=document_graph,
+                                                                                 ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
         ###########################################################################################################
-        # for i,m in enumerate(matches):
-        #     print(pattern_id, '\t', i, '\t', m)
 
-        matches = list(map(dict, set(tuple(sorted(m.items())) for m in matches)))  # deduplicate (sanity check)
+        pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
+        pattern_matches = [MatchWrapper(m, pattern_id, serif_doc) for m in pattern_match_dicts]
 
-        all_matches[pattern_id][docid].extend(matches)
-        stats[pattern_id] += len(matches)
+        matches.extend(pattern_matches)
 
-    return all_matches, stats
+    return matches
 
 
 def main(args):
@@ -59,25 +56,23 @@ def main(args):
     else:
         serifxml_paths = [args.input]
 
-    stats = defaultdict(int)
-    all_matches = defaultdict(lambda: defaultdict(list))
+    all_matches = []
     for serifxml_path in serifxml_paths:
-        all_matches, stats = extract_claims(serifxml_path, all_matches=all_matches, stats=stats, visualize=args.visualize)
+        all_matches.extend(extract_claims(serifxml_path, visualize=args.visualize))
 
-    if args.output:
-        with open(args.output, 'w') as f:
-            json.dump(all_matches, f, sort_keys=True, indent=4)
+    for m in all_matches:
+        print(m)
 
-    print(stats)
 
 if __name__ == '__main__':
-
-    # PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python
-    # python3 \
-    # /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py \
-    # - i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.train \
-    # - l \
-    # - o /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/output/train.json
+    '''
+    PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python
+    python3 \
+    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py \
+    -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.test \
+    -l \
+    -o /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/output/test.json
+    '''
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
