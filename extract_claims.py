@@ -36,7 +36,7 @@ def extract_claims(serifxml_path, visualize=False):
         ###########################################################################################################
         if pattern_id == 'relaxed_ccomp':
             from on_match_filters import is_ancestor
-            pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_to_pattern=m, document_graph=document_graph,
+            pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m, document_graph=document_graph,
                                                                                  ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
         ###########################################################################################################
 
@@ -61,14 +61,17 @@ def main(args):
         all_matches.extend(extract_claims(serifxml_path, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
-    ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
-    according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
+    match_corpus.extraction_stats()
+    match_corpus.count_intersentence_conceiver_event_edges()
 
-    for m in ccomp_family_random_sample:
-        print(m)
-    print("\n\n====================\n====================\n\n")
-    for m in according_to_random_sample:
-        print(m)
+    # ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
+    # according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
+    #
+    # for m in ccomp_family_random_sample:
+    #     print(m)
+    # print("\n\n====================\n====================\n\n")
+    # for m in according_to_random_sample:
+    #     print(m)
 
 
 if __name__ == '__main__':

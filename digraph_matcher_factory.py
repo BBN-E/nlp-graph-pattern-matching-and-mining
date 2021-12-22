@@ -21,6 +21,9 @@ class DiGraphMatcherFactory():
                          'relaxed_ccomp_one_hop': self.relaxed_ccomp_one_hop_pattern,
                          'according_to': self.according_to_pattern}
 
+        self.basic_patterns = {'conceiver_event_edge': self.conceiver_event_edge_pattern,
+                               'grounded_conceiver_event_edge': self.grounded_conceiver_event_edge_pattern}
+
 
     def build_basic_claim_pattern(self):
         '''build pattern graph with basic relations'''
@@ -41,6 +44,29 @@ class DiGraphMatcherFactory():
         ])
 
         return pattern
+
+
+    def conceiver_event_edge_pattern(self):
+
+        pattern = nx.DiGraph()
+
+        pattern.add_nodes_from([
+            PatternModalNodes.CONCEIVER_NODE,
+            PatternModalNodes.EVENT_NODE,
+        ])
+
+        pattern.add_edges_from([
+            PatternEdges.CONCEIVER_EVENT_EDGE,
+        ])
+
+        return pattern, node_modal_type_match, edge_type_match
+
+
+    def grounded_conceiver_event_edge_pattern(self):
+
+        pattern = self.build_basic_claim_pattern()
+
+        return pattern, node_modal_type_match, edge_type_match
 
 
     def ccomp_pattern(self):

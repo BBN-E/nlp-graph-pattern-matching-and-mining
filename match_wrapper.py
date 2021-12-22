@@ -1,5 +1,6 @@
 import json
 from random import sample
+from collections import defaultdict
 
 from graph_builder import ID_DELIMITER
 
@@ -68,3 +69,18 @@ class MatchCorpus():
             return(sample(match_pool, sample_size))
         else:
             return match_pool
+
+    def extraction_stats(self):
+
+        stats = defaultdict(int)
+        for m in self.matches:
+            stats[m.pattern_id] += 1
+        print(json.dumps(stats, indent=4, sort_keys=True))
+
+        return stats
+
+    def count_intersentence_conceiver_event_edges(self):
+
+        n = len([m for m in self.matches if len(m.retrieve_matched_sentences()) > 1])
+        print("# inter-sentence conceive-event edges:", n)
+        return n
