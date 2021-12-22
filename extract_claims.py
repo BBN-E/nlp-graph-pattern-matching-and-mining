@@ -23,7 +23,7 @@ def extract_claims(serifxml_path, visualize=False):
     Factory = DiGraphMatcherFactory()
 
     matches = []
-    for pattern_id, pattern in Factory.basic_patterns.items():
+    for pattern_id, pattern in Factory.patterns.items():
 
         pattern_graph, node_match, edge_match = pattern()
 
