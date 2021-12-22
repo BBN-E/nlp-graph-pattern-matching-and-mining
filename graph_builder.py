@@ -12,6 +12,8 @@ from constants import NodeTypes, EdgeTypes, \
     EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
 
 
+ID_DELIMITER = "__"
+
 class GraphBuilder():
 
     def __init__(self):
@@ -117,7 +119,7 @@ class GraphBuilder():
         :return: dict
         '''
 
-        feats = {NodeAttrs.id: token.text + "_" + token.id,
+        feats = {NodeAttrs.id: ID_DELIMITER.join([token.text, token.id]),
                  NodeAttrs.node_type: NodeTypes.token,
                  TokenNodeAttrs.text: token.text,
                  TokenNodeAttrs.upos: token.upos,
@@ -186,7 +188,7 @@ class GraphBuilder():
 
         feats = {
 
-            NodeAttrs.id: mtra.id,  # TODO or mtrm.id + mtra.id ?
+            NodeAttrs.id: ID_DELIMITER.join([mtra.id]),  # TODO or mtrm.id + mtra.id ?
             NodeAttrs.node_type: NodeTypes.modal,
 
             ModalNodeAttrs.special_name: special_name,
