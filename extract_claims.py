@@ -60,7 +60,14 @@ def main(args):
     for serifxml_path in serifxml_paths:
         all_matches.extend(extract_claims(serifxml_path, visualize=args.visualize))
 
-    for m in all_matches:
+    match_corpus = MatchCorpus(all_matches)
+    ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
+    according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
+
+    for m in ccomp_family_random_sample:
+        print(m)
+    print("\n\n====================\n====================\n\n")
+    for m in according_to_random_sample:
         print(m)
 
 
@@ -70,15 +77,14 @@ if __name__ == '__main__':
     python3 \
     /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py \
     -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.test \
-    -l \
-    -o /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/output/test.json
+    -l
     '''
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-l', '--list', action='store_true', help='input is list of serifxmls rather than serifxml path')
     parser.add_argument('-v', '--visualize', action='store_true')
-    parser.add_argument('-o', '--output', type=str)
+    # parser.add_argument('-o', '--output', type=str)
     args = parser.parse_args()
 
     main(args)
