@@ -38,7 +38,7 @@ class MatchWrapper():
 
     def retrieve_matched_sentences(self):
         '''
-        :return: list[serif.theory.sentence.Sentence]
+        :return:
         '''
         sentences = dict()
         for p,t in self.pattern_node_id_to_serif_theory.items():

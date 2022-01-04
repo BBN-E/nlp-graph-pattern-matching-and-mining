@@ -8,8 +8,8 @@ from constants import NodeTypes, EdgeTypes, \
     PatternTokenNodeIDs, PatternModalNodeIDs
 
 from digraph_matcher_factory import DiGraphMatcherFactory
-from node_match_functions import *
-from edge_match_functions import *
+from match_utils.node_match_functions import *
+from match_utils.edge_match_functions import *
 
 ###############################################################################
 G = nx.DiGraph()
