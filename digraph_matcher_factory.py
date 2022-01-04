@@ -6,9 +6,9 @@ from constants import NodeTypes, EdgeTypes, \
     PatternTokenNodes, PatternModalNodes, PatternEdges, \
     PatternTokenNodeIDs, PatternModalNodeIDs
 
-from node_match_functions import node_type_match, node_modal_type_match, node_upos_match, \
+from match_utils.node_match_functions import node_type_match, node_modal_type_match, node_upos_match, \
     node_modal_type_and_upos_match, node_modal_type_and_text_match
-from edge_match_functions import edge_type_match, edge_syntactic_relation_match
+from match_utils.edge_match_functions import edge_type_match, edge_syntactic_relation_match
 
 
 class DiGraphMatcherFactory():

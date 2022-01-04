@@ -35,7 +35,7 @@ def extract_claims(serifxml_path, visualize=False):
         # TODO create on-match-filter API that is not ad-hoc
         ###########################################################################################################
         if pattern_id == 'relaxed_ccomp':
-            from on_match_filters import is_ancestor
+            from match_utils.on_match_filters import is_ancestor
             pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m, document_graph=document_graph,
                                                                                  ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
         ###########################################################################################################
