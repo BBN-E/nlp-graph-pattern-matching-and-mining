@@ -1,6 +1,8 @@
 # subgraph-pattern-matching
 
-Using subgraph pattern matching over compositions of multifarious linguistic parses to extract meaningful knowledge elements. Requires `networkx` to be installed in the environment.
+Using subgraph pattern matching over compositions of multifarious linguistic parses to extract meaningful knowledge elements. 
+
+Requires `networkx` to be installed in the environment.
 
 ```
 PYTHONPATH=<TEXT_OPEN_PYTHONPATH>
