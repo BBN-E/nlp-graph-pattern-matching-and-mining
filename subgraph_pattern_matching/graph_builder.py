@@ -50,6 +50,7 @@ class GraphBuilder():
             return G
 
         # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
+        # when adding constituent_token edges
         for sentence in serif_doc.sentences:
             for token in sentence.token_sequence:
                 token_feats = self.token_to_feats(token)
