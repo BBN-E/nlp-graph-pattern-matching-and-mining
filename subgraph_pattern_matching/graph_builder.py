@@ -46,7 +46,7 @@ class GraphBuilder():
         G = nx.DiGraph()
 
         if serif_doc.modal_temporal_relation_mention_set is None:
-            return
+            return G
 
         mtrm_list = [m for m in serif_doc.modal_temporal_relation_mention_set if re.match("(.*)_modal", m.node.model)]
 
