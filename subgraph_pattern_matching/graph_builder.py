@@ -10,7 +10,7 @@ from serif.theory.value_mention import ValueMention
 from constants import NodeTypes, EdgeTypes, \
     NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
     EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
-
+from verify_graph_compliance import verify_graph_compliance
 
 ID_DELIMITER = "__"
 
@@ -34,6 +34,7 @@ class GraphBuilder():
                                                 sentence_level_dependency_syntax_graphs)
 
         assert nx.algorithms.dag.is_directed_acyclic_graph(G)
+        verify_graph_compliance(G)
 
         return G
 
@@ -47,6 +48,13 @@ class GraphBuilder():
 
         if serif_doc.modal_temporal_relation_mention_set is None:
             return G
+
+        # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
+        for sentence in serif_doc.sentences:
+            for token in sentence.token_sequence:
+                token_feats = self.token_to_feats(token)
+                token_id = token_feats['id']
+                G.add_node(token_id, **token_feats)
 
         mtrm_list = [m for m in serif_doc.modal_temporal_relation_mention_set if re.match("(.*)_modal", m.node.model)]
 
