@@ -6,6 +6,9 @@ from graph_builder import ID_DELIMITER
 
 
 class MatchWrapper():
+    '''
+    Convenient wrapper to store isomorphism dicts and map matches back to serifxml
+    '''
 
     def __init__(self, match_node_id_to_pattern_node_id, pattern_id, serif_doc):
         '''
@@ -48,6 +51,9 @@ class MatchWrapper():
 
 
 class MatchCorpus():
+    '''
+    Wraps a collection of MatchWrapper objects, facilitates corpus statistics, and corpus-level conversions
+    '''
 
     def __init__(self, matches):
         '''
@@ -87,7 +93,7 @@ class MatchCorpus():
 
     def to_mtra_pairs(self):
         '''
-        Assumes the corpus is over claim extractions, so each match contains 'CONCEIVER_NODE' and 'EVENT_NODE'
+        Assumes each match contains 'CONCEIVER_NODE' and 'EVENT_NODE' (claim pattern extractions)
 
         :param match_corpus: subgraph_pattern_matching.match_wrapper.MatchCorpus; assumes that all matches come from same serif_doc
         :param serif_doc: serif_doc for match_corpus extractions
