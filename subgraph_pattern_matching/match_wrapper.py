@@ -95,8 +95,6 @@ class MatchCorpus():
         '''
         Assumes each match contains 'CONCEIVER_NODE' and 'EVENT_NODE' (claim pattern extractions)
 
-        :param match_corpus: subgraph_pattern_matching.match_wrapper.MatchCorpus; assumes that all matches come from same serif_doc
-        :param serif_doc: serif_doc for match_corpus extractions
         :return: list[(conceiver_mtra, event_mtra)]
         '''
 
