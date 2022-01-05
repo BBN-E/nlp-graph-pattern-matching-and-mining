@@ -10,10 +10,12 @@ from digraph_matcher_factory import DiGraphMatcherFactory
 from match_wrapper import MatchWrapper, MatchCorpus
 
 
-def extract_claims(serifxml_path, visualize=False):
-
-    print(serifxml_path)
-    serif_doc = serifxml3.Document(serifxml_path)
+def extract_claims(serif_doc, visualize=False):
+    '''
+    :param serif_doc:
+    :param visualize:
+    :return:
+    '''
 
     GB = GraphBuilder()
     document_graph = GB.convert_serif_doc_to_networkx(serif_doc)
@@ -58,11 +60,16 @@ def main(args):
 
     all_matches = []
     for serifxml_path in serifxml_paths:
-        all_matches.extend(extract_claims(serifxml_path, visualize=args.visualize))
+        print(serifxml_path)
+        serif_doc = serifxml3.Document(serifxml_path)
+        all_matches.extend(extract_claims(serif_doc, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
-    match_corpus.count_intersentence_conceiver_event_edges()
+    # match_corpus.count_intersentence_conceiver_event_edges()
+
+    # conceiver_event_mtras = match_corpus.to_mtra_pairs()
+    # print(conceiver_event_mtras)
 
     # ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
     # according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
@@ -78,7 +85,7 @@ if __name__ == '__main__':
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python
     python3 \
-    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/extract_claims.py \
+    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/extract_claims.py \
     -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.test \
     -l
     '''

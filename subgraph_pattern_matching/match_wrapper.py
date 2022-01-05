@@ -84,3 +84,23 @@ class MatchCorpus():
         n = len([m for m in self.matches if len(m.retrieve_matched_sentences()) > 1])
         print("# inter-sentence conceive-event edges:", n)
         return n
+
+    def to_mtra_pairs(self):
+        '''
+        Assumes the corpus is over claim extractions, so each match contains 'CONCEIVER_NODE' and 'EVENT_NODE'
+
+        :param match_corpus: subgraph_pattern_matching.match_wrapper.MatchCorpus; assumes that all matches come from same serif_doc
+        :param serif_doc: serif_doc for match_corpus extractions
+        :return: list[(conceiver_mtra, event_mtra)]
+        '''
+
+        conceiver_event_mtras = []
+
+        for i, match in enumerate(self.matches):
+
+            conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id['CONCEIVER_NODE'], match.serif_doc)
+            event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id['EVENT_NODE'], match.serif_doc)
+
+            conceiver_event_mtras.append([conceiver_mtra, event_mtra])
+
+        return conceiver_event_mtras
