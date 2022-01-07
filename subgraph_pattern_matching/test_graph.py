@@ -7,7 +7,7 @@ from constants import NodeTypes, EdgeTypes, \
     PatternTokenNodes, PatternModalNodes, PatternEdges, \
     PatternTokenNodeIDs, PatternModalNodeIDs
 
-from digraph_matcher_factory import PatternFactory
+from pattern_factory import PatternFactory
 from match_utils.node_match_functions import *
 from match_utils.edge_match_functions import *
 

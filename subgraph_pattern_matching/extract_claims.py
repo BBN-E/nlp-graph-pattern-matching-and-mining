@@ -6,7 +6,7 @@ from collections import defaultdict
 import serifxml3
 
 from graph_builder import GraphBuilder
-from digraph_matcher_factory import PatternFactory
+from pattern_factory import PatternFactory
 from match_wrapper import MatchWrapper, MatchCorpus
 
 
