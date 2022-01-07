@@ -70,9 +70,16 @@ class GraphBuilder():
 
             # connect parent node to all of its tokens
             parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
-            G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
+            AAA = list(map(lambda t: (parent_mtrm_id, t), parent_token_ids))
+            print(AAA)
+            for token in parent_mtrm_feats['tokens']:
+                token_feats = self.token_to_feats(token)
+                G.add_node(token_feats['id'], **token_feats)
+
+            G.add_edges_from(AAA,
                              **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                                EdgeAttrs.edge_type: EdgeTypes.constituent_token,
+                                EdgeAttrs.color : "blue"})
 
             for child_mtrm in parent_mtrm.children:
 
@@ -85,13 +92,16 @@ class GraphBuilder():
                 child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
                 G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
                                  **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                    EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                                    EdgeAttrs.edge_type: EdgeTypes.constituent_token,
+                                    EdgeAttrs.color : "blue"})
 
                 # modal dependency edge between parent and child nodes
                 G.add_edge(parent_mtrm_id, child_mtrm_id,
                            **{EdgeAttrs.label: child_mtrm_feats[ModalNodeAttrs.modal_relation],
                               ModalEdgeAttrs.modal_relation: child_mtrm_feats[ModalNodeAttrs.modal_relation],
-                              EdgeAttrs.edge_type: EdgeTypes.modal})
+                              EdgeAttrs.edge_type: EdgeTypes.modal,
+                              EdgeAttrs.color : "red",
+                          })
 
         return G
 
@@ -136,6 +146,7 @@ class GraphBuilder():
 
         feats = {NodeAttrs.id: ID_DELIMITER.join([token.text, token.id]),
                  NodeAttrs.node_type: NodeTypes.token,
+                 NodeAttrs.color : "blue",
                  TokenNodeAttrs.text: token.text,
                  TokenNodeAttrs.upos: token.upos,
                  TokenNodeAttrs.xpos: token.xpos,
@@ -205,6 +216,7 @@ class GraphBuilder():
 
             NodeAttrs.id: ID_DELIMITER.join([mtra.id]),  # TODO or mtrm.id + mtra.id ?
             NodeAttrs.node_type: NodeTypes.modal,
+            NodeAttrs.color : "red",
 
             ModalNodeAttrs.special_name: special_name,
             ModalNodeAttrs.mention: mention,
@@ -220,8 +232,12 @@ class GraphBuilder():
 
         return feats
 
-    def visualize_networkx_graph(self, G):
+    def visualize_networkx_graph(self, G, html_file="graph.html"):
         from pyvis.network import Network
-        net = Network('750px', '1500px')
+        net = Network('750px', '1500px', directed=True)
         net.from_nx(G)
-        net.show("graph.html")
+        # net.show_buttons(filter_=['physics'])
+        net.toggle_physics(False)
+        # net.show(html_file)
+        print(html_file)
+        net.write_html(html_file)
