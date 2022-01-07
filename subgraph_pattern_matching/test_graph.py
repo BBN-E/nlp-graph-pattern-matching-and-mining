@@ -7,7 +7,7 @@ from constants import NodeTypes, EdgeTypes, \
     PatternTokenNodes, PatternModalNodes, PatternEdges, \
     PatternTokenNodeIDs, PatternModalNodeIDs
 
-from digraph_matcher_factory import DiGraphMatcherFactory
+from digraph_matcher_factory import PatternFactory
 from match_utils.node_match_functions import *
 from match_utils.edge_match_functions import *
 
@@ -75,7 +75,7 @@ pattern.add_edges_from([
 import pdb; pdb.set_trace()
 
 
-Factory = DiGraphMatcherFactory()
+Factory = PatternFactory()
 _, node_match, edge_match = Factory.relaxed_ccomp_pattern()
 
 matcher = nx.algorithms.isomorphism.DiGraphMatcher(G, pattern,

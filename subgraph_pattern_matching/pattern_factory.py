@@ -11,7 +11,7 @@ from match_utils.node_match_functions import node_type_match, node_modal_type_ma
 from match_utils.edge_match_functions import edge_type_match, edge_syntactic_relation_match
 
 
-class DiGraphMatcherFactory():
+class PatternFactory():
 
 
     def __init__(self):

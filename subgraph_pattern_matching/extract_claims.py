@@ -6,7 +6,7 @@ from collections import defaultdict
 import serifxml3
 
 from graph_builder import GraphBuilder
-from digraph_matcher_factory import DiGraphMatcherFactory
+from digraph_matcher_factory import PatternFactory
 from match_wrapper import MatchWrapper, MatchCorpus
 
 
@@ -22,7 +22,7 @@ def extract_claims(serif_doc, visualize=False):
     if visualize:
         GB.visualize_networkx_graph(document_graph)
 
-    Factory = DiGraphMatcherFactory()
+    Factory = PatternFactory()
 
     matches = []
     for pattern_id, pattern in Factory.patterns.items():
