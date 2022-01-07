@@ -19,18 +19,28 @@ class GraphBuilder():
     def __init__(self):
         pass
 
-    def convert_serif_doc_to_networkx(self, serif_doc):
+    def serif_doc_to_networkx(self, serif_doc):
         '''
         :param serif_doc: serif.theory.document.Document
         :return: networkx.classes.digraph.DiGraph
         '''
+
+        # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
+        # when adding constituent_token edges
+        disconnected_tokens_digraph = nx.DiGraph()
+        for sentence in serif_doc.sentences:
+            for token in sentence.token_sequence:
+                token_feats = self.token_to_feats(token)
+                token_id = token_feats['id']
+                disconnected_tokens_digraph.add_node(token_id, **token_feats)
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
         sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
         # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
 
         # compose into one document-level networkx DiGraph
-        G = nx.algorithms.operators.compose_all([document_level_modal_dependencies_graph] + \
+        G = nx.algorithms.operators.compose_all([disconnected_tokens_digraph] + \
+                                                [document_level_modal_dependencies_graph] + \
                                                 sentence_level_dependency_syntax_graphs)
 
         assert nx.algorithms.dag.is_directed_acyclic_graph(G)
@@ -48,14 +58,6 @@ class GraphBuilder():
 
         if serif_doc.modal_temporal_relation_mention_set is None:
             return G
-
-        # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
-        # when adding constituent_token edges
-        for sentence in serif_doc.sentences:
-            for token in sentence.token_sequence:
-                token_feats = self.token_to_feats(token)
-                token_id = token_feats['id']
-                G.add_node(token_id, **token_feats)
 
         mtrm_list = [m for m in serif_doc.modal_temporal_relation_mention_set if re.match("(.*)_modal", m.node.model)]
 

@@ -13,12 +13,12 @@ from match_wrapper import MatchWrapper, MatchCorpus
 def extract_claims(serif_doc, visualize=False):
     '''
     :param serif_doc:
-    :param visualize:
-    :return:
+    :param visualize: whether to generate a pyviz visualization of graph
+    :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
     '''
 
     GB = GraphBuilder()
-    document_graph = GB.convert_serif_doc_to_networkx(serif_doc)
+    document_graph = GB.serif_doc_to_networkx(serif_doc)
     if visualize:
         GB.visualize_networkx_graph(document_graph)
 
@@ -83,7 +83,7 @@ def main(args):
 
 if __name__ == '__main__':
     '''
-    PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python
+    PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
     /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/extract_claims.py \
     -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.test \
