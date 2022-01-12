@@ -1,0 +1,7 @@
+CONCEIVER -> EVENT             [edgeType = modal]
+CONCEIVER -> CONCEIVERTOKEN    [edgeType = constituentToken]
+EVENT -> EVENTTOKEN            [edgeType = constituentToken]
+SIP -> CONCEIVERTOKEN          [edgeType = syntax, depRel = nsubj]
+SIP -> CCOMPTOKEN              [edgeType = syntax, depRel = ccomp]
+
+SIP.upos = VERB
