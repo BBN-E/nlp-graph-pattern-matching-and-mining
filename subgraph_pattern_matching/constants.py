@@ -13,7 +13,7 @@ class EdgeTypes():
 
     syntax = 'syntax'
     modal = 'modal'
-    constituent_token = 'constituent_token'
+    constituent_token = 'constituentToken'
 
 
 #####################################################
@@ -22,7 +22,7 @@ class EdgeTypes():
 class NodeAttrs():
 
     id = 'id'
-    node_type = 'node_type'
+    node_type = 'nodeType'
 
 
 class TokenNodeAttrs(NodeAttrs):
@@ -30,19 +30,19 @@ class TokenNodeAttrs(NodeAttrs):
     text = 'text'
     upos = 'upos'
     xpos = 'xpos'
-    index_in_doc = 'index_in_doc'
+    index_in_doc = 'indexInDoc'
 
 
 class ModalNodeAttrs(NodeAttrs):
 
-    special_name = 'special_name'
+    special_name = 'specialName'
     mention = 'mention'
-    event_mention = 'event_mention'
-    value_mention = 'value_mention'
+    event_mention = 'eventMention'
+    value_mention = 'valueMention'
     sentence = 'sentence'
     tokens = 'tokens'
-    modal_node_type = 'modal_node_type'
-    modal_relation = 'modal_relation'  # relation attr but stored here because ModalTemporalRelationMention stores it
+    modal_node_type = 'modalNodeType'
+    modal_relation = 'modalRelation'  # relation attr but stored here because ModalTemporalRelationMention stores it
 
 
 #####################################################
@@ -51,17 +51,17 @@ class ModalNodeAttrs(NodeAttrs):
 class EdgeAttrs():
 
     label = 'label'  # PyVis will visualize 'label' value on edge
-    edge_type = 'edge_type'
+    edge_type = 'edgeType'
 
 
 class SyntaxEdgeAttrs(EdgeAttrs):
 
-    dep_rel = 'dep_rel'
+    dep_rel = 'depRel'
 
 
 class ModalEdgeAttrs(EdgeAttrs):
 
-    modal_relation = 'modal_relation'
+    modal_relation = 'modalRelation'
 
 
 class ConstituentTokenEdgeAttrs(EdgeAttrs):
@@ -81,17 +81,17 @@ class PatternNodeIDs():
 
 class PatternModalNodeIDs(PatternNodeIDs):
 
-    CONCEIVER_NODE_ID = 'CONCEIVER_NODE'
-    EVENT_NODE_ID = 'EVENT_NODE'
-    EVENT_SIP_NODE_ID = 'EVENT_SIP_NODE'
+    CONCEIVER_NODE_ID = 'CONCEIVERNODE'
+    EVENT_NODE_ID = 'EVENTNODE'
+    EVENT_SIP_NODE_ID = 'EVENTSIPNODE'
 
 
 class PatternTokenNodeIDs(PatternNodeIDs):
 
     SIP_TOKEN_NODE_ID = 'SIP'
-    CONCEIVER_TOKEN_NODE_ID = 'CONCEIVER_TOKEN'
-    EVENT_TOKEN_NODE_ID = 'EVENT_TOKEN'
-    CCOMP_TOKEN_NODE_ID = 'CCOMP_TOKEN'  # token that has incoming ccomp relation (could be the same as event token)
+    CONCEIVER_TOKEN_NODE_ID = 'CONCEIVERTOKEN'
+    EVENT_TOKEN_NODE_ID = 'EVENTTOKEN'
+    CCOMP_TOKEN_NODE_ID = 'CCOMPTOKEN'  # token that has incoming ccomp relation (could be the same as event token)
 
 
 #####################################################

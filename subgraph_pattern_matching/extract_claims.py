@@ -39,7 +39,7 @@ def extract_claims(serif_doc, visualize=False):
         if pattern_id == 'relaxed_ccomp':
             from match_utils.on_match_filters import is_ancestor
             pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m, document_graph=document_graph,
-                                                                                 ancestor_id='CCOMP_TOKEN', descendant_id='EVENT_TOKEN')]
+                                                                                 ancestor_id='CCOMPTOKEN', descendant_id='EVENTTOKEN')]
         ###########################################################################################################
 
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
