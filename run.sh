@@ -19,4 +19,4 @@ SERIFXML=/nfs/mercury-13/u124/dzajic/aida/mtdp/output/mtdp.LDC2021E11.20220117/L
 WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html
 
 # PYTHONPATH=$TEXTOPEN python $SGPM/extract_claims.py -i $SERIFXML -v
-PYTHONPATH=$TEXTOPEN python $SGPM/graph_viewer.py -i $SERIFXML -w $WORKSPACE
+PYTHONPATH=$TEXTOPEN python $SGPM/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
