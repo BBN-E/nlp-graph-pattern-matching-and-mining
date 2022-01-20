@@ -1,3 +1,7 @@
+# NOTE: don't include underscore "_" in node/edge names
+#       because dotmotif complains; i.e. use "nodeType" instead of
+#       "node_type", "CCOMPTOKEN" instead of "CCOMP_TOKEN"
+
 #####################################################
 ######     Constants for Document Graph        ######
 #####################################################
