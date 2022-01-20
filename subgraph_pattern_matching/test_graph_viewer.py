@@ -52,16 +52,25 @@ def graph_view(serif_doc, workspace):
     
 
     G = GB.modal_dependency_parse_to_networkx(serif_doc)
+    GV.prepare_mdp_networkx_for_visualization(G)
+    GV.visualize_networkx_graph(G, os.path.join(workspace,"mdp_graph.html"))
+
     for i, sentence in enumerate(serif_doc.sentences):
         H = GB.syntactic_dependency_parse_to_networkx(sentence)
-        GV.visualize_syntactic_dependency_parse(H, i)
+        GV.prepare_sdp_networkx_for_visualization(H, root_level=3)
+        GV.visualize_networkx_graph(H, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)))
+        F = GV.filter_mdp_networkx_by_sentence(G, H)
+        GV.visualize_networkx_graph(F, os.path.join(workspace,"mdp_{:02d}_graph.html".format(i)))
+        J = nx.algorithms.operators.compose(F,H)
+        GV.visualize_networkx_graph(J, os.path.join(workspace,"compose_{:02d}_graph.html".format(i)))
 
     for node in G:
         in_edges = len(G.in_edges(node))
         if in_edges == 0:
-            print("{} {} {}".format(
+            print("{} {} {} {}".format(
                 node, 
                 G.in_edges(node),
+                G[node],
                 G.nodes[node]))
 
 def main(args):
