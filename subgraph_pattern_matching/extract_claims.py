@@ -1,5 +1,6 @@
 import os, json
 import argparse
+import logging
 import networkx as nx
 from collections import defaultdict
 
@@ -9,8 +10,27 @@ from graph_builder import GraphBuilder
 from pattern_factory import PatternFactory
 from match_wrapper import MatchWrapper, MatchCorpus
 
+from timer import timer
 
-def extract_claims(serif_doc, visualize=False):
+
+logging.basicConfig(level=logging.INFO)
+
+
+@timer
+def prepare_patterns():
+    '''one-time method to create ready-to-use patterns with corresponding node_match and edge_match functions'''
+
+    Factory = PatternFactory()
+
+    prepared_patterns = []
+    for pattern_id, pattern in Factory.patterns.items():
+        pattern_graph, node_match, edge_match = pattern()
+        prepared_patterns.append((pattern_id, (pattern_graph, node_match, edge_match)))
+
+    return prepared_patterns
+
+@timer
+def extract_claims(serif_doc, prepared_patterns, visualize=False):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -22,12 +42,8 @@ def extract_claims(serif_doc, visualize=False):
     if visualize:
         GB.visualize_networkx_graph(document_graph)
 
-    Factory = PatternFactory()
-
     matches = []
-    for pattern_id, pattern in Factory.patterns.items():
-
-        pattern_graph, node_match, edge_match = pattern()
+    for (pattern_id, (pattern_graph, node_match, edge_match)) in prepared_patterns:
 
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
                                                                    node_match=node_match,
@@ -44,12 +60,14 @@ def extract_claims(serif_doc, visualize=False):
 
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
         pattern_matches = [MatchWrapper(m, pattern_id, serif_doc) for m in pattern_match_dicts]
+        logging.debug("%s - %d", pattern_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
     return matches
 
 
+@timer
 def main(args):
 
     if args.list:
@@ -59,10 +77,11 @@ def main(args):
         serifxml_paths = [args.input]
 
     all_matches = []
+    prepared_patterns = prepare_patterns()
     for serifxml_path in serifxml_paths:
-        print(serifxml_path)
+        logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_claims(serif_doc, visualize=args.visualize))
+        all_matches.extend(extract_claims(serif_doc, prepared_patterns, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
