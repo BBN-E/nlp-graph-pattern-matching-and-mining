@@ -1,5 +1,6 @@
 import os, json
 import argparse
+import logging
 import networkx as nx
 from collections import defaultdict
 
@@ -8,10 +9,16 @@ import serifxml3
 from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
 
-from dotmotif import Motif, GrandIsoExecutor, NetworkXExecutor
+from dotmotif import Motif, NetworkXExecutor
+
+from timer import timer
 
 
-def load_motifs(motif_dir='/nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/motifs'):
+logging.basicConfig(level=logging.INFO)
+
+
+def prepare_motifs(motif_dir='/nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/motifs'):
+    '''one-time method to create ready-to-use motifs for matching'''
 
     id_to_motif = dict()
     for motif_fname in os.listdir(motif_dir):
@@ -20,7 +27,8 @@ def load_motifs(motif_dir='/nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-ma
     return id_to_motif
 
 
-def extract_claims(serif_doc, visualize=False):
+@timer
+def extract_claims(serif_doc, prepared_motifs, visualize=False):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -32,12 +40,10 @@ def extract_claims(serif_doc, visualize=False):
     if visualize:
         GB.visualize_networkx_graph(document_graph)
 
-    motifs = load_motifs()
-
     E = NetworkXExecutor(graph=document_graph)
 
     matches = []
-    for motif_id, motif in motifs.items():
+    for motif_id, motif in prepared_motifs.items():
 
         pattern_match_dicts = E.find(motif)
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
@@ -51,14 +57,16 @@ def extract_claims(serif_doc, visualize=False):
                                                                                  ancestor_id='CCOMPTOKEN', descendant_id='EVENTTOKEN')]
         ###########################################################################################################
 
-        print(pattern_match_dicts)
+        # logging.debug(pattern_match_dicts)
         pattern_matches = [MatchWrapper(m, motif_id, serif_doc) for m in pattern_match_dicts]
+        logging.debug("%s - %d", motif_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
     return matches
 
 
+@timer
 def main(args):
 
     if args.list:
@@ -68,10 +76,11 @@ def main(args):
         serifxml_paths = [args.input]
 
     all_matches = []
+    prepared_motifs = prepare_motifs()
     for serifxml_path in serifxml_paths:
-        print(serifxml_path)
+        logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_claims(serif_doc, visualize=args.visualize))
+        all_matches.extend(extract_claims(serif_doc, prepared_motifs, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
@@ -80,11 +89,11 @@ def main(args):
     # conceiver_event_mtras = match_corpus.to_mtra_pairs()
     # print(conceiver_event_mtras)
 
-    ccomp_family_random_sample = match_corpus.random_sample({'ccomp'}, sample_size=10)
+    # ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
     # according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
     
-    for m in ccomp_family_random_sample:
-        print(m)
+    # for m in ccomp_family_random_sample:
+    #     print(m)
     # print("\n\n====================\n====================\n\n")
     # for m in according_to_random_sample:
     #    print(m)
