@@ -35,10 +35,6 @@ class GraphBuilder():
                 disconnected_tokens_digraph.add_node(token_id, **token_feats)
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
-        root_depth = 4
-        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s, root_depth=root_depth) for s in serif_doc.sentences]
-
-        document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
         sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
         # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
 
