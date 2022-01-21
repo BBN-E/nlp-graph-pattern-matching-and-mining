@@ -8,6 +8,7 @@ import serifxml3
 
 from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
+from constants import PatternTokenNodeIDs
 
 from dotmotif import Motif, NetworkXExecutor
 
@@ -53,8 +54,10 @@ def extract_claims(serif_doc, prepared_motifs, visualize=False):
         ###########################################################################################################
         if motif_id == 'relaxed_ccomp':
             from match_utils.on_match_filters import is_ancestor
-            pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m, document_graph=document_graph,
-                                                                                 ancestor_id='CCOMPTOKEN', descendant_id='EVENTTOKEN')]
+            pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m,
+                                                                                 document_graph=document_graph,
+                                                                                 ancestor_id=PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,
+                                                                                 descendant_id=PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID)]
         ###########################################################################################################
 
         # logging.debug(pattern_match_dicts)
