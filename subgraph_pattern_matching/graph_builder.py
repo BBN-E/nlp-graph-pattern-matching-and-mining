@@ -103,19 +103,23 @@ class GraphBuilder():
 
         G = nx.DiGraph()
 
-        for i, token in enumerate(serif_sentence.token_sequence):
+        # Add all nodes first, to handle case where sentence consists of
+        # a single token.
 
+        for i, token in enumerate(serif_sentence.token_sequence):
+            child_feats = self.token_to_feats(token)
+            child_id = child_feats['id']
+            G.add_node(child_id, **child_feats)
+
+        for i, token in enumerate(serif_sentence.token_sequence):
             if token.head == None:  # root token, can't be child
                 assert token.dep_rel == 'root'
                 continue
 
-            parent_feats = self.token_to_feats(token.head)
-            parent_id = parent_feats['id']
-            G.add_node(parent_id, **parent_feats)
-
             child_feats = self.token_to_feats(token)
             child_id = child_feats['id']
-            G.add_node(child_id, **child_feats)
+            parent_feats = self.token_to_feats(token.head)
+            parent_id = parent_feats['id']
 
             G.add_edge(parent_id, child_id,
                        **{EdgeAttrs.label: token.dep_rel,
