@@ -3,6 +3,7 @@ from random import sample
 from collections import defaultdict
 
 from graph_builder import ID_DELIMITER
+from constants import PatternModalNodeIDs
 
 
 class MatchWrapper():
@@ -102,8 +103,8 @@ class MatchCorpus():
 
         for i, match in enumerate(self.matches):
 
-            conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id['CONCEIVER_NODE'], match.serif_doc)
-            event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id['EVENT_NODE'], match.serif_doc)
+            conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.CONCEIVER_NODE_ID], match.serif_doc)
+            event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.EVENT_NODE_ID], match.serif_doc)
 
             conceiver_event_mtras.append([conceiver_mtra, event_mtra])
 

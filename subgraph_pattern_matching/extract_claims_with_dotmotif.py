@@ -7,9 +7,10 @@ from collections import defaultdict
 import serifxml3
 
 from graph_builder import GraphBuilder
-from pattern_factory import PatternFactory
 from match_wrapper import MatchWrapper, MatchCorpus
 from constants import PatternTokenNodeIDs
+
+from dotmotif import Motif, NetworkXExecutor
 
 from timer import timer
 
@@ -17,21 +18,18 @@ from timer import timer
 logging.basicConfig(level=logging.INFO)
 
 
-@timer
-def prepare_patterns():
-    '''one-time method to create ready-to-use patterns with corresponding node_match and edge_match functions'''
+def prepare_motifs(motif_dir='/nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/motifs'):
+    '''one-time method to create ready-to-use motifs for matching'''
 
-    Factory = PatternFactory()
+    id_to_motif = dict()
+    for motif_fname in os.listdir(motif_dir):
+        motif = Motif(open(os.path.join(motif_dir, motif_fname), 'r').read().strip())
+        id_to_motif[motif_fname] = motif
+    return id_to_motif
 
-    prepared_patterns = []
-    for pattern_id, pattern in Factory.patterns.items():
-        pattern_graph, node_match, edge_match = pattern()
-        prepared_patterns.append((pattern_id, (pattern_graph, node_match, edge_match)))
-
-    return prepared_patterns
 
 @timer
-def extract_claims(serif_doc, prepared_patterns, visualize=False):
+def extract_claims(serif_doc, prepared_motifs, visualize=False):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -43,17 +41,18 @@ def extract_claims(serif_doc, prepared_patterns, visualize=False):
     if visualize:
         GB.visualize_networkx_graph(document_graph)
 
-    matches = []
-    for (pattern_id, (pattern_graph, node_match, edge_match)) in prepared_patterns:
+    E = NetworkXExecutor(graph=document_graph)
 
-        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
-                                                                   node_match=node_match,
-                                                                   edge_match=edge_match)
-        pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
+    matches = []
+    for motif_id, motif in prepared_motifs.items():
+
+        pattern_match_dicts = E.find(motif)
+        pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
+        pattern_match_dicts = [{v:k for k, v in d.items()} for d in pattern_match_dicts]  # reverse in order to initialize MatchWrappers
 
         # TODO create on-match-filter API that is not ad-hoc
         ###########################################################################################################
-        if pattern_id == 'relaxed_ccomp':
+        if motif_id == 'relaxed_ccomp':
             from match_utils.on_match_filters import is_ancestor
             pattern_match_dicts = [m for m in pattern_match_dicts if is_ancestor(match_node_id_to_pattern_node_id=m,
                                                                                  document_graph=document_graph,
@@ -61,9 +60,9 @@ def extract_claims(serif_doc, prepared_patterns, visualize=False):
                                                                                  descendant_id=PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID)]
         ###########################################################################################################
 
-        pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
-        pattern_matches = [MatchWrapper(m, pattern_id, serif_doc) for m in pattern_match_dicts]
-        logging.debug("%s - %d", pattern_id, len(pattern_matches))
+        # logging.debug(pattern_match_dicts)
+        pattern_matches = [MatchWrapper(m, motif_id, serif_doc) for m in pattern_match_dicts]
+        logging.debug("%s - %d", motif_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
@@ -80,11 +79,11 @@ def main(args):
         serifxml_paths = [args.input]
 
     all_matches = []
-    prepared_patterns = prepare_patterns()
+    prepared_motifs = prepare_motifs()
     for serifxml_path in serifxml_paths:
         logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_claims(serif_doc, prepared_patterns, visualize=args.visualize))
+        all_matches.extend(extract_claims(serif_doc, prepared_motifs, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
@@ -95,19 +94,19 @@ def main(args):
 
     # ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
     # according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
-    #
+    
     # for m in ccomp_family_random_sample:
     #     print(m)
     # print("\n\n====================\n====================\n\n")
     # for m in according_to_random_sample:
-    #     print(m)
+    #    print(m)
 
 
 if __name__ == '__main__':
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
-    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/extract_claims.py \
+    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/extract_claims_with_dotmotif.py \
     -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.test \
     -l
     '''

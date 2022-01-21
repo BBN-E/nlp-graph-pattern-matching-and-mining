@@ -1,0 +1,7 @@
+CONCEIVER -> EVENT                  [edgeType = modal]
+CONCEIVER -> CONCEIVERTOKEN         [edgeType = constituentToken]
+EVENT -> EVENTTOKEN                 [edgeType = constituentToken]
+EVENTTOKEN -> CONCEIVERTOKEN        [edgeType = syntax, depRel = obl]
+CONCEIVERTOKEN -> ACCORDINGTOKEN    [edgeType = syntax, depRel = case]
+
+ACCORDINGTOKEN.text = according
