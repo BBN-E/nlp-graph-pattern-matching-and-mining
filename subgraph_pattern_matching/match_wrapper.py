@@ -102,8 +102,10 @@ class MatchCorpus():
         conceiver_event_mtras = []
 
         for i, match in enumerate(self.matches):
-
-            conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.CONCEIVER_NODE_ID], match.serif_doc)
+            if PatternModalNodeIDs.CONCEIVER_NODE_ID in match.pattern_node_id_to_match_node_id:
+                conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.CONCEIVER_NODE_ID], match.serif_doc)
+            else:  # must be AUTHOR_CONCEIVER
+                conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.AUTHOR_CONCEIVER_NODE_ID], match.serif_doc)
             event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.EVENT_NODE_ID], match.serif_doc)
 
             conceiver_event_mtras.append([conceiver_mtra, event_mtra])
