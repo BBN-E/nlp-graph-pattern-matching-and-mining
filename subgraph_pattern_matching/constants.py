@@ -35,6 +35,7 @@ class TokenNodeAttrs(NodeAttrs):
     upos = 'upos'
     xpos = 'xpos'
     index_in_doc = 'indexInDoc'
+    incoming_dep_rel = 'incomingDepRel'
 
 
 class ModalNodeAttrs(NodeAttrs):
@@ -86,6 +87,7 @@ class PatternNodeIDs():
 class PatternModalNodeIDs(PatternNodeIDs):
 
     CONCEIVER_NODE_ID = 'CONCEIVERNODE'
+    AUTHOR_CONCEIVER_NODE_ID = 'AUTHORCONCEIVERNODE'
     EVENT_NODE_ID = 'EVENTNODE'
     EVENT_SIP_NODE_ID = 'EVENTSIPNODE'
 
@@ -114,6 +116,11 @@ class PatternModalNodes(PatternNodes):
     EVENT_NODE = (PatternModalNodeIDs.EVENT_NODE_ID,
                   {NodeAttrs.node_type: NodeTypes.modal, ModalNodeAttrs.modal_node_type: 'Event'})
 
+    AUTHOR_CONCEIVER_NODE = (PatternModalNodeIDs.AUTHOR_CONCEIVER_NODE_ID,
+                             {NodeAttrs.node_type: NodeTypes.modal,
+                              ModalNodeAttrs.modal_node_type: 'Conceiver',
+                              ModalNodeAttrs.special_name: 'AUTHOR_NODE'})
+
 
 class PatternTokenNodes(PatternNodes):
 
@@ -126,6 +133,21 @@ class PatternTokenNodes(PatternNodes):
     EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
                         {NodeAttrs.node_type: NodeTypes.token})
 
+    ROOT_VERB_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                                    {NodeAttrs.node_type: NodeTypes.token,
+                                     TokenNodeAttrs.upos: 'VERB',
+                                     TokenNodeAttrs.incoming_dep_rel: 'root'})
+
+    ROOT_ADJ_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                                 {NodeAttrs.node_type: NodeTypes.token,
+                                  TokenNodeAttrs.upos: 'ADJ',
+                                  TokenNodeAttrs.incoming_dep_rel: 'root'})
+
+    CCOMP_VERB_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                                   {NodeAttrs.node_type: NodeTypes.token,
+                                    TokenNodeAttrs.upos: 'VERB',
+                                    TokenNodeAttrs.incoming_dep_rel: 'ccomp'})
+
     CCOMP_TOKEN_NODE = (PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,
                         {NodeAttrs.node_type: NodeTypes.token})  # may be same as event token
 
@@ -135,6 +157,10 @@ class PatternEdges():
     # links conceiver meta-node to event meta-node
     CONCEIVER_EVENT_EDGE = (PatternModalNodeIDs.CONCEIVER_NODE_ID, PatternModalNodeIDs.EVENT_NODE_ID,
                             {EdgeAttrs.edge_type: EdgeTypes.modal})
+
+    # links author conceiver meta-node to event meta-node
+    AUTHOR_CONCEIVER_EVENT_EDGE = (PatternModalNodeIDs.AUTHOR_CONCEIVER_NODE_ID, PatternModalNodeIDs.EVENT_NODE_ID,
+                                   {EdgeAttrs.edge_type: EdgeTypes.modal})
 
     # links conceiver meta-node to conceiver token
     CONCEIVER_TOKEN_EDGE = (PatternModalNodeIDs.CONCEIVER_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
