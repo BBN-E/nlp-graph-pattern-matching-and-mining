@@ -1,5 +1,6 @@
 import re
 import networkx as nx
+import logging
 
 import serifxml3
 
@@ -7,10 +8,12 @@ from serif.theory.event_mention import EventMention
 from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
-from constants import NodeTypes, EdgeTypes, \
-    NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
-    EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
+from constants import *
 from verify_graph_compliance import verify_graph_compliance
+
+
+logging.basicConfig(level=logging.INFO)
+
 
 ID_DELIMITER = "__"
 
@@ -43,7 +46,9 @@ class GraphBuilder():
                                                 [document_level_modal_dependencies_graph] + \
                                                 sentence_level_dependency_syntax_graphs)
 
-        assert nx.algorithms.dag.is_directed_acyclic_graph(G)
+        if not nx.algorithms.dag.is_directed_acyclic_graph(G):
+            logging.warning("Cycle detected in graph for %s" % serif_doc.id)
+            logging.warning(str(nx.algorithms.cycles.find_cycle(G)))
         verify_graph_compliance(G)
 
         return G
@@ -93,6 +98,12 @@ class GraphBuilder():
                               ModalEdgeAttrs.modal_relation: child_mtrm_feats[ModalNodeAttrs.modal_relation],
                               EdgeAttrs.edge_type: EdgeTypes.modal})
 
+        try:
+            assert nx.algorithms.dag.is_directed_acyclic_graph(G)
+        except AssertionError:
+            logging.warning("Cycle detected in MDP for %s" % serif_doc.id)
+            logging.warning(str(nx.algorithms.cycles.find_cycle(G)))
+
         return G
 
     def syntactic_dependency_parse_to_networkx(self, serif_sentence):
@@ -139,7 +150,8 @@ class GraphBuilder():
                  TokenNodeAttrs.text: token.text,
                  TokenNodeAttrs.upos: token.upos,
                  TokenNodeAttrs.xpos: token.xpos,
-                 TokenNodeAttrs.index_in_doc: "_".join([str(token.sentence.sent_no), str(token.index()), str(token.index())])}
+                 TokenNodeAttrs.index_in_doc: "_".join([str(token.sentence.sent_no), str(token.index()), str(token.index())]),
+                 TokenNodeAttrs.incoming_dep_rel: token.dep_rel}
 
         return feats
 
@@ -151,7 +163,7 @@ class GraphBuilder():
 
         mtra = mtrm.node  # modal_temporal_relation_argument
 
-        special_name = None
+        special_name = "Null"  # default "Null" value for regular mtra nodes (node_match functions will match if only one of the values is None)
         mention = None
         event_mention = None
         value_mention = None
