@@ -92,7 +92,7 @@ class MatchCorpus():
         print("# inter-sentence conceive-event edges:", n)
         return n
 
-    def to_mtra_pairs(self):
+    def to_mtra_pairs(self, include_pattern_id=False):
         '''
         Assumes each match contains 'CONCEIVER_NODE' and 'EVENT_NODE' (claim pattern extractions)
 
@@ -108,6 +108,9 @@ class MatchCorpus():
                 conceiver_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.AUTHOR_CONCEIVER_NODE_ID], match.serif_doc)
             event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.EVENT_NODE_ID], match.serif_doc)
 
-            conceiver_event_mtras.append([conceiver_mtra, event_mtra])
+            if include_pattern_id:
+                conceiver_event_mtras.append([conceiver_mtra, event_mtra, match.pattern_id])
+            else:
+                conceiver_event_mtras.append([conceiver_mtra, event_mtra])
 
         return conceiver_event_mtras

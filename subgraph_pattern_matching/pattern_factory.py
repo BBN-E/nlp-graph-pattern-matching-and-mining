@@ -14,7 +14,7 @@ class PatternFactory():
                          'relaxed_ccomp': self.relaxed_ccomp_pattern,
                          'relaxed_ccomp_one_hop': self.relaxed_ccomp_one_hop_pattern,
                          'according_to': self.according_to_pattern,
-                         'author_conceiver_event_edge_0': self.author_conceiver_event_edge_pattern_0,
+                         # 'author_conceiver_event_edge_0': self.author_conceiver_event_edge_pattern_0,
                          'author_conceiver_event_edge_1': self.author_conceiver_event_edge_pattern_1,
                          'author_conceiver_event_edge_2': self.author_conceiver_event_edge_pattern_2,
                          'author_conceiver_event_edge_3': self.author_conceiver_event_edge_pattern_3,
