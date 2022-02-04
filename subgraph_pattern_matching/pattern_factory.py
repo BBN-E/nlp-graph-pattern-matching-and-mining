@@ -16,8 +16,8 @@ class PatternFactory():
                          'according_to': self.according_to_pattern,
                          'author_conceiver_event_edge_1': self.author_conceiver_event_edge_pattern_1,
                          'author_conceiver_event_edge_2': self.author_conceiver_event_edge_pattern_2,
-                         'author_conceiver_event_edge_3': self.author_conceiver_event_edge_pattern_3}#,
-                         # 'as_reported_by': self.as_reported_by_pattern}
+                         'author_conceiver_event_edge_3': self.author_conceiver_event_edge_pattern_3,
+                         'as_reported_by': self.as_reported_by_pattern}
 
         self.basic_patterns = {'grounded_conceiver_event_edge': self.grounded_conceiver_event_edge_pattern}
 

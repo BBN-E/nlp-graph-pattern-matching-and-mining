@@ -28,12 +28,14 @@ def node_attr_match(n1, n2, attr):
     # TODO permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
     #    return n1.get(TokenNodeAttrs.upos, "ε") in set(n2.get(TokenNodeAttrs.upos, "ε").split("|"))
 
+
 def node_multiple_attrs_match(*match_fns):
 
     def node_multiple_attrs_match_fn(n1, n2):
         return all(match_fn(n1, n2) for match_fn in match_fns)
 
     return node_multiple_attrs_match_fn
+
 
 #######################################################
 #######   SINGLE ATTR NODE MATCHING FUNCTIONS   #######
@@ -55,21 +57,3 @@ def node_incoming_dep_rel_match(n1, n2):
 
 def node_text_match(n1, n2):
     return node_attr_match(n1, n2, attr=TokenNodeAttrs.text)
-
-
-# TODO these are obsolete with the implementation of node_multiple_attrs_match(*match_fns) above
-# #########################################################
-# #######   MULTIPLE ATTR NODE MATCHING FUNCTIONS   #######
-# #########################################################
-#
-# def node_modal_type_and_upos_match(n1, n2):
-#     return node_modal_type_match(n1, n2) and node_upos_match(n1, n2)
-#
-# def node_modal_type_and_upos_and_incoming_dep_rel_match(n1, n2):
-#     return node_modal_type_match(n1, n2) and node_upos_match(n1, n2) and node_incoming_dep_rel_match(n1, n2)
-#
-# def node_modal_type_and_text_match(n1, n2):
-#     return node_modal_type_match(n1, n2) and node_text_match(n1, n2)
-#
-# def node_modal_type_and_special_name_and_upos_and_incoming_dep_rel_match(n1, n2):
-#     return node_modal_type_match(n1, n2) and node_special_name_match(n1, n2) and node_upos_match(n1, n2) and node_incoming_dep_rel_match(n1, n2)

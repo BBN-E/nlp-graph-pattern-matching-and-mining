@@ -233,7 +233,6 @@ class GraphBuilder():
         return feats
 
     def visualize_networkx_graph(self, G):
-        from pyvis.network import Network
-        net = Network('750px', '1500px')
-        net.from_nx(G)
-        net.show("graph.html")
+        from graph_viewer import GraphViewer
+        GV = GraphViewer()
+        GV.visualize_networkx_graph(G)
