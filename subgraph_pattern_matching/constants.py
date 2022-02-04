@@ -133,6 +133,11 @@ class PatternTokenNodes(PatternNodes):
     EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
                         {NodeAttrs.node_type: NodeTypes.token})
 
+    ROOT_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
+                             {NodeAttrs.node_type: NodeTypes.token,
+                              TokenNodeAttrs.upos: 'VERB|ADJ',
+                              TokenNodeAttrs.incoming_dep_rel: 'root'})
+
     ROOT_VERB_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
                                     {NodeAttrs.node_type: NodeTypes.token,
                                      TokenNodeAttrs.upos: 'VERB',

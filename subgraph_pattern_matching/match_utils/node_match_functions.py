@@ -24,9 +24,9 @@ def node_attr_match(n1, n2, attr):
     if ((attr in n1) and (attr not in n2)) or \
        ((attr in n2) and (attr not in n1)):
         return True  # if one of the nodes is underspecified w.r.t. attr, then the attrs match
-    return n1.get(attr, None) == n2.get(attr, None)
-    # TODO permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
-    #    return n1.get(TokenNodeAttrs.upos, "ε") in set(n2.get(TokenNodeAttrs.upos, "ε").split("|"))
+    # return n1.get(attr, None) == n2.get(attr, None)
+    # TODO is "ε" epsilon char usable in all settings?
+    return n1.get(attr, "ε") in set(n2.get(attr, "ε").split("|"))  # permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
 
 
 def node_multiple_attrs_match(*match_fns):

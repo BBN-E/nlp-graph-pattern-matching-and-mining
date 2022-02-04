@@ -14,6 +14,7 @@ class PatternFactory():
                          'relaxed_ccomp': self.relaxed_ccomp_pattern,
                          'relaxed_ccomp_one_hop': self.relaxed_ccomp_one_hop_pattern,
                          'according_to': self.according_to_pattern,
+                         'author_conceiver_event_edge_0': self.author_conceiver_event_edge_pattern_0,
                          'author_conceiver_event_edge_1': self.author_conceiver_event_edge_pattern_1,
                          'author_conceiver_event_edge_2': self.author_conceiver_event_edge_pattern_2,
                          'author_conceiver_event_edge_3': self.author_conceiver_event_edge_pattern_3,
@@ -41,6 +42,38 @@ class PatternFactory():
         ])
 
         return pattern
+
+    ######################################################
+
+    def grounded_conceiver_event_edge_pattern(self):
+
+        pattern = self.build_basic_claim_pattern()
+
+        return pattern, node_modal_type_match, edge_type_match
+
+    ######################################################
+
+    def author_conceiver_event_edge_pattern_0(self):
+        '''event token is VERB|ADJ with incoming root relation'''
+
+        pattern = nx.DiGraph()
+
+        pattern.add_nodes_from([
+            PatternModalNodes.AUTHOR_CONCEIVER_NODE,
+            PatternModalNodes.EVENT_NODE,
+            PatternTokenNodes.ROOT_EVENT_TOKEN_NODE
+        ])
+
+        pattern.add_edges_from([
+            PatternEdges.AUTHOR_CONCEIVER_EVENT_EDGE,
+            PatternEdges.EVENT_TOKEN_EDGE
+        ])
+
+        # return pattern, node_modal_type_and_special_name_and_upos_and_incoming_dep_rel_match, edge_type_match
+        return pattern, node_multiple_attrs_match(node_modal_type_match,
+                                                  node_special_name_match,
+                                                  node_upos_match,
+                                                  node_incoming_dep_rel_match), edge_type_match
 
 
     def author_conceiver_event_edge_pattern_1(self):
@@ -111,13 +144,7 @@ class PatternFactory():
                                                   node_upos_match,
                                                   node_incoming_dep_rel_match), edge_type_match
 
-
-    def grounded_conceiver_event_edge_pattern(self):
-
-        pattern = self.build_basic_claim_pattern()
-
-        return pattern, node_modal_type_match, edge_type_match
-
+    ######################################################
 
     def ccomp_pattern(self):
 
@@ -194,6 +221,7 @@ class PatternFactory():
         return pattern, node_multiple_attrs_match(node_modal_type_match, \
                                                   node_upos_match), edge_syntactic_relation_match
 
+    ######################################################
 
     def according_to_pattern(self):
 
@@ -226,7 +254,7 @@ class PatternFactory():
 
         pattern.add_nodes_from([
             ('REPORTED_TOKEN_NODE',
-             {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.text: 'reported'})
+             {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.text: 'reported|stated'})
         ])
 
         pattern.add_nodes_from([
