@@ -11,13 +11,15 @@ class NodeTypes():
 
     token = 'token'
     modal = 'modal'
+    # amr = 'amr'
 
 
 class EdgeTypes():
 
     syntax = 'syntax'
     modal = 'modal'
-    constituent_token = 'constituentToken'
+    # amr = 'amr'
+    modal_constituent_token = 'constituentToken'
 
 
 #####################################################
@@ -169,8 +171,8 @@ class PatternEdges():
 
     # links conceiver meta-node to conceiver token
     CONCEIVER_TOKEN_EDGE = (PatternModalNodeIDs.CONCEIVER_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
-                            {EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                            {EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})
 
     # links event meta-node to event token
     EVENT_TOKEN_EDGE = (PatternModalNodeIDs.EVENT_NODE_ID, PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
-                        {EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                        {EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})

@@ -29,7 +29,7 @@ class GraphBuilder():
         '''
 
         # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
-        # when adding constituent_token edges
+        # when adding modal_constituent_token edges
         disconnected_tokens_digraph = nx.DiGraph()
         for sentence in serif_doc.sentences:
             for token in sentence.token_sequence:
@@ -76,8 +76,8 @@ class GraphBuilder():
             # connect parent node to all of its tokens
             parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
             G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
-                             **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                             **{EdgeAttrs.label: EdgeTypes.modal_constituent_token,
+                                EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})
 
             for child_mtrm in parent_mtrm.children:
 
@@ -89,8 +89,8 @@ class GraphBuilder():
                 # connect child node to all of its tokens
                 child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
                 G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
-                                 **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                    EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                                 **{EdgeAttrs.label: EdgeTypes.modal_constituent_token,
+                                    EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})
 
                 # modal dependency edge between parent and child nodes
                 G.add_edge(parent_mtrm_id, child_mtrm_id,
@@ -107,6 +107,39 @@ class GraphBuilder():
         return G
 
     def syntactic_dependency_parse_to_networkx(self, serif_sentence):
+        '''
+        :param serif_sentence: serif.theory.sentence.Sentence
+        :return: networkx.classes.digraph.DiGraph
+        '''
+
+        G = nx.DiGraph()
+
+        # Add all nodes first, to handle case where sentence consists of
+        # a single token.
+
+        for i, token in enumerate(serif_sentence.token_sequence):
+            child_feats = self.token_to_feats(token)
+            child_id = child_feats['id']
+            G.add_node(child_id, **child_feats)
+
+        for i, token in enumerate(serif_sentence.token_sequence):
+            if token.head == None:  # root token, can't be child
+                assert token.dep_rel == 'root'
+                continue
+
+            child_feats = self.token_to_feats(token)
+            child_id = child_feats['id']
+            parent_feats = self.token_to_feats(token.head)
+            parent_id = parent_feats['id']
+
+            G.add_edge(parent_id, child_id,
+                       **{EdgeAttrs.label: token.dep_rel,
+                          SyntaxEdgeAttrs.dep_rel: token.dep_rel,
+                          EdgeAttrs.edge_type: EdgeTypes.syntax})
+
+        return G
+
+    def amr_parse_to_networkx(self, serif_sentence):
         '''
         :param serif_sentence: serif.theory.sentence.Sentence
         :return: networkx.classes.digraph.DiGraph
@@ -231,6 +264,9 @@ class GraphBuilder():
         }
 
         return feats
+
+    def amr_node_to_feats(self, amr_node):
+        pass
 
     def visualize_networkx_graph(self, G):
         from graph_viewer import GraphViewer

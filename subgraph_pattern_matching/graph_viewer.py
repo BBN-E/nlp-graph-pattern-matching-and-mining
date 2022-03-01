@@ -49,7 +49,7 @@ class GraphViewer:
                  G.nodes[node]['color'] = "blue"
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
-            if edge_type == EdgeTypes.constituent_token:
+            if edge_type == EdgeTypes.modal_constituent_token:
                 G.edges[edge]['color'] = "purple"
 
     def filter_mdp_networkx_by_sentence (self, G, H):
