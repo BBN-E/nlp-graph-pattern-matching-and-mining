@@ -43,10 +43,12 @@ class GraphBuilder():
         sentence_level_amr_graphs = [self.amr_parse_to_networkx(s) for s in serif_doc.sentences]
 
         # compose into one document-level networkx DiGraph
-        G = nx.algorithms.operators.compose_all([disconnected_tokens_digraph] + \
-                                                [document_level_modal_dependencies_graph] + \
-                                                sentence_level_dependency_syntax_graphs + \
-                                                sentence_level_amr_graphs)
+        G = nx.algorithms.operators.compose_all(
+                [disconnected_tokens_digraph] + \
+                [document_level_modal_dependencies_graph] + \
+                sentence_level_dependency_syntax_graphs + \
+                sentence_level_amr_graphs
+            )
 
         if not nx.algorithms.dag.is_directed_acyclic_graph(G):
             logging.warning("Cycle detected in graph for %s" % serif_doc.id)
