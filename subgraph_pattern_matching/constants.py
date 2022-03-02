@@ -11,15 +11,16 @@ class NodeTypes():
 
     token = 'token'
     modal = 'modal'
-    # amr = 'amr'
+    amr = 'amr'
 
 
 class EdgeTypes():
 
     syntax = 'syntax'
     modal = 'modal'
-    # amr = 'amr'
+    amr = 'amr'
     modal_constituent_token = 'constituentToken'
+    amr_aligned_token = 'amrAlignedToken'
 
 
 #####################################################
@@ -52,6 +53,11 @@ class ModalNodeAttrs(NodeAttrs):
     modal_relation = 'modalRelation'  # relation attr but stored here because ModalTemporalRelationMention stores it
 
 
+class AMRNodeAttrs(NodeAttrs):
+
+    varname = 'varname'
+    content = 'content'
+
 #####################################################
 
 
@@ -71,10 +77,17 @@ class ModalEdgeAttrs(EdgeAttrs):
     modal_relation = 'modalRelation'
 
 
-class ConstituentTokenEdgeAttrs(EdgeAttrs):
+class AMREdgeAttrs(EdgeAttrs):
 
+    amr_relation = 'amrRelation'
+
+
+class ModalConstituentTokenEdgeAttrs(EdgeAttrs):
     pass
 
+
+class AMRAlignedTokenEdgeAttrs(EdgeAttrs):
+    pass
 
 #####################################################
 ######     Constants for Pattern Graphs        ######
@@ -106,7 +119,6 @@ class PatternTokenNodeIDs(PatternNodeIDs):
 
 
 class PatternNodes():
-
     pass
 
 
@@ -157,6 +169,10 @@ class PatternTokenNodes(PatternNodes):
 
     CCOMP_TOKEN_NODE = (PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,
                         {NodeAttrs.node_type: NodeTypes.token})  # may be same as event token
+
+
+class PatternAMRNodes(PatternNodes):
+    pass
 
 
 class PatternEdges():
