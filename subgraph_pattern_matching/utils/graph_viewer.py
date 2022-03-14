@@ -14,7 +14,7 @@ from serif.theory.value_mention import ValueMention
 from constants import NodeTypes, EdgeTypes, \
     NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
     EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
-from verify_graph_compliance import verify_graph_compliance
+
 
 ID_DELIMITER = "_"
 
