@@ -7,7 +7,6 @@ from match_utils.edge_match_functions import *
 
 class PatternFactory():
 
-
     def __init__(self):
 
         self.patterns = {'ccomp': self.ccomp_pattern,
@@ -22,6 +21,11 @@ class PatternFactory():
 
         self.basic_patterns = {'grounded_conceiver_event_edge': self.grounded_conceiver_event_edge_pattern}
 
+        self.amr_patterns = self.create_propbank_frames_patterns()
+
+    ######################################################
+    #                MDP + DP Patterns                   #
+    ######################################################
 
     def build_basic_claim_pattern(self):
         '''build pattern graph with basic relations'''
@@ -75,7 +79,6 @@ class PatternFactory():
                                                   node_upos_match,
                                                   node_incoming_dep_rel_match), edge_type_match
 
-
     def author_conceiver_event_edge_pattern_1(self):
         '''event token is VERB with incoming root relation'''
 
@@ -98,7 +101,6 @@ class PatternFactory():
                                                   node_upos_match,
                                                   node_incoming_dep_rel_match), edge_type_match
 
-
     def author_conceiver_event_edge_pattern_2(self):
         '''event token is ADJ with incoming root relation'''
 
@@ -120,7 +122,6 @@ class PatternFactory():
                                                   node_special_name_match,
                                                   node_upos_match,
                                                   node_incoming_dep_rel_match), edge_type_match
-
 
     def author_conceiver_event_edge_pattern_3(self):
         '''event token is VERB with incoming ccomp relation'''
@@ -168,7 +169,6 @@ class PatternFactory():
         return pattern, node_multiple_attrs_match(node_modal_type_match, \
                                                   node_upos_match), edge_syntactic_relation_match
 
-
     def relaxed_ccomp_one_hop_pattern(self):
 
         pattern = self.build_basic_claim_pattern()
@@ -195,7 +195,6 @@ class PatternFactory():
 
         return pattern, node_multiple_attrs_match(node_modal_type_match, \
                                                   node_upos_match), edge_syntactic_relation_match
-
 
     def relaxed_ccomp_pattern(self):
 
@@ -247,7 +246,6 @@ class PatternFactory():
         return pattern, node_multiple_attrs_match(node_modal_type_match, \
                                                   node_text_match), edge_syntactic_relation_match
 
-
     def as_reported_by_pattern(self):
 
         pattern = self.build_basic_claim_pattern()
@@ -279,3 +277,21 @@ class PatternFactory():
 
         return pattern, node_multiple_attrs_match(node_modal_type_match, \
                                                   node_text_match), edge_syntactic_relation_match
+
+    ######################################################
+    #                   AMR Patterns                     #
+    ######################################################
+
+    def create_propbank_frames_patterns(self):
+
+        from utils.load_propbank_to_xpo_mapping import load_propbank_to_xpo_mapping
+        propbank_to_xpo = load_propbank_to_xpo_mapping()
+
+        pb_frame_to_nx_pattern = dict()
+        for pb_frame in propbank_to_xpo.keys():
+            G = nx.DiGraph()
+            G.add_node(pb_frame, **{NodeAttrs.node_type: NodeTypes.amr,
+                                    AMRNodeAttrs.content: pb_frame})
+            pb_frame_to_nx_pattern[pb_frame] = lambda: (G, node_amr_match, None)
+
+        return pb_frame_to_nx_pattern

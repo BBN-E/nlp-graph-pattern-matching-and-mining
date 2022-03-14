@@ -10,7 +10,7 @@ from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
 from constants import *
-from verify_graph_compliance import verify_graph_compliance
+from utils.verify_graph_compliance import verify_graph_compliance
 
 
 logging.basicConfig(level=logging.INFO)
