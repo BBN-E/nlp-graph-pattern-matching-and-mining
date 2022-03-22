@@ -4,29 +4,39 @@ from constants import *
 def edge_type_match(e1, e2):
     return e1[EdgeAttrs.edge_type] == e2[EdgeAttrs.edge_type]  # syntax, modal_dependency, constituent_token
 
-def edge_modal_relation_match(e1, e2):
+def edge_attr_match(e1, e2, attr):
+    '''
+    :param e1: document graph edge
+    :param e2: pattern graph edge
+    :param attr: edge attribute used to match e1 and e2
+    :return: boolean indicating whether the nodes match w.r.t. attr
+    '''
+
     if not edge_type_match(e1, e2):
         return False
-    if ((ModalEdgeAttrs.modal_relation in e1) and (ModalEdgeAttrs.modal_relation not in e2)) or \
-       ((ModalEdgeAttrs.modal_relation in e2) and (ModalEdgeAttrs.modal_relation not in e1)):
-        return True  # if one of the edges is underspecified in modal relation, then the modal relations match
-    return e1.get(ModalEdgeAttrs.modal_relation, None) == e2.get(ModalEdgeAttrs.modal_relation, None)  # nsubj, ccomp etc.
+    if ((attr in e1) and (attr not in e2)) or \
+       ((attr in e2) and (attr not in e1)):
+        return True  # if one of the nodes is underspecified w.r.t. attr, then the attrs match
+    # return e1.get(attr, None) == e2.get(attr, None)
+    # TODO is "ε" epsilon char usable in all settings?
+    return e1.get(attr, "ε") in set(e2.get(attr, "ε").split("|"))  # permit pattern edge e2 to specify conjunction of attrs, e.g. "nsubj|dobj"
+
+def edge_multiple_attrs_match(*match_fns):
+
+    def edge_multiple_attrs_match_fn(e1, e2):
+        return all(match_fn(e1, e2) for match_fn in match_fns)
+
+    return edge_multiple_attrs_match_fn
+
+#######################################################
+#######   SINGLE ATTR EDGE MATCHING FUNCTIONS   #######
+#######################################################
+
+def edge_modal_relation_match(e1, e2):
+    return edge_attr_match(e1, e2, attr=ModalEdgeAttrs.modal_relation)
 
 def edge_syntactic_relation_match(e1, e2):
-    if not edge_type_match(e1, e2):
-        return False
-    if ((SyntaxEdgeAttrs.dep_rel in e1) and (SyntaxEdgeAttrs.dep_rel not in e2)) or \
-       ((SyntaxEdgeAttrs.dep_rel in e2) and (SyntaxEdgeAttrs.dep_rel not in e1)):
-        return True  # if one of the edges is underspecified in dep_rel, then the dep_rel match
-    return e1.get(SyntaxEdgeAttrs.dep_rel, None) == e2.get(SyntaxEdgeAttrs.dep_rel, None)  # nsubj, ccomp etc.
-
-def edge_modal_and_syntactic_relation_match(e1, e2):
-    return edge_modal_relation_match(e1, e2) and edge_syntactic_relation_match(e1, e2)
+    return edge_attr_match(e1, e2, attr=SyntaxEdgeAttrs.dep_rel)
 
 def edge_amr_relation_match(e1, e2):
-    if not edge_type_match(e1, e2):
-        return False
-    if ((AMREdgeAttrs.amr_relation in e1) and (AMREdgeAttrs.amr_relation not in e2)) or \
-       ((AMREdgeAttrs.amr_relation in e2) and (AMREdgeAttrs.amr_relation not in e1)):
-        return True  # if one of the edges is underspecified in amr_relation, then the amr_relation match
-    return e1.get(AMREdgeAttrs.amr_relation, None) == e2.get(AMREdgeAttrs.amr_relation, None)  # :arg0, :purpose etc.
+    return edge_attr_match(e1, e2, attr=AMREdgeAttrs.amr_relation)
