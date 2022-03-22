@@ -24,8 +24,8 @@ def prepare_patterns():
     Factory = PatternFactory()
 
     prepared_patterns = []
-    # for pattern_id, pattern in Factory.patterns.items():
-    for pattern_id, pattern in Factory.amr_patterns.items():
+    for pattern_id, pattern in Factory.patterns.items():
+    # for pattern_id, pattern in Factory.amr_patterns.items():
         pattern_graph, node_match, edge_match = pattern()
         prepared_patterns.append((pattern_id, (pattern_graph, node_match, edge_match)))
 
