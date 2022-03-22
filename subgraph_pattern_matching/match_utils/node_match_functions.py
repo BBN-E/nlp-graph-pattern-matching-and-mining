@@ -57,3 +57,6 @@ def node_incoming_dep_rel_match(n1, n2):
 
 def node_text_match(n1, n2):
     return node_attr_match(n1, n2, attr=TokenNodeAttrs.text)
+
+def node_amr_match(n1, n2):
+    return node_attr_match(n1, n2, attr=AMRNodeAttrs.content)

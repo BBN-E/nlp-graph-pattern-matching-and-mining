@@ -14,7 +14,7 @@ from serif.theory.value_mention import ValueMention
 from constants import NodeTypes, EdgeTypes, \
     NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
     EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
-from verify_graph_compliance import verify_graph_compliance
+
 
 ID_DELIMITER = "_"
 
@@ -49,7 +49,7 @@ class GraphViewer:
                  G.nodes[node]['color'] = "blue"
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
-            if edge_type == EdgeTypes.constituent_token:
+            if edge_type == EdgeTypes.modal_constituent_token:
                 G.edges[edge]['color'] = "purple"
 
     def filter_mdp_networkx_by_sentence (self, G, H):

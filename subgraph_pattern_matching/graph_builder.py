@@ -1,4 +1,5 @@
 import re
+import json
 import networkx as nx
 import logging
 
@@ -9,7 +10,7 @@ from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
 from constants import *
-from verify_graph_compliance import verify_graph_compliance
+from utils.verify_graph_compliance import verify_graph_compliance
 
 
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +30,7 @@ class GraphBuilder():
         '''
 
         # make sure all the tokens in the document exist beforehand to prevent creating empty token nodes
-        # when adding constituent_token edges
+        # when adding modal_constituent_token edges
         disconnected_tokens_digraph = nx.DiGraph()
         for sentence in serif_doc.sentences:
             for token in sentence.token_sequence:
@@ -39,12 +40,15 @@ class GraphBuilder():
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
         sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
-        # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(serif_doc.sentences[17])]
+        sentence_level_amr_graphs = [self.amr_parse_to_networkx(s) for s in serif_doc.sentences]
 
         # compose into one document-level networkx DiGraph
-        G = nx.algorithms.operators.compose_all([disconnected_tokens_digraph] + \
-                                                [document_level_modal_dependencies_graph] + \
-                                                sentence_level_dependency_syntax_graphs)
+        G = nx.algorithms.operators.compose_all(
+                [disconnected_tokens_digraph] + \
+                [document_level_modal_dependencies_graph] + \
+                sentence_level_dependency_syntax_graphs + \
+                sentence_level_amr_graphs
+            )
 
         if not nx.algorithms.dag.is_directed_acyclic_graph(G):
             logging.warning("Cycle detected in graph for %s" % serif_doc.id)
@@ -76,8 +80,8 @@ class GraphBuilder():
             # connect parent node to all of its tokens
             parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
             G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
-                             **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                             **{EdgeAttrs.label: EdgeTypes.modal_constituent_token,
+                                EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})
 
             for child_mtrm in parent_mtrm.children:
 
@@ -89,8 +93,8 @@ class GraphBuilder():
                 # connect child node to all of its tokens
                 child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
                 G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
-                                 **{EdgeAttrs.label: EdgeTypes.constituent_token,
-                                    EdgeAttrs.edge_type: EdgeTypes.constituent_token})
+                                 **{EdgeAttrs.label: EdgeTypes.modal_constituent_token,
+                                    EdgeAttrs.edge_type: EdgeTypes.modal_constituent_token})
 
                 # modal dependency edge between parent and child nodes
                 G.add_edge(parent_mtrm_id, child_mtrm_id,
@@ -136,6 +140,70 @@ class GraphBuilder():
                        **{EdgeAttrs.label: token.dep_rel,
                           SyntaxEdgeAttrs.dep_rel: token.dep_rel,
                           EdgeAttrs.edge_type: EdgeTypes.syntax})
+
+        return G
+
+    def amr_parse_to_networkx(self, serif_sentence):
+        '''
+        :param serif_sentence: serif.theory.sentence.Sentence
+        :return: networkx.classes.digraph.DiGraph
+        '''
+
+        G = nx.DiGraph()
+
+        amr_parse = serif_sentence.amr_parse
+        if amr_parse is None:
+            return G
+
+        root_amr_node = amr_parse.root
+        root_amr_node_feats = self.amr_node_to_feats(root_amr_node)
+        root_amr_node_id = root_amr_node_feats['id']
+
+        # perform BFS starting from root amr node
+
+        visited = []  # List to keep track of visited nodes.
+        queue = []  # Initialize a queue
+
+        visited.append(root_amr_node_id)
+        queue.append(root_amr_node)
+
+        while queue:
+
+            curr_amr_node = queue.pop(0)
+
+            curr_amr_node_feats = self.amr_node_to_feats(curr_amr_node)
+            curr_amr_node_id = curr_amr_node_feats['id']
+            G.add_node(curr_amr_node_id, **{k: v for k, v in curr_amr_node_feats.items() if type(v) == str})
+
+            # add edges to aligned tokens (if there are any)
+            if curr_amr_node.tokens is not None:
+
+                for aligned_token in curr_amr_node.tokens:
+
+                    aligned_token_feats = self.token_to_feats(aligned_token)
+                    aligned_token_id = aligned_token_feats['id']
+
+                    G.add_edge(curr_amr_node_id, aligned_token_id,
+                               **{EdgeAttrs.label: EdgeTypes.amr_aligned_token,
+                                  EdgeAttrs.edge_type: EdgeTypes.amr_aligned_token})
+
+            # iterate over child nodes
+            for i, child_amr_node in enumerate(curr_amr_node._children):
+
+                child_amr_node_feats = self.amr_node_to_feats(child_amr_node)
+                child_amr_node_id = child_amr_node_feats['id']
+
+                if child_amr_node_id not in visited:
+
+                    G.add_node(child_amr_node_id, **{k: v for k, v in child_amr_node_feats.items() if type(v) == str})
+
+                    G.add_edge(curr_amr_node_id, child_amr_node_id,
+                               **{EdgeAttrs.label: json.loads(curr_amr_node._outgoing_amr_rels)[i],
+                                  AMREdgeAttrs.amr_relation: json.loads(curr_amr_node._outgoing_amr_rels)[i],
+                                  EdgeAttrs.edge_type: EdgeTypes.amr})
+
+                    visited.append(child_amr_node_id)
+                    queue.append(child_amr_node)
 
         return G
 
@@ -228,6 +296,24 @@ class GraphBuilder():
 
             ModalNodeAttrs.modal_node_type: mtra.modal_temporal_node_type,  # Event, Conceiver
             ModalNodeAttrs.modal_relation: mtra.relation_type  # pos, neg, pn
+        }
+
+        return feats
+
+    def amr_node_to_feats(self, amr_node):
+        '''
+        :param amr_node: serif.theory.amr_node.AMRNode
+        :return: dict
+        '''
+
+        feats = {
+
+            NodeAttrs.id: ID_DELIMITER.join([amr_node.varname, amr_node.content, amr_node.id]),
+            NodeAttrs.node_type: NodeTypes.amr,
+
+            AMRNodeAttrs.varname: amr_node.varname,
+            AMRNodeAttrs.content: amr_node.content
+
         }
 
         return feats

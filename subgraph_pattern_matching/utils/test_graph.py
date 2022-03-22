@@ -34,9 +34,9 @@ G.add_node('CONCEIVER<the Red Cross>', nodeType=NodeTypes.modal, modalNodeType='
 G.add_node('EVENT<missing>', nodeType=NodeTypes.modal, modalNodeType='Event')
 G.add_node('EVENT<landslide>', nodeType=NodeTypes.modal, modalNodeType='Event')
 
-G.add_edge('CONCEIVER<the Red Cross>', 'Cross', edgeType=EdgeTypes.constituent_token)
-G.add_edge('EVENT<missing>', 'missing', edgeType=EdgeTypes.constituent_token)
-G.add_edge('EVENT<landslide>', 'landslide', edgeType=EdgeTypes.constituent_token)
+G.add_edge('CONCEIVER<the Red Cross>', 'Cross', edgeType=EdgeTypes.modal_constituent_token)
+G.add_edge('EVENT<missing>', 'missing', edgeType=EdgeTypes.modal_constituent_token)
+G.add_edge('EVENT<landslide>', 'landslide', edgeType=EdgeTypes.modal_constituent_token)
 
 # # TODO activating these will make the matching not work -- adding edges this way must eliminate node info
 # G.add_edge('CONCEIVER<the Red Cross>', 'EVENT<missing>', edgeType=EdgeTypes.modal)
