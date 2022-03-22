@@ -22,6 +22,11 @@ DOC=L0C04958I
 SERIFXML=/nfs/mercury-13/u124/dzajic/aida/mtdp/output/mtdp.LDC2021E11.20220117/$DOC.rsd.xml
 WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
 
+DOC=cnn_3000084273
+SERIFXML=/nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/modal.serifxml.with_amr/$DOC.xml
+WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
+
+
 # PYTHONPATH=$TEXTOPEN python $SGPM/extract_claims.py -i $SERIFXML -v
 mkdir -p $WORKSPACE
-PYTHONPATH=$TEXTOPEN python $SGPM/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
+PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE

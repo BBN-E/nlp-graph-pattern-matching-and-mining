@@ -24,10 +24,15 @@ def graph_view(serif_doc, workspace):
         H = GB.syntactic_dependency_parse_to_networkx(sentence)
         GV.prepare_sdp_networkx_for_visualization(H, root_level=4)
         GV.visualize_networkx_graph(H, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)))
+        K = GB.amr_parse_to_networkx(sentence)
+        GV.prepare_amr_networkx_for_visualization(K, root_level=4)
+        GV.visualize_networkx_graph(K, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)))
         F = GV.filter_mdp_networkx_by_sentence(G, H)
         GV.visualize_networkx_graph(F, os.path.join(workspace,"mdp_{:02d}_graph.html".format(i)))
-        J = nx.algorithms.operators.compose(F,H)
-        GV.visualize_networkx_graph(J, os.path.join(workspace,"compose_{:02d}_graph.html".format(i)))
+        J = nx.algorithms.operators.compose(F,K)
+        GV.visualize_networkx_graph(J, os.path.join(workspace,"amr_compose_{:02d}_graph.html".format(i)))
+        L = nx.algorithms.operators.compose(F,H)
+        GV.visualize_networkx_graph(L, os.path.join(workspace,"compose_{:02d}_graph.html".format(i)))
 
 
 def main(args):

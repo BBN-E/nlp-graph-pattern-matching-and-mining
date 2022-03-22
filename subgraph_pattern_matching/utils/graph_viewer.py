@@ -85,6 +85,12 @@ class GraphViewer:
             G.nodes[node]['color'] = "blue"
             G.nodes[node]['label'] = self.token_node_label(G,node)
 
+    def prepare_amr_networkx_for_visualization (self, G, root_level=0):
+        self.prepare_networkx_for_visualization(G, root_level=root_level)
+        for node in G.nodes:
+            G.nodes[node]['color'] = "orange"
+            G.nodes[node]['label'] = self.token_node_label(G,node)
+
 
     def prepare_networkx_for_visualization (self, G, root_level=0):
         roots = [x for x in G if len(G.in_edges(x)) == 0]
