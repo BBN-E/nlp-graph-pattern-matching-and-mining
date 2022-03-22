@@ -22,3 +22,11 @@ def edge_syntactic_relation_match(e1, e2):
 
 def edge_modal_and_syntactic_relation_match(e1, e2):
     return edge_modal_relation_match(e1, e2) and edge_syntactic_relation_match(e1, e2)
+
+def edge_amr_relation_match(e1, e2):
+    if not edge_type_match(e1, e2):
+        return False
+    if ((AMREdgeAttrs.amr_relation in e1) and (AMREdgeAttrs.amr_relation not in e2)) or \
+       ((AMREdgeAttrs.amr_relation in e2) and (AMREdgeAttrs.amr_relation not in e1)):
+        return True  # if one of the edges is underspecified in amr_relation, then the amr_relation match
+    return e1.get(AMREdgeAttrs.amr_relation, None) == e2.get(AMREdgeAttrs.amr_relation, None)  # :arg0, :purpose etc.

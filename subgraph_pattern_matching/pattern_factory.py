@@ -21,7 +21,8 @@ class PatternFactory():
 
         self.basic_patterns = {'grounded_conceiver_event_edge': self.grounded_conceiver_event_edge_pattern}
 
-        self.amr_patterns = self.create_propbank_frames_patterns()
+        # self.amr_patterns = self.create_propbank_frames_patterns()
+        self.amr_patterns = {'person_says_x_pattern': self.person_says_x_pattern}
 
     ######################################################
     #                MDP + DP Patterns                   #
@@ -295,3 +296,23 @@ class PatternFactory():
             pb_frame_to_nx_pattern[pb_frame] = lambda: (G, node_amr_match, None)
 
         return pb_frame_to_nx_pattern
+
+    def person_says_x_pattern(self):
+        '''
+        1) "John says that Mary is sad."
+        2) "Mary is sad, according to John."
+
+        Both (1) and (2) receive identical AMR parses with "say-01" at the root, and an :arg0 of type "person"
+        '''
+
+        G = nx.DiGraph()
+
+        G.add_node("say-01", **{NodeAttrs.node_type: NodeTypes.amr,
+                                AMRNodeAttrs.content: "say-01"})
+        G.add_node("person", **{NodeAttrs.node_type: NodeTypes.amr,
+                                AMRNodeAttrs.content: "person"})
+
+        G.add_edge("say-01", "person", **{EdgeAttrs.edge_type: EdgeTypes.amr,
+                                          AMREdgeAttrs.amr_relation: ":arg0"})
+
+        return G, node_amr_match, edge_amr_relation_match
