@@ -1,6 +1,7 @@
 import networkx
 
-from constants import PatternTokenNodeIDs
+from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
+
 
 def is_ancestor(match_node_id_to_pattern_node_id, document_graph,
                 ancestor_id=PatternTokenNodeIDs.CCOMP_TOKEN_NODE_ID,

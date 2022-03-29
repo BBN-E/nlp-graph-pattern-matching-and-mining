@@ -1,6 +1,38 @@
 import networkx as nx
 
-from constants import *
+# pattern constants
+from constants.pattern.id.pattern_node_ids import PatternNodeIDs
+from constants.pattern.id.pattern_modal_node_ids import PatternModalNodeIDs
+from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
+
+from constants.pattern.node.pattern_nodes import PatternNodes
+from constants.pattern.node.pattern_amr_nodes import PatternAMRNodes
+from constants.pattern.node.pattern_modal_nodes import PatternModalNodes
+from constants.pattern.node.pattern_token_nodes import PatternTokenNodes
+
+from constants.pattern.edge.pattern_edges import PatternEdges
+from constants.pattern.node.pattern_nodes import PatternNodes
+from constants.pattern.node.pattern_amr_nodes import PatternAMRNodes
+from constants.pattern.node.pattern_modal_nodes import PatternModalNodes
+from constants.pattern.node.pattern_token_nodes import PatternTokenNodes
+
+# common constants
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.edge.amr_aligned_token_edge_attrs import AMRAlignedTokenEdgeAttrs
+from constants.common.attrs.edge.amr_edge_attrs import AMREdgeAttrs
+from constants.common.attrs.edge.modal_constitutent_token_edge_attrs import ModalConstituentTokenEdgeAttrs
+from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.types.node_types import NodeTypes
+
+
 from match_utils.node_match_functions import *
 from match_utils.edge_match_functions import *
 

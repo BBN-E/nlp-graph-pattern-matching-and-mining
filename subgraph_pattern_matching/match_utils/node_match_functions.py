@@ -1,4 +1,7 @@
-from constants import *
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 
 
 def node_type_match(n1, n2):
@@ -9,7 +12,6 @@ def node_type_match(n1, n2):
     '''
 
     return n1[NodeAttrs.node_type] == n2[NodeAttrs.node_type]  # modal, token
-
 
 def node_attr_match(n1, n2, attr):
     '''
@@ -28,14 +30,12 @@ def node_attr_match(n1, n2, attr):
     # TODO is "ε" epsilon char usable in all settings?
     return n1.get(attr, "ε") in set(n2.get(attr, "ε").split("|"))  # permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
 
-
 def node_multiple_attrs_match(*match_fns):
 
     def node_multiple_attrs_match_fn(n1, n2):
         return all(match_fn(n1, n2) for match_fn in match_fns)
 
     return node_multiple_attrs_match_fn
-
 
 #######################################################
 #######   SINGLE ATTR NODE MATCHING FUNCTIONS   #######
