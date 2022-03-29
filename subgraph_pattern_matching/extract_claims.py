@@ -9,7 +9,7 @@ import serifxml3
 from graph_builder import GraphBuilder
 from pattern_factory import PatternFactory
 from match_wrapper import MatchWrapper, MatchCorpus
-from constants import PatternTokenNodeIDs
+from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 
 from utils.timer import timer
 

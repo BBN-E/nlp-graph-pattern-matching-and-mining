@@ -1,6 +1,6 @@
 from .pattern_nodes import PatternNodes
 
-from constants.pattern.id.pattern_modal_node_ids import PatternTokenNodeIDs
+from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 from constants.common.types.node_types import NodeTypes
