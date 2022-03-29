@@ -9,7 +9,21 @@ from serif.theory.event_mention import EventMention
 from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
-from constants import *
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.edge.amr_aligned_token_edge_attrs import AMRAlignedTokenEdgeAttrs
+from constants.common.attrs.edge.amr_edge_attrs import AMREdgeAttrs
+from constants.common.attrs.edge.modal_constitutent_token_edge_attrs import ModalConstituentTokenEdgeAttrs
+from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.types.node_types import NodeTypes
+
 from utils.verify_graph_compliance import verify_graph_compliance
 
 

@@ -1,0 +1,4 @@
+
+class PatternNodeIDs():
+
+    pass

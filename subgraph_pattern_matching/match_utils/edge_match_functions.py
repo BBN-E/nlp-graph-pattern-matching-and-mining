@@ -1,4 +1,9 @@
-from constants import *
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.edge.amr_aligned_token_edge_attrs import AMRAlignedTokenEdgeAttrs
+from constants.common.attrs.edge.amr_edge_attrs import AMREdgeAttrs
+from constants.common.attrs.edge.modal_constitutent_token_edge_attrs import ModalConstituentTokenEdgeAttrs
+from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 
 
 def edge_type_match(e1, e2):

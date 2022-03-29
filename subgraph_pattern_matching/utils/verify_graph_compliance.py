@@ -1,10 +1,4 @@
-
-from constants import NodeTypes, EdgeTypes, \
-    NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
-    EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs, \
-    PatternTokenNodes, PatternModalNodes, PatternEdges, \
-    PatternTokenNodeIDs, PatternModalNodeIDs
-
+from constants.common.attrs.node.node_attrs import NodeAttrs
 
 def verify_graph_compliance(G):
     '''ensure graph has desired attributes'''
