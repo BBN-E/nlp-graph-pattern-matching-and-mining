@@ -2,7 +2,7 @@
 
 Using subgraph pattern matching over compositions of multifarious linguistic parses to extract meaningful knowledge elements. 
 
-Requires `networkx` to be installed in the environment.
+Requires `networkx` and `penman` (for matching over AMR graphs) to be installed in the environment.
 
 ```
 PYTHONPATH=<TEXT_OPEN_PYTHONPATH> \
