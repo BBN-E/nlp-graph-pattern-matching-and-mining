@@ -24,9 +24,11 @@ WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-patte
 
 DOC=cnn_3000084273
 SERIFXML=/nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/modal.serifxml.with_amr/$DOC.xml
+SERIFXML_LIST=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/serifxml_with_amr.list
 WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
 
 
 # PYTHONPATH=$TEXTOPEN python $SGPM/extract_claims.py -i $SERIFXML -v
 mkdir -p $WORKSPACE
-PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
+# PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
+PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -l -i $SERIFXML_LIST -w $WORKSPACE
