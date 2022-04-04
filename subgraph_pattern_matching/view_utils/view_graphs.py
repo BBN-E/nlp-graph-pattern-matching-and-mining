@@ -24,40 +24,54 @@ def graph_view(serif_doc, workspace):
     GB = GraphBuilder()
     GV = GraphViewer()
 
-    G = GB.modal_dependency_parse_to_networkx(serif_doc)
-    GV.prepare_mdp_networkx_for_visualization(G)
-    GV.visualize_networkx_graph(G, os.path.join(workspace,"mdp_graph.html"))
+    mdp_graph = GB.modal_dependency_parse_to_networkx(serif_doc)
+    GV.prepare_mdp_networkx_for_visualization(mdp_graph)
+    GV.visualize_networkx_graph(mdp_graph, os.path.join(workspace,"mdp_graph.html"))
 
     for i, sentence in enumerate(serif_doc.sentences):
-        H = GB.syntactic_dependency_parse_to_networkx(sentence)
-        GV.prepare_sdp_networkx_for_visualization(H, root_level=4)
-        GV.visualize_networkx_graph(H, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)))
-        K = GB.amr_parse_to_networkx(sentence)
-        GV.prepare_amr_networkx_for_visualization(K, root_level=0)
-        GV.visualize_networkx_graph(K, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)),
+        sdp_graph = GB.syntactic_dependency_parse_to_networkx(sentence)
+        GV.prepare_sdp_networkx_for_visualization(sdp_graph, root_level=0)
+        GV.visualize_networkx_graph(sdp_graph, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)),
                                     sentence_text=sentence.text)
 
-        N = GB.token_to_networkx(sentence)
-        GV.prepare_tok_networkx_for_visualization(N, root_level=0)
-        GV.visualize_networkx_graph(N, os.path.join(workspace,"tok_{:02d}_graph.html".format(i)))
-
-        K_max_level = GV.get_max_level(K)
-        N_max_level = GV.get_max_level(N)
-        GV.invert_node_levels(K)
-        GV.adjust_level(K, N_max_level+1)
-
-        O = nx.algorithms.compose(K,N)
-        GV.visualize_networkx_graph(O, os.path.join(workspace,"amr_tok_{:02d}_graph.html".format(i)),
+        amr_graph = GB.amr_parse_to_networkx(sentence)
+        GV.prepare_amr_networkx_for_visualization(amr_graph, root_level=0)
+        GV.visualize_networkx_graph(amr_graph, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)),
                                     sentence_text=sentence.text)
 
-        F = GV.filter_mdp_networkx_by_sentence(G, H)
-        GV.visualize_networkx_graph(F, os.path.join(workspace,"mdp_{:02d}_graph.html".format(i)))
-        # J = nx.algorithms.operators.compose(F,K)
-        # GV.visualize_networkx_graph(J, os.path.join(workspace,"mdp_amr_compose_{:02d}_graph.html".format(i)))
-        L = nx.algorithms.operators.compose(F,H)
-        GV.visualize_networkx_graph(L, os.path.join(workspace,"mdp_sdp_compose_{:02d}_graph.html".format(i)))
-        # M = nx.algorithms.operators.compose(L,K)
-        # GV.visualize_networkx_graph(M, os.path.join(workspace,"all_compose_{:02d}_graph.html".format(i)))
+        tok_graph = GB.token_to_networkx(sentence)
+        GV.prepare_tok_networkx_for_visualization(tok_graph, root_level=0)
+        GV.visualize_networkx_graph(tok_graph, os.path.join(workspace,"tok_{:02d}_graph.html".format(i)))
+
+        mdp_filter = GV.filter_mdp_networkx_by_sentence(mdp_graph, tok_graph)
+        GV.visualize_networkx_graph(mdp_filter, os.path.join(workspace,"mdp_{:02d}_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+
+        mdp_filter_max_level = GV.get_max_level(mdp_filter)
+        GV.adjust_level(sdp_graph, mdp_filter_max_level)
+        mdp_sdp_graph = nx.algorithms.operators.compose(mdp_filter, sdp_graph)
+        GV.visualize_networkx_graph(mdp_sdp_graph,
+                                    os.path.join(workspace,"mdp_sdp_compose_{:02d}_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+
+
+        # To show the tokens in surface string order, invert the AMR graph, push the AMR graph down
+        # so it doesn't overlap with the token graph. Compose them and display
+        amr_graph_max_level = GV.get_max_level(amr_graph)
+        tok_graph_max_level = GV.get_max_level(tok_graph)
+        GV.invert_node_levels(amr_graph)
+        GV.adjust_level(amr_graph, tok_graph_max_level+1)
+        amr_tok_graph = nx.algorithms.operators.compose(amr_graph, tok_graph)
+        GV.visualize_networkx_graph(amr_tok_graph,
+                                    os.path.join(workspace,"amr_tok_{:02d}_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+        # To show a nicer version of the AMR graph, but with the tokens out of order, invert
+        # the composed graph
+        GV.invert_node_levels(amr_tok_graph)
+        GV.visualize_networkx_graph(amr_tok_graph,
+                                    os.path.join(workspace,"amr_tok_{:02d}_invert_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+
 
 
 def amr_print_interesting_alignments(serif_doc, ORG):
