@@ -8,9 +8,14 @@ import penman
 from penman import surface
 from penman.surface import Alignment
 
-from constants import NodeTypes, EdgeTypes, \
-    NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
-    EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
+from constants.common.types.node_types import NodeTypes
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 from graph_builder import GraphBuilder
 from graph_viewer import GraphViewer
@@ -28,14 +33,31 @@ def graph_view(serif_doc, workspace):
         GV.prepare_sdp_networkx_for_visualization(H, root_level=4)
         GV.visualize_networkx_graph(H, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)))
         K = GB.amr_parse_to_networkx(sentence)
-        GV.prepare_amr_networkx_for_visualization(K, root_level=4)
-        GV.visualize_networkx_graph(K, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)))
+        GV.prepare_amr_networkx_for_visualization(K, root_level=0)
+        GV.visualize_networkx_graph(K, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+
+        N = GB.token_to_networkx(sentence)
+        GV.prepare_tok_networkx_for_visualization(N, root_level=0)
+        GV.visualize_networkx_graph(N, os.path.join(workspace,"tok_{:02d}_graph.html".format(i)))
+
+        K_max_level = GV.get_max_level(K)
+        N_max_level = GV.get_max_level(N)
+        GV.invert_node_levels(K)
+        GV.adjust_level(K, N_max_level+1)
+
+        O = nx.algorithms.compose(K,N)
+        GV.visualize_networkx_graph(O, os.path.join(workspace,"amr_tok_{:02d}_graph.html".format(i)),
+                                    sentence_text=sentence.text)
+
         F = GV.filter_mdp_networkx_by_sentence(G, H)
         GV.visualize_networkx_graph(F, os.path.join(workspace,"mdp_{:02d}_graph.html".format(i)))
-        J = nx.algorithms.operators.compose(F,K)
-        GV.visualize_networkx_graph(J, os.path.join(workspace,"amr_compose_{:02d}_graph.html".format(i)))
+        # J = nx.algorithms.operators.compose(F,K)
+        # GV.visualize_networkx_graph(J, os.path.join(workspace,"mdp_amr_compose_{:02d}_graph.html".format(i)))
         L = nx.algorithms.operators.compose(F,H)
-        GV.visualize_networkx_graph(L, os.path.join(workspace,"compose_{:02d}_graph.html".format(i)))
+        GV.visualize_networkx_graph(L, os.path.join(workspace,"mdp_sdp_compose_{:02d}_graph.html".format(i)))
+        # M = nx.algorithms.operators.compose(L,K)
+        # GV.visualize_networkx_graph(M, os.path.join(workspace,"all_compose_{:02d}_graph.html".format(i)))
 
 
 def amr_print_interesting_alignments(serif_doc, ORG):
@@ -121,8 +143,8 @@ def main(args):
     for serifxml_path in serifxml_paths:
         print(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        # graph_view(serif_doc, args.workspace)
-        amr_print(serif_doc, ORG)
+        graph_view(serif_doc, args.workspace)
+        # amr_print(serif_doc, ORG)
         # amr_print_interesting_alignments(serif_doc, ORG)
 
 if __name__ == '__main__':

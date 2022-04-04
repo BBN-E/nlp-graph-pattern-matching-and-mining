@@ -22,13 +22,18 @@ DOC=L0C04958I
 SERIFXML=/nfs/mercury-13/u124/dzajic/aida/mtdp/output/mtdp.LDC2021E11.20220117/$DOC.rsd.xml
 WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
 
-DOC=cnn_3000084273
+# DOC=cnn_3000084273
+DOC=foxnews_71348028
 SERIFXML=/nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/modal.serifxml.with_amr/$DOC.xml
 SERIFXML_LIST=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/serifxml_with_amr.list
 WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
 
+# DOC=penn_treebank_brackets
+# SERIFXML=/nfs/raid66/u11/users/brozonoy-ad/mtdp_runs/output_serifxml/$DOC.xml
+# WORKSPACE=/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/workspace/html.$DOC
+
 
 # PYTHONPATH=$TEXTOPEN python $SGPM/extract_claims.py -i $SERIFXML -v
 mkdir -p $WORKSPACE
-# PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
-PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -l -i $SERIFXML_LIST -w $WORKSPACE
+PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -i $SERIFXML -w $WORKSPACE
+# PYTHONPATH=$TEXTOPEN:$SGPM python $SGPM/utils/test_graph_viewer.py -l -i $SERIFXML_LIST -w $WORKSPACE
