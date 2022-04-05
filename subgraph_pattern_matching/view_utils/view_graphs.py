@@ -18,7 +18,7 @@ from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 from graph_builder import GraphBuilder
-from graph_viewer import GraphViewer
+from graph_viewer import GraphViewer, token_sequence_to_networkx
 
 def graph_view(serif_doc, workspace):
     GB = GraphBuilder()
@@ -39,7 +39,7 @@ def graph_view(serif_doc, workspace):
         GV.visualize_networkx_graph(amr_graph, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)),
                                     sentence_text=sentence.text)
 
-        tok_graph = GB.token_to_networkx(sentence)
+        tok_graph = token_sequence_to_networkx(sentence)
         GV.prepare_tok_networkx_for_visualization(tok_graph, root_level=0)
         GV.visualize_networkx_graph(tok_graph, os.path.join(workspace,"tok_{:02d}_graph.html".format(i)))
 
