@@ -221,10 +221,10 @@ class GraphBuilder():
 
         return G
 
-    def token_to_networkx(self, sentence):
+    def token_sequence_to_networkx(self, sentence):
         '''
         :param serif_sentence: serif.theory.sentence.Sentence
-        :return: networkx.classes.digraph.DiGraph
+        :return: networkx.classes.digraph.DiGraph. Root node with token children in surface string order
         '''
         G = nx.DiGraph()
         
