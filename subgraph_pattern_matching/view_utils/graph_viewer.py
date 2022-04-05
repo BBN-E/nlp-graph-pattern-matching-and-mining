@@ -11,9 +11,14 @@ from serif.theory.event_mention import EventMention
 from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
-from constants import NodeTypes, EdgeTypes, \
-    NodeAttrs, TokenNodeAttrs, ModalNodeAttrs, \
-    EdgeAttrs, SyntaxEdgeAttrs, ModalEdgeAttrs
+from constants.common.types.node_types import NodeTypes
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 
 ID_DELIMITER = "_"
@@ -23,7 +28,7 @@ ID_DELIMITER = "_"
 class GraphViewer:
 
     def mdp_node_label (self, G, node):
-        if ModalNodeAttrs.special_name in G.nodes[node]:
+        if G.nodes[node][ModalNodeAttrs.special_name] != 'Null':
             label = G.nodes[node][ModalNodeAttrs.special_name]
         elif ModalNodeAttrs.modal_node_type in G.nodes[node]:
             label = G.nodes[node][ModalNodeAttrs.modal_node_type]
@@ -85,6 +90,58 @@ class GraphViewer:
             G.nodes[node]['color'] = "blue"
             G.nodes[node]['label'] = self.token_node_label(G,node)
 
+    def prepare_tok_networkx_for_visualization (self, G, root_level=0):
+        self.prepare_networkx_for_visualization(G, root_level=root_level)
+        # self.invert_node_levels(G)
+        for node in G.nodes:
+            G.nodes[node]['color'] = "blue"
+            G.nodes[node]['label'] = self.token_node_label(G,node)
+        
+
+
+    def prepare_amr_networkx_for_visualization (self, G, root_level=0):
+        self.prepare_networkx_for_visualization(G, root_level=root_level)
+        for node in G.nodes:
+            node_type = G.nodes[node].get(NodeAttrs.node_type, None)
+            if node_type == NodeTypes.amr:
+                G.nodes[node]['color'] = "orange"
+                G.nodes[node]['label'] = self.token_node_label(G,node)
+            else:
+                G.nodes[node]['color'] = "blue"
+        for edge in G.edges:
+            edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
+            if edge_type == EdgeTypes.amr_aligned_token:
+                G.edges[edge]['color'] = "purple"
+        # self.invert_node_levels(G)
+
+
+    def get_max_level(self, G):
+        max_level = 0
+        for node in G.nodes:
+            l = G.nodes[node]['level']
+            if l >= max_level:
+                max_level = l
+        return max_level
+
+
+    def invert_node_levels(self, G):
+        min_level = 1000000
+        max_level = 0
+        for node in G.nodes:
+            l = G.nodes[node]['level']
+            if l <= min_level:
+                min_level = l
+            if l >= max_level:
+                max_level = l
+        for node in G.nodes:
+            l = G.nodes[node]['level']
+            G.nodes[node]['level'] = max_level - l + min_level
+
+            
+    def adjust_level(self, G, n):
+        for node in G.nodes:
+            l = G.nodes[node]['level']
+            G.nodes[node]['level'] = l + n
 
     def prepare_networkx_for_visualization (self, G, root_level=0):
         roots = [x for x in G if len(G.in_edges(x)) == 0]
@@ -99,8 +156,11 @@ class GraphViewer:
             self.add_level_to_syntactic_dependency_parse (G, child, level=level+1)
 
 
-    def visualize_networkx_graph(self, G, html_file="graph.html"):
-        net = Network(height='1000px', width='1800px', directed=True, layout=True)
+    def visualize_networkx_graph(self, G, html_file="graph.html", sentence_text=None):
+        if sentence_text is not None:
+            net = Network(height='1000px', width='1800px', directed=True, layout=True, heading=sentence_text)
+        else:
+            net = Network(height='1000px', width='1800px', directed=True, layout=True)
         net.from_nx(G)
         net.toggle_physics(False)
 
@@ -140,3 +200,22 @@ class GraphViewer:
         new_options = "var options = {}".format(json_dump)
         # print(new_options)
         net.set_options(new_options)
+
+# Support function to build a simple graph of tokens in a sentence.
+# Consists of root node with token children in surface string order
+def token_sequence_to_networkx(sentence):
+    '''
+    :param serif_sentence: serif.theory.sentence.Sentence
+    :return: networkx.classes.digraph.DiGraph. 
+    '''
+    G = nx.DiGraph()
+
+    # Root node
+    root_id = "Tokens"
+    G.add_node(root_id)
+    for token in sentence.token_sequence:
+        token_id = "{}__{}".format(token.text, token.id)
+        G.add_node(token_id)
+        G.add_edge(root_id,token_id)
+
+    return G
