@@ -216,7 +216,6 @@ class GraphBuilderTestCase(unittest.TestCase):
         )
 
 
-
     def test_dependency_parse_build(self):
 
         assert nx.algorithms.isomorphism.is_isomorphic(self.gold_syntax_nx_graph,
@@ -249,6 +248,24 @@ class GraphBuilderTestCase(unittest.TestCase):
                                                        edge_match=None)
 
 
+    def test_composition_does_not_lose_information(self):
+        '''
+        AMR, modal/temporal dependencies don't store token features in aligned token nodes.
+        Composition must ensure that empty token nodes get populated with features from full token nodes.
+        '''
+
+        assert self.gold_amr_nx_graph.nodes['thought'] == {}
+
+        assert nx.algorithms.operators.compose(self.gold_amr_nx_graph,
+                                               self.gold_token_nx_graph).nodes['thought'] == {'id': 'thought',
+                                                                                              'nodeType': 'token',
+                                                                                              'text': 'thought',
+                                                                                              'upos': 'VERB',
+                                                                                              'xpos': 'VBD',
+                                                                                              'indexInDoc': '0_9_9',
+                                                                                              'incomingDepRel': 'root'}
+
+
     def test_composed_graph_build(self):
 
         assert nx.algorithms.isomorphism.is_isomorphic(self.gold_G,
@@ -256,9 +273,6 @@ class GraphBuilderTestCase(unittest.TestCase):
                                                        node_match=None,
                                                        edge_match=None)
 
-
-    def test_composition_does_not_lose_information(self):
-        pass
 
 
 class SubgraphIsomorphismTestCase(unittest.TestCase):
