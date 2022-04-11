@@ -32,7 +32,7 @@ def prepare_patterns():
     return prepared_patterns
 
 @timer
-def extract_claims(serif_doc, prepared_patterns, visualize=False):
+def extract_patterns(serif_doc, prepared_patterns, visualize=False):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -86,7 +86,7 @@ def main(args):
     for serifxml_path in serifxml_paths:
         logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_claims(serif_doc, prepared_patterns, visualize=args.visualize))
+        all_matches.extend(extract_patterns(serif_doc, prepared_patterns, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
-    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/extract_claims.py \
+    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/driver.py \
     -i /nfs/raid66/u11/users/brozonoy-ad/modal_and_temporal_parsing/mtdp_data/lists/modal.serifxml.with_amr.all \
     -l
     '''

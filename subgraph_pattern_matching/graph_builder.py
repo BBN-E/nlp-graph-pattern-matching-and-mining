@@ -14,11 +14,13 @@ from constants.common.attrs.edge.amr_aligned_token_edge_attrs import AMRAlignedT
 from constants.common.attrs.edge.amr_edge_attrs import AMREdgeAttrs
 from constants.common.attrs.edge.modal_constitutent_token_edge_attrs import ModalConstituentTokenEdgeAttrs
 from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
+from constants.common.attrs.edge.temporal_edge_attrs import TemporalEdgeAttrs
 from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
 from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.temporal_node_attrs import TemporalNodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 
 from constants.common.types.edge_types import EdgeTypes
@@ -53,6 +55,7 @@ class GraphBuilder():
                 disconnected_tokens_digraph.add_node(token_id, **token_feats)
 
         document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
+        document_level_temporal_dependencies_graph = self.temporal_dependency_parse_to_networkx(serif_doc)
         sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
         sentence_level_amr_graphs = [self.amr_parse_to_networkx(s) for s in serif_doc.sentences]
 
@@ -60,6 +63,7 @@ class GraphBuilder():
         G = nx.algorithms.operators.compose_all(
                 [disconnected_tokens_digraph] + \
                 [document_level_modal_dependencies_graph] + \
+                [document_level_temporal_dependencies_graph] + \
                 sentence_level_dependency_syntax_graphs + \
                 sentence_level_amr_graphs
             )
@@ -87,7 +91,7 @@ class GraphBuilder():
         for parent_mtrm in mtrm_list:
 
             # create parent node
-            parent_mtrm_feats = self.modal_temporal_relation_mention_to_feats(parent_mtrm)
+            parent_mtrm_feats = self.modal_relation_mention_to_feats(parent_mtrm)
             parent_mtrm_id = parent_mtrm_feats['id']
             G.add_node(parent_mtrm_id, **{k:v for k,v in parent_mtrm_feats.items() if type(v)==str})
 
@@ -100,7 +104,7 @@ class GraphBuilder():
             for child_mtrm in parent_mtrm.children:
 
                 # create child node
-                child_mtrm_feats = self.modal_temporal_relation_mention_to_feats(child_mtrm)
+                child_mtrm_feats = self.modal_relation_mention_to_feats(child_mtrm)
                 child_mtrm_id = child_mtrm_feats['id']
                 G.add_node(child_mtrm_id, **{k:v for k,v in child_mtrm_feats.items() if type(v)==str})
 
@@ -115,6 +119,60 @@ class GraphBuilder():
                            **{EdgeAttrs.label: child_mtrm_feats[ModalNodeAttrs.modal_relation],
                               ModalEdgeAttrs.modal_relation: child_mtrm_feats[ModalNodeAttrs.modal_relation],
                               EdgeAttrs.edge_type: EdgeTypes.modal})
+
+        try:
+            assert nx.algorithms.dag.is_directed_acyclic_graph(G)
+        except AssertionError:
+            logging.warning("Cycle detected in MDP for %s" % serif_doc.id)
+            logging.warning(str(nx.algorithms.cycles.find_cycle(G)))
+
+        return G
+
+    def temporal_dependency_parse_to_networkx(self, serif_doc):
+
+        '''
+        :param serif_doc: serif.theory.document.Document
+        :return: networkx.classes.digraph.DiGraph
+        '''
+
+        G = nx.DiGraph()
+
+        if serif_doc.modal_temporal_relation_mention_set is None:
+            return G
+
+        mtrm_list = [m for m in serif_doc.modal_temporal_relation_mention_set if re.match("(.*)_time", m.node.model)]
+
+        for parent_mtrm in mtrm_list:
+
+            # create parent node
+            parent_mtrm_feats = self.temporal_relation_mention_to_feats(parent_mtrm)
+            parent_mtrm_id = parent_mtrm_feats['id']
+            G.add_node(parent_mtrm_id, **{k:v for k,v in parent_mtrm_feats.items() if type(v)==str})
+
+            # connect parent node to all of its tokens
+            parent_token_ids = [self.token_to_feats(t)['id'] for t in parent_mtrm_feats['tokens']]
+            G.add_edges_from(list(map(lambda t: (parent_mtrm_id, t), parent_token_ids)),
+                             **{EdgeAttrs.label: EdgeTypes.temporal_constituent_token,
+                                EdgeAttrs.edge_type: EdgeTypes.temporal_constituent_token})
+
+            for child_mtrm in parent_mtrm.children:
+
+                # create child node
+                child_mtrm_feats = self.temporal_relation_mention_to_feats(child_mtrm)
+                child_mtrm_id = child_mtrm_feats['id']
+                G.add_node(child_mtrm_id, **{k:v for k,v in child_mtrm_feats.items() if type(v)==str})
+
+                # connect child node to all of its tokens
+                child_token_ids = [self.token_to_feats(t)['id'] for t in child_mtrm_feats['tokens']]
+                G.add_edges_from(list(map(lambda t: (child_mtrm_id, t), child_token_ids)),
+                                 **{EdgeAttrs.label: EdgeTypes.temporal_constituent_token,
+                                    EdgeAttrs.edge_type: EdgeTypes.temporal_constituent_token})
+
+                # temporal dependency edge between parent and child nodes
+                G.add_edge(parent_mtrm_id, child_mtrm_id,
+                           **{EdgeAttrs.label: child_mtrm_feats[TemporalNodeAttrs.temporal_relation],
+                              TemporalEdgeAttrs.temporal_relation: child_mtrm_feats[TemporalNodeAttrs.temporal_relation],
+                              EdgeAttrs.edge_type: EdgeTypes.temporal})
 
         try:
             assert nx.algorithms.dag.is_directed_acyclic_graph(G)
@@ -237,7 +295,7 @@ class GraphBuilder():
 
         return feats
 
-    def modal_temporal_relation_mention_to_feats(self, mtrm):
+    def modal_relation_mention_to_feats(self, mtrm):
         '''
         :param mtrm: serif.theory.modal_temporal_relation_mention.ModalTemporalRelationMention
         :return: dict
@@ -314,6 +372,83 @@ class GraphBuilder():
 
         return feats
 
+    def temporal_relation_mention_to_feats(self, mtrm):
+        '''
+        :param mtrm: serif.theory.modal_temporal_relation_mention.ModalTemporalRelationMention
+        :return: dict
+        '''
+
+        mtra = mtrm.node  # modal_temporal_relation_argument
+
+        special_name = "Null"  # default "Null" value for regular mtra nodes (node_match functions will match if only one of the values is None)
+        mention = None
+        event_mention = None
+        value_mention = None
+        sentence = None
+        tokens = []
+
+        value_type = type(mtra.value)
+        if value_type == str:
+            special_name = mtra.value
+
+        elif value_type == EventMention:
+            event_mention = mtra.value
+            if event_mention.anchor_node is not None:
+                sentence = event_mention.sentence
+                start_token = event_mention.anchor_node.start_token
+                end_token = event_mention.anchor_node.end_token
+                tokens = sentence.token_sequence[start_token.index():end_token.index()+1]
+
+            else:
+                sentence = event_mention.sentence
+                start_token_index = event_mention.semantic_phrase_start
+                end_token_index = event_mention.semantic_phrase_end
+                tokens = sentence.token_sequence[start_token_index:end_token_index+1]
+
+        elif value_type == Mention:
+            mention = mtra.value
+            if mention.syn_node is not None:
+                sentence = mention.sentence
+                start_token = mention.syn_node.start_token
+                end_token = mention.syn_node.end_token
+                tokens = sentence.token_sequence[start_token.index():end_token.index()+1]
+
+            else:
+                sentence = mention.sentence
+                start_token = mention.start_token
+                end_token = mention.end_token
+                tokens = sentence.token_sequence[start_token.index():end_token.index()+1]
+
+        elif value_type == ValueMention:
+            value_mention = mtra.value
+
+            sentence = value_mention.sentence
+            start_token = value_mention.start_token
+            end_token = value_mention.end_token
+            tokens = sentence.token_sequence[start_token.index():end_token.index()+1]
+
+        else:
+            raise TypeError
+
+        feats = {
+
+            NodeAttrs.id: ID_DELIMITER.join([mtra.id]),  # TODO or mtrm.id + mtra.id ?
+            NodeAttrs.node_type: NodeTypes.temporal,
+
+            TemporalNodeAttrs.special_name: special_name,
+            TemporalNodeAttrs.mention: mention,
+            TemporalNodeAttrs.event_mention: event_mention,
+            TemporalNodeAttrs.value_mention: value_mention,
+
+            TemporalNodeAttrs.sentence: sentence,
+            TemporalNodeAttrs.tokens: tokens,
+
+            TemporalNodeAttrs.temporal_node_type: mtra.modal_temporal_node_type,  # Event, Timex
+            TemporalNodeAttrs.temporal_relation: mtra.relation_type  # before, after, overlap
+        }
+
+        return feats
+
     def amr_node_to_feats(self, amr_node):
         '''
         :param amr_node: serif.theory.amr_node.AMRNode
@@ -331,8 +466,3 @@ class GraphBuilder():
         }
 
         return feats
-
-    def visualize_networkx_graph(self, G):
-        from graph_viewer import GraphViewer
-        GV = GraphViewer()
-        GV.visualize_networkx_graph(G)
