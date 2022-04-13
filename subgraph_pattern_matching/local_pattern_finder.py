@@ -30,21 +30,29 @@ PARSE_TYPE_TO_EDGE_TYPES = {
 }
 
 
+PARSE_TYPE_COMBINATIONS = [
+    [ParseTypes.DP],
+    [ParseTypes.MDP],
+    [ParseTypes.TDP],
+    [ParseTypes.AMR],
+    [ParseTypes.DP, ParseTypes.MDP],
+    [ParseTypes.DP, ParseTypes.TDP],
+    [ParseTypes.DP, ParseTypes.AMR],
+    [ParseTypes.DP, ParseTypes.MDP, ParseTypes.TDP, ParseTypes.AMR]
+]
+
+
 class LocalPatternFinder():
 
     def __init__(self):
         pass
 
-    def return_k_hop_neighborhood_of_node(self,
-                                          G,
-                                          node,
-                                          k=1,
-                                          parse_types=[ParseTypes.DP],
-                                          search_direction=DAGSearchDirection.BOTH):
+
+    def return_k_hop_neighborhood_of_node(self, G, node_id, k=1, parse_types=[ParseTypes.DP], search_direction=DAGSearchDirection.BOTH):
         '''
 
         :param G: networkx.classes.digraph.DiGraph
-        :param node: str, source node id in G
+        :param node_id: str, source node id in G
         :param k: int, size of neighborhood
         :param parse_type: list[ParseTypes.X]
         :param search_direction: DAGSearchDirection.X
@@ -57,15 +65,15 @@ class LocalPatternFinder():
         #  node so we'll take the keys of that dictionary.
 
         if search_direction == DAGSearchDirection.BOTH:
-            down_nodes = set(nx.single_source_shortest_path(G, node, cutoff=k).keys())
-            up_nodes = set(nx.single_source_shortest_path(G.reverse(copy=True), node, cutoff=k).keys())
+            down_nodes = set(nx.single_source_shortest_path(G, node_id, cutoff=k).keys())
+            up_nodes = set(nx.single_source_shortest_path(G.reverse(copy=True), node_id, cutoff=k).keys())
             neighborhood_nodes = down_nodes.union(up_nodes)
 
         elif search_direction == DAGSearchDirection.DOWN:
-            neighborhood_nodes = set(nx.single_source_shortest_path(G, node, cutoff=k).keys())
+            neighborhood_nodes = set(nx.single_source_shortest_path(G, node_id, cutoff=k).keys())
 
         else: # search_direction == DAGSearchDirection.UP:
-            neighborhood_nodes = set(nx.single_source_shortest_path(G.reverse(copy=True), node, cutoff=k).keys())
+            neighborhood_nodes = set(nx.single_source_shortest_path(G.reverse(copy=True), node_id, cutoff=k).keys())
 
         # get subgraph induced by nodes in k-hop neighborhood of source node
         neighborhood_subgraph = G.subgraph(neighborhood_nodes)
@@ -97,19 +105,75 @@ class LocalPatternFinder():
         return edge_induced_subgraph
 
 
+    def grid_search(self,
+                    annotations,
+                    k_values=[1,2,3,4,5],
+                    parse_type_combinations=PARSE_TYPE_COMBINATIONS,
+                    search_directions=[DAGSearchDirection.DOWN, DAGSearchDirection.UP, DAGSearchDirection.BOTH]):
+        '''
+
+        :param annotations: list[annotation.annotation.Annotation]
+        :param k_values: list[int]
+        :param parse_type_combinations: list[list[ParseTypes.X]]
+        :param search_directions: list[DAGSearchDirections.X]
+
+        :return: {tup: list[networkx.classes.digraph.DiGraph]}
+        '''
+
+        config_to_annotation_subgraphs = dict()
+
+        # loop over k-hop neighborhood configurations
+        for k in k_values:
+            for parse_types in parse_type_combinations:
+                for search_direction in search_directions:
+
+                    config = (k, tuple(parse_types), search_direction)
+                    annotation_subgraphs_for_configuration = []
+
+                    # loop over annotations
+                    for ann in annotations:
+
+                        # if annotation consists of multiple tokens, compose their k-hop subgraphs
+                        token_k_hop_neighborhoods = []
+                        for token_node_id in ann.token_node_ids:
+
+                            token_k_hop_neighborhoods.append(
+                                self.return_k_hop_neighborhood_of_node(G=ann.networkx_graph,
+                                                                       node_id=token_node_id,
+                                                                       k=k,
+                                                                       parse_types=parse_types,
+                                                                       search_direction=search_direction))
+
+                            ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
+                            annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
+
+                    config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
+
+        return config_to_annotation_subgraphs
+
+
 if __name__ == '__main__':
-    from graph_builder import GraphBuilder
-    import serifxml3
 
-    serif_doc = serifxml3.Document("/nfs/raid66/u11/users/brozonoy-ad/mtdp_runs/universal_parse/output.amr/universal_sentence.xml")
+    # from graph_builder import GraphBuilder
+    # import serifxml3
+    #
+    # serif_doc = serifxml3.Document("/nfs/raid66/u11/users/brozonoy-ad/mtdp_runs/universal_parse/output.amr/universal_sentence.xml")
+    #
+    # GB = GraphBuilder()
+    # G = GB.serif_doc_to_networkx(serif_doc)
+    #
+    # LPF = LocalPatternFinder()
+    # # import pdb; pdb.set_trace()
+    #
+    # g = LPF.return_k_hop_neighborhood_of_node(G, 'smile__a12', k=5, parse_types=[ParseTypes.DP, ParseTypes.AMR], search_direction=DAGSearchDirection.BOTH)
+    # import pdb; pdb.set_trace()
+    #
+    # # LPF.return_kth_neighborhood_of_node(G, )
 
-    GB = GraphBuilder()
-    G = GB.serif_doc_to_networkx(serif_doc)
+    from annotation.ingestion.ingest_ner import IngestNER
+    conll_english_corpus = IngestNER().ingest_conll(language='english')  # annotation.annotation_corpus.AnnotationCorpus
 
     LPF = LocalPatternFinder()
-    # import pdb; pdb.set_trace()
+    config_to_annotation_subgraphs = LPF.grid_search(annotations=conll_english_corpus.train_annotations)
 
-    g = LPF.return_k_hop_neighborhood_of_node(G, 'smile__a12', k=5, parse_types=[ParseTypes.DP, ParseTypes.AMR], search_direction=DAGSearchDirection.BOTH)
     import pdb; pdb.set_trace()
-
-    # LPF.return_kth_neighborhood_of_node(G, )
