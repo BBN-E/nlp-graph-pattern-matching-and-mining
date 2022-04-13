@@ -145,9 +145,3 @@ class EventArgumentAnnotation(SimpleAnnotation):
 # class ClaimFrameAnnotation(FrameAnnotation):
 #
 #     _annotation_type = FrameAnnotationTypes.CLAIM_FRAME
-
-if __name__ == '__main__':
-    import networkx as nx
-    G = nx.DiGraph()
-    ma = MentionAnnotation(G, ['a', 'b', 'c'], 'PER')
-    import pdb; pdb.set_trace()
