@@ -75,6 +75,44 @@ class GraphBuilder():
 
         return G
 
+    def serif_doc_to_networkx_per_sentence(self, serif_doc):
+        '''
+        :param serif_doc: serif.theory.document.Document
+        :return: list[networkx.classes.digraph.DiGraph]
+        '''
+
+        return [self.serif_sentence_to_networkx(s) for s in serif_doc.sentences]
+
+    def serif_sentence_to_networkx(self, serif_sentence):
+        '''
+        :param serif_sentence: serif.theory.sentence.Sentence
+        :return: networkx.classes.digraph.DiGraph
+        '''
+
+        # make sure all the tokens in the sentence exist beforehand
+        disconnected_tokens_digraph = nx.DiGraph()
+        for token in serif_sentence.token_sequence:
+            token_feats = self.token_to_feats(token)
+            token_id = token_feats['id']
+            disconnected_tokens_digraph.add_node(token_id, **token_feats)
+
+        sentence_level_dependency_syntax_graph = self.syntactic_dependency_parse_to_networkx(serif_sentence)
+        sentence_level_amr_graph = self.amr_parse_to_networkx(serif_sentence)
+
+        # compose into one sentence-level networkx DiGraph
+        G = nx.algorithms.operators.compose_all(
+                [disconnected_tokens_digraph] + \
+                [sentence_level_dependency_syntax_graph] + \
+                [sentence_level_amr_graph]
+            )
+
+        if not nx.algorithms.dag.is_directed_acyclic_graph(G):
+            logging.warning("Cycle detected in graph for %s" % serif_sentence.id)
+            logging.warning(str(nx.algorithms.cycles.find_cycle(G)))
+        verify_graph_compliance(G)
+
+        return G
+
     def modal_dependency_parse_to_networkx(self, serif_doc):
         '''
         :param serif_doc: serif.theory.document.Document
@@ -200,7 +238,7 @@ class GraphBuilder():
 
         for i, token in enumerate(serif_sentence.token_sequence):
             if token.head == None:  # root token, can't be child
-                assert token.dep_rel == 'root'
+                assert token.dep_rel == 'root' or token.dep_rel is None
                 continue
 
             child_feats = self.token_to_feats(token)
