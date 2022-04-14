@@ -1,5 +1,6 @@
 from enum import Enum
 import networkx as nx
+from tqdm import tqdm
 
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
@@ -123,20 +124,19 @@ class LocalPatternFinder():
         config_to_annotation_subgraphs = dict()
 
         # loop over k-hop neighborhood configurations
-        for k in k_values:
-            for parse_types in parse_type_combinations:
-                for search_direction in search_directions:
+        for k in tqdm(k_values, desc='k-hop neighborgoods', position=0):
+            for parse_types in tqdm(parse_type_combinations, desc='parse type combinations', position=1, leave=False):
+                for search_direction in tqdm(search_directions, desc='search combinations', position=2, leave=False):
 
                     config = (k, tuple(parse_types), search_direction)
                     annotation_subgraphs_for_configuration = []
 
                     # loop over annotations
-                    for ann in annotations:
+                    for ann in tqdm(annotations, desc="annotations", position=3, leave=False):
 
                         # if annotation consists of multiple tokens, compose their k-hop subgraphs
                         token_k_hop_neighborhoods = []
                         for token_node_id in ann.token_node_ids:
-
                             token_k_hop_neighborhoods.append(
                                 self.return_k_hop_neighborhood_of_node(G=ann.networkx_graph,
                                                                        node_id=token_node_id,
@@ -144,9 +144,9 @@ class LocalPatternFinder():
                                                                        parse_types=parse_types,
                                                                        search_direction=search_direction))
 
-                            ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
-                            annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
-
+                        ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
+                        annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
+                        import pdb; pdb.set_trace()
                     config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
 
         return config_to_annotation_subgraphs
@@ -170,10 +170,17 @@ if __name__ == '__main__':
     #
     # # LPF.return_kth_neighborhood_of_node(G, )
 
-    from annotation.ingestion.ingest_ner import IngestNER
-    conll_english_corpus = IngestNER().ingest_conll(language='english')  # annotation.annotation_corpus.AnnotationCorpus
+    # from annotation.ingestion.ner_ingester import NERIngester
+    # conll_english_corpus = NERIngester().ingest_conll(language='english')  # annotation.annotation_corpus.AnnotationCorpus
+    #
+    # LPF = LocalPatternFinder()
+    # config_to_annotation_subgraphs = LPF.grid_search(annotations=conll_english_corpus.train_annotations)
+
+
+    from annotation.ingestion.event_ingester import EventIngester
+    ace_english_corpus = EventIngester().ingest_ace(language='english')  # annotation.annotation_corpus.AnnotationCorpus
 
     LPF = LocalPatternFinder()
-    config_to_annotation_subgraphs = LPF.grid_search(annotations=conll_english_corpus.train_annotations)
+    config_to_annotation_subgraphs = LPF.grid_search(annotations=ace_english_corpus.train_annotations, k_values=[1], parse_type_combinations=[[ParseTypes.DP]])
 
     import pdb; pdb.set_trace()

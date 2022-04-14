@@ -13,12 +13,12 @@ class SimpleAnnotationTypes(Enum):
     EVENT_ARGUMENT = 'EVENT_ARGUMENT'
 
 
-# class FrameAnnotationTypes(Enum):
-#
-#     EVENT_FRAME = 'EVENT_FRAME'
-#     ENTITY_ENTITY_RELATION = 'ENTITY_ENTITY_RELATION'
-#     EVENT_EVENT_RELATION = 'EVENT_EVENT_RELATION'
-#     CLAIM_FRAME = 'CLAIM_FRAME'
+class FrameAnnotationTypes(Enum):
+
+    EVENT_FRAME = 'EVENT_FRAME'
+    ENTITY_ENTITY_RELATION = 'ENTITY_ENTITY_RELATION'
+    EVENT_EVENT_RELATION = 'EVENT_EVENT_RELATION'
+    CLAIM_FRAME = 'CLAIM_FRAME'
 
 
 ##############################################################
@@ -65,25 +65,38 @@ class SimpleAnnotation(Annotation):
         return self._token_node_ids
 
 
-# class FrameAnnotation(Annotation):
-#
-#     @property
-#     @abstractmethod
-#     def frame(self):
-#         pass
-#
-#     @property
-#     @abstractmethod
-#     def components(self):
-#         pass
-#
-#     @property
-#     def all_tokens_as_flat_list(self):
-#         return [c.tokens for c in self.components]
-#
-#     @property
-#     def all_tokens_as_nested_list(self):
-#         return [t for c in self.components for t in c.tokens]
+class FrameAnnotation(Annotation):
+
+    def __init__(self, networkx_graph, annotation_type):
+        '''
+
+        :param networkx_graph: networkx.classes.digraph.DiGraph
+        :param annotation_type: annotation.FrameAnnotationTypes.X
+        '''
+
+        super().__init__(networkx_graph, annotation_type)
+
+    @property
+    @abstractmethod
+    def frame(self):
+        pass
+
+    @property
+    @abstractmethod
+    def components(self):
+        pass
+
+    @property
+    def token_node_ids(self):
+        return self.all_tokens_as_flat_list
+
+    @property
+    def all_tokens_as_nested_list(self):
+        return [c.token_node_ids for c in self.components]
+
+    @property
+    def all_tokens_as_flat_list(self):
+        return [t for c in self.components for t in c.token_node_ids]
 
 
 ##############################################################
@@ -126,22 +139,80 @@ class EventArgumentAnnotation(SimpleAnnotation):
 # ##############################################################
 # #####           FRAME ANNOTATION CLASSES
 # ##############################################################
-#
-# class EntityEntityRelationAnnotation(FrameAnnotation):
-#
-#     _annotation_type = FrameAnnotationTypes.ENTITY_ENTITY_RELATION
-#
-#
+
+
+class EntityEntityRelationAnnotation(FrameAnnotation):
+
+    def __init__(self, networkx_graph, left_entity, right_entity, relation_type):
+        super().__init__(networkx_graph, FrameAnnotationTypes.ENTITY_ENTITY_RELATION)
+        self._frame = self.EntityEntityRelationFrame(left_entity, right_entity)
+        self._components = [left_entity, right_entity]
+        self._relation_type = relation_type
+
+    class EntityEntityRelationFrame():
+        def __init__(self, left_entity, right_entity):
+            self.left_entity = left_entity
+            self.right_entity = right_entity
+
+    @property
+    def relation_type(self):
+        return self._relation_type
+
+    @property
+    def frame(self):
+        return self._frame
+
+    @property
+    def components(self):
+        return self._components
+
+
 # class EventEventRelationAnnotation(FrameAnnotation):
 #
-#     _annotation_type = FrameAnnotationTypes.EVENT_EVENT_RELATION
+#     def __init__(self, networkx_graph, left_event, right_event, relation_type):
+#         super().__init__(networkx_graph, FrameAnnotationTypes.EVENT_EVENT_RELATION)
+#         self._frame = self.EventEventRelationFrame(left_event, right_event)
+#         self._components = [left_event, right_event]
+#         self._relation_type = relation_type
 #
+#     class EventEventRelationFrame():
+#         def __init__(self, left_event, right_event):
+#             self.left_event = left_event
+#             self.right_event = right_event
 #
-# class EventFrameAnnotation(FrameAnnotation):
+#     @property
+#     def relation_type(self):
+#         return self._relation_type
 #
-#     _annotation_type = FrameAnnotationTypes.EVENT_FRAME
+#     @property
+#     def frame(self):
+#         return self._frame
 #
-#
+#     @property
+#     def components(self):
+#         return self._components
+
+
+class EventFrameAnnotation(FrameAnnotation):
+    def __init__(self, networkx_graph, event_annotation, arg_annotations):
+        super().__init__(networkx_graph, FrameAnnotationTypes.EVENT_FRAME)
+        self._frame = self.EventFrame(event_annotation, arg_annotations)
+        self._components = [event_annotation]
+        self._components.extend([a for a in arg_annotations])
+
+    class EventFrame():
+        def __init__(self, event, event_arguments):
+            self.event = event
+            self.event_arguments = event_arguments
+
+    @property
+    def frame(self):
+        return self._frame
+
+    @property
+    def components(self):
+        return self._components
+
 # class ClaimFrameAnnotation(FrameAnnotation):
 #
 #     _annotation_type = FrameAnnotationTypes.CLAIM_FRAME
