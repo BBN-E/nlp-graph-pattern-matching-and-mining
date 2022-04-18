@@ -83,7 +83,6 @@ class GraphViewer:
             self.add_node_and_ancestors (parent, Source, Target)
             Target.add_edge(parent,child,**Source.edges[edge])
 
-
     def prepare_sdp_networkx_for_visualization (self, G, root_level=0):
         self.prepare_networkx_for_visualization(G, root_level=root_level)
         for node in G.nodes:
@@ -96,8 +95,6 @@ class GraphViewer:
         for node in G.nodes:
             G.nodes[node]['color'] = "blue"
             G.nodes[node]['label'] = self.token_node_label(G,node)
-        
-
 
     def prepare_amr_networkx_for_visualization (self, G, root_level=0):
         self.prepare_networkx_for_visualization(G, root_level=root_level)
@@ -114,7 +111,6 @@ class GraphViewer:
                 G.edges[edge]['color'] = "purple"
         # self.invert_node_levels(G)
 
-
     def get_max_level(self, G):
         max_level = 0
         for node in G.nodes:
@@ -122,7 +118,6 @@ class GraphViewer:
             if l >= max_level:
                 max_level = l
         return max_level
-
 
     def invert_node_levels(self, G):
         min_level = 1000000
@@ -137,7 +132,6 @@ class GraphViewer:
             l = G.nodes[node]['level']
             G.nodes[node]['level'] = max_level - l + min_level
 
-            
     def adjust_level(self, G, n):
         for node in G.nodes:
             l = G.nodes[node]['level']
@@ -149,12 +143,10 @@ class GraphViewer:
         for root in roots:
             self.add_level_to_syntactic_dependency_parse (G, root, level=root_level)
 
-
     def add_level_to_syntactic_dependency_parse (self, G, node, level=0):
         G.nodes[node]['level'] = level
         for child in G[node]:
             self.add_level_to_syntactic_dependency_parse (G, child, level=level+1)
-
 
     def visualize_networkx_graph(self, G, html_file="graph.html", sentence_text=None):
         if sentence_text is not None:
@@ -172,7 +164,6 @@ class GraphViewer:
 
         print(html_file)
         net.write_html(html_file)
-
 
     def set_node_spacing(self, net, node_spacing, show_buttons=False):
         json_dict = {

@@ -5,6 +5,7 @@ from abc import abstractmethod
 
 from annotation.annotation import MentionAnnotation
 from annotation.annotation_corpus import AnnotationCorpus
+from tqdm import tqdm
 
 
 class Ingester(ABC):
@@ -65,7 +66,8 @@ class DocumentIngester(Ingester):
         serif_docs = []
         nx_graphs = []
         with open(serif_list, 'r') as serif_list_file:
-            for line in serif_list_file:
+            lines = serif_list_file.readlines()
+            for line in tqdm(lines, desc='building nx graphs from serif'):
                 serif_doc = serifxml3.Document(line.strip())
                 nx_graph = self.graph_builder.serif_doc_to_networkx(serif_doc)
                 nx_graphs.append(nx_graph)
