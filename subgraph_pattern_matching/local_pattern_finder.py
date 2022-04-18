@@ -146,7 +146,6 @@ class LocalPatternFinder():
 
                         ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
                         annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
-                        import pdb; pdb.set_trace()
                     config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
 
         return config_to_annotation_subgraphs
