@@ -13,7 +13,7 @@ use Getopt::Long;
 use Digest::MD5 qw(md5_hex);
 
 my $JOB_NAME;
-my $INPUT_DIR = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/aida_digraphs_test";
+my $INPUT_DIR = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/pattern-discovery-4-18/digraphs";
 my $PYTHON3= "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
 my $SCRIPT_LOCATION= "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching/clustering";
 my $num_batches = 50;
