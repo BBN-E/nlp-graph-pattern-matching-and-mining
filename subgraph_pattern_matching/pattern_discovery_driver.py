@@ -92,7 +92,7 @@ if __name__ == '__main__':
     '''
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--load_distance_matrices', action='store_true', help="load prexisting distance matrices")
+    parser.add_argument('--load_distance_matrices', action='store_true', help="load preexisting distance matrices")
     parser.add_argument('--save_digraphs', action='store_true', help='stop prematurely and save digraphs to use with runjobs script')
     parser.add_argument('-o', '--output', type=str, required=True, help='output directory to store patterns and intermediate files')
     args = parser.parse_args()

@@ -10,8 +10,20 @@ from view_utils.graph_viewer import GraphViewer
 from kneed import KneeLocator
 import tqdm
 
+
 class ClusterOptions(enum.Enum):
     DBSCAN = enum.auto()
+
+
+def main(args):
+
+    digraph_list = deserialize_pattern_graphs(args.digraphs_json, is_file_path=True)
+
+    with open(args.distance_matrix, 'rb') as f:
+        distance_matrix = np.load(f)
+        print(distance_matrix)
+
+    cluster_digraphs(digraph_list, distance_matrix, ClusterOptions[args.cluster_option])
 
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
@@ -169,13 +181,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--cluster_option', type=str, default="DBSCAN")
     args = parser.parse_args()
 
-    digraph_list = deserialize_pattern_graphs(args.digraphs_json, is_file_path=True)
-
-    with open(args.distance_matrix, 'rb') as f:
-        distance_matrix = np.load(f)
-        print(distance_matrix)
-
-    cluster_digraphs(digraph_list, distance_matrix, ClusterOptions[args.cluster_option])
+    main(args)
 
     # from os import listdir
     #
