@@ -28,8 +28,7 @@ def main(args):
 
         # find local patterns on train set
         LPF = LocalPatternFinder()
-        config_to_annotation_subgraphs = LPF.grid_search(annotations=aida_test_corpus.train_annotations, k_values=[2],
-                                                         parse_type_combinations=[[ParseTypes.MDP]])
+        config_to_annotation_subgraphs = LPF.grid_search(annotations=aida_test_corpus.train_annotations, k_values=[3])
 
         if not os.path.exists(digraph_dir):
             os.mkdir(digraph_dir)
@@ -43,8 +42,8 @@ def main(args):
                 f.write(json_dump)
 
         # TODO: ParseTypes not json serializable, figure out an encoding
-        # with open(os.path.join(args.output, "index_to_config.json"), 'w') as index_to_config_f:
-        #     json.dump(index_to_config_key, index_to_config_f)
+        with open(os.path.join(args.output, "index_to_config.json"), 'w') as index_to_config_f:
+            json.dump(index_to_config_key, index_to_config_f, default=str)
 
         return
 
@@ -52,9 +51,8 @@ def main(args):
 
     if args.load_distance_matrices:
         # load distance matrices and saved digraphs
-        # with open(os.path.join(args.output, "index_to_config.json")) as index_to_config_f:
-        #     index_to_config_key = json.load(index_to_config_f)
-        index_to_config_key = {1: 'Up', 2: "Both"} # temp
+        with open(os.path.join(args.output, "index_to_config.json")) as index_to_config_f:
+            index_to_config_key = json.load(index_to_config_f)
 
         config_to_annotation_subgraphs = {}
         for index, key in index_to_config_key.items():
@@ -80,8 +78,6 @@ def main(args):
         labels = cluster_digraphs(config_to_annotation_subgraphs[key], distance_matrix)
         cluster_num_to_cluster_pattern = get_pattern_from_clusters(config_to_annotation_subgraphs[key], distance_matrix, labels)
         print(cluster_num_to_cluster_pattern)
-
-
 
     # TODO: apply new patterns to hold out set, compare to existing annotations
 
