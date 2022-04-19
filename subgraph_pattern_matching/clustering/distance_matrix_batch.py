@@ -7,13 +7,7 @@ from networkx.readwrite import json_graph
 from distance_metrics import approximate_graph_edit_distance, create_distance_matrix
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--stripe', type=int, required=True)
-    parser.add_argument('--num_batches', type=int, required=True)
-    parser.add_argument('--output_file_path', type=str, required=True)
-    parser.add_argument('--input_graphs', type=str, required=True)
-    args = parser.parse_args()
+def main(args):
 
     with open(args.input_graphs, 'r') as f:
         node_link_data_list = json.load(f)
@@ -31,3 +25,13 @@ if __name__ == '__main__':
         np.save(f, distance_matrix)
 
 
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stripe', type=int, required=True)
+    parser.add_argument('--num_batches', type=int, required=True)
+    parser.add_argument('--output_file_path', type=str, required=True)
+    parser.add_argument('--input_graphs', type=str, required=True)
+    args = parser.parse_args()
+
+    main(args)
