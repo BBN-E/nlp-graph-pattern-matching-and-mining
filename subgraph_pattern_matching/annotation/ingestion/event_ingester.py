@@ -18,6 +18,11 @@ ACE_CHINESE = {
     'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/datasets_to_serifxml/default/ACE/ACE_Chinese/serifxmls/test/serifxmls.list',
 }
 
+AIDA_TEST = {
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.train',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.dev',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.test',
+}
 
 class EventIngester(DocumentIngester):
 
@@ -32,6 +37,9 @@ class EventIngester(DocumentIngester):
             ace_data = ACE_CHINESE
 
         return self.ingest_serifxmls_from_list(ace_data)
+
+    def ingest_aida(self):
+        return self.ingest_serifxmls_from_list(AIDA_TEST)
 
     def docs_to_annotations(self, serif_docs, nx_graphs):
 

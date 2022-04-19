@@ -124,7 +124,7 @@ class LocalPatternFinder():
         config_to_annotation_subgraphs = dict()
 
         # loop over k-hop neighborhood configurations
-        for k in tqdm(k_values, desc='k-hop neighborgoods', position=0):
+        for k in tqdm(k_values, desc='k-hop neighborhoods', position=0):
             for parse_types in tqdm(parse_type_combinations, desc='parse type combinations', position=1, leave=False):
                 for search_direction in tqdm(search_directions, desc='search combinations', position=2, leave=False):
 
@@ -145,6 +145,8 @@ class LocalPatternFinder():
                                                                        search_direction=search_direction))
 
                         ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
+                        if len(ann_k_hop_neighborhood) == 0:
+                            continue
                         annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
                     config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
 
@@ -177,9 +179,18 @@ if __name__ == '__main__':
 
 
     from annotation.ingestion.event_ingester import EventIngester
-    ace_english_corpus = EventIngester().ingest_ace(language='english')  # annotation.annotation_corpus.AnnotationCorpus
+    ace_english_corpus = EventIngester().ingest_aida()  # annotation.annotation_corpus.AnnotationCorpus
 
     LPF = LocalPatternFinder()
-    config_to_annotation_subgraphs = LPF.grid_search(annotations=ace_english_corpus.train_annotations, k_values=[1], parse_type_combinations=[[ParseTypes.DP]])
+    config_to_annotation_subgraphs = LPF.grid_search(annotations=ace_english_corpus.train_annotations,
+                                                     search_directions=[DAGSearchDirection.BOTH])
+
+    from io.io_utils import serialize_pattern_graphs
+
+    for i, (key, digraph_list) in enumerate(config_to_annotation_subgraphs.items()):
+        json_dump = serialize_pattern_graphs(digraph_list)
+
+        with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/aida_digraphs/digraphs_{}.json".format(i), 'w') as f:
+            f.write(json_dump)
 
     import pdb; pdb.set_trace()
