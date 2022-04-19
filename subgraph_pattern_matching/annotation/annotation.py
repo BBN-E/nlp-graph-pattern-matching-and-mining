@@ -77,14 +77,12 @@ class FrameAnnotation(Annotation):
         super().__init__(networkx_graph, annotation_type)
 
     @property
-    @abstractmethod
     def frame(self):
-        pass
+        return self._frame
 
     @property
-    @abstractmethod
     def components(self):
-        pass
+        return self._components
 
     @property
     def token_node_ids(self):
@@ -158,14 +156,6 @@ class EntityEntityRelationAnnotation(FrameAnnotation):
     def relation_type(self):
         return self._relation_type
 
-    @property
-    def frame(self):
-        return self._frame
-
-    @property
-    def components(self):
-        return self._components
-
 
 # class EventEventRelationAnnotation(FrameAnnotation):
 #
@@ -205,13 +195,6 @@ class EventFrameAnnotation(FrameAnnotation):
             self.event = event
             self.event_arguments = event_arguments
 
-    @property
-    def frame(self):
-        return self._frame
-
-    @property
-    def components(self):
-        return self._components
 
 # class ClaimFrameAnnotation(FrameAnnotation):
 #
