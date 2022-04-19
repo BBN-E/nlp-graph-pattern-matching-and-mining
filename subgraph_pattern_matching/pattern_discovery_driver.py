@@ -1,18 +1,17 @@
 import os, json
 import argparse
-import logging
-import networkx as nx
-from collections import defaultdict
 import numpy as np
 
 from local_pattern_finder import LocalPatternFinder, ParseTypes
 from annotation.ingestion.event_ingester import EventIngester
 from pattern_factory import serialize_pattern_graphs, deserialize_pattern_graphs
 from clustering.distance_metrics import create_distance_matrix, approximate_graph_edit_distance
-from cluster_patterns import cluster_digraphs, get_pattern_from_clusters
+from clustering.cluster_graphs import cluster_digraphs
+from clustering.generalize_patterns import get_pattern_from_clusters
 
 
-distance_matrices_dir = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/pattern-discovery-4-18/combined_matrices"
+distance_matrices_dir = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/pattern-discovery-4-19/combined_matrices"
+
 
 def main(args):
 
@@ -48,14 +47,17 @@ def main(args):
         return
 
     distance_matrices = {}
+    config_to_annotation_subgraphs = {}
 
     if args.load_distance_matrices:
         # load distance matrices and saved digraphs
         with open(os.path.join(args.output, "index_to_config.json")) as index_to_config_f:
             index_to_config_key = json.load(index_to_config_f)
 
-        config_to_annotation_subgraphs = {}
-        for index, key in index_to_config_key.items():
+        for index, list_key in enumerate(index_to_config_key):
+
+            list_key[1] = tuple(list_key[1])
+            key = tuple(list_key)
 
             digraph_path = os.path.join(digraph_dir, "digraphs_{}.json".format(index))
             digraph_list = deserialize_pattern_graphs(digraph_path, is_file_path=True)
@@ -75,6 +77,9 @@ def main(args):
     # cluster local patterns on train set, create representative pattern from each cluster
     for key, distance_matrix in distance_matrices.items():
         print(key)
+        # skip empty distance matrices
+        if not np.any(distance_matrix):
+            continue
         labels = cluster_digraphs(config_to_annotation_subgraphs[key], distance_matrix)
         cluster_num_to_cluster_pattern = get_pattern_from_clusters(config_to_annotation_subgraphs[key], distance_matrix, labels)
         print(cluster_num_to_cluster_pattern)

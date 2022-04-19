@@ -1,30 +1,6 @@
-from sklearn.cluster import DBSCAN
-from sklearn.neighbors import NearestNeighbors
-import matplotlib.pyplot as plt
-import enum
-import numpy as np
-import argparse
 import networkx as nx
-from pattern_factory import deserialize_pattern_graphs
+
 from view_utils.graph_viewer import GraphViewer
-from kneed import KneeLocator
-import tqdm
-
-
-class ClusterOptions(enum.Enum):
-    DBSCAN = enum.auto()
-
-
-def main(args):
-
-    digraph_list = deserialize_pattern_graphs(args.digraphs_json, is_file_path=True)
-
-    with open(args.distance_matrix, 'rb') as f:
-        distance_matrix = np.load(f)
-        print(distance_matrix)
-
-    cluster_digraphs(digraph_list, distance_matrix, ClusterOptions[args.cluster_option])
-
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
     # Returns the index of the largest graph in each cluster
@@ -106,6 +82,7 @@ def find_pattern_for_cluster(central_graph, graph_list):
 
 
 def get_pattern_from_clusters(digraphs_list, distance_matrix, labels):
+    # Find a representative pattern for each cluster of digraphs
 
     cluster_to_central_graph_index = get_central_graph_per_cluster(labels, distance_matrix)
 
@@ -132,62 +109,3 @@ def get_pattern_from_clusters(digraphs_list, distance_matrix, labels):
         cluster_num_to_cluster_pattern.append(cluster_pattern)
 
     return cluster_num_to_cluster_pattern
-
-
-def dbscan_cluster(distance_matrix):
-
-    # Finds elbow point of NearestNeighbors graph to find optimal epsilon value
-    neigh = NearestNeighbors(n_neighbors=2, metric="precomputed")
-    nbrs = neigh.fit(distance_matrix)
-    distances, indices = nbrs.kneighbors(distance_matrix)
-    distances = np.sort(distances, axis=0)
-    distances = distances[:, 1]
-    kneedle = KneeLocator([i for i in range(len(distances))], distances, S=1.0, curve="convex", direction="increasing")
-    # kneedle.plot_knee()
-    # plt.show()
-
-    clustering = DBSCAN(eps=kneedle.knee_y, min_samples=5, metric="precomputed")
-    clustering.fit(distance_matrix)
-
-    core_samples_mask = np.zeros_like(clustering.labels_, dtype=bool)
-    core_samples_mask[clustering.core_sample_indices_] = True
-    labels = clustering.labels_
-
-    # Number of clusters in labels, ignoring noise if present
-    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
-    n_noise = list(labels).count(-1)
-
-    print("Estimated number of clusters: {}".format(n_clusters))
-    print("Estimated number of noise points: {}".format(n_noise))
-
-    return labels
-
-
-def cluster_digraphs(digraphs_list, distance_matrix, cluster_option=ClusterOptions.DBSCAN):
-
-    if cluster_option == ClusterOptions.DBSCAN:
-        labels = dbscan_cluster(distance_matrix)
-    else:
-        raise NotImplementedError("Cluster method {} not implemented".format(cluster_option))
-
-    return labels
-
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--digraphs_json', type=str, required=True)
-    parser.add_argument('-l', '--distance_matrix', type=str, required=True)
-    parser.add_argument('-c', '--cluster_option', type=str, default="DBSCAN")
-    args = parser.parse_args()
-
-    main(args)
-
-    # from os import listdir
-    #
-    # distance_matrices = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/run_jobs/expts/4-18-2022-aida-digraphs/combined_matrices"
-    #
-    # for f in listdir():
-    #     diagraph_list = deserialize_pattern_graphs(, is_file_path=True)
-
-
