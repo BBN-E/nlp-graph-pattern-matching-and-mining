@@ -9,7 +9,7 @@ from local_pattern_finder import LocalPatternFinder, ParseTypes
 from annotation.ingestion.event_ingester import EventIngester
 from pattern_factory import serialize_pattern_graphs, deserialize_pattern_graphs
 from clustering.distance_metrics import create_distance_matrix, approximate_graph_edit_distance
-from cluster_patterns import cluster_digraphs
+from cluster_patterns import cluster_digraphs, get_pattern_from_clusters
 
 
 distance_matrices_dir = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/pattern-discovery-4-18/combined_matrices"
@@ -77,7 +77,11 @@ def main(args):
     # cluster local patterns on train set, create representative pattern from each cluster
     for key, distance_matrix in distance_matrices.items():
         print(key)
-        cluster_digraphs(config_to_annotation_subgraphs[key], distance_matrix)
+        labels = cluster_digraphs(config_to_annotation_subgraphs[key], distance_matrix)
+        cluster_num_to_cluster_pattern = get_pattern_from_clusters(config_to_annotation_subgraphs[key], distance_matrix, labels)
+        print(cluster_num_to_cluster_pattern)
+
+
 
     # TODO: apply new patterns to hold out set, compare to existing annotations
 

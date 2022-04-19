@@ -8,7 +8,7 @@ import networkx as nx
 from pattern_factory import deserialize_pattern_graphs
 from view_utils.graph_viewer import GraphViewer
 from kneed import KneeLocator
-
+import tqdm
 
 class ClusterOptions(enum.Enum):
     DBSCAN = enum.auto()
@@ -73,6 +73,55 @@ def get_central_graph_per_cluster(labels, distance_matrix):
     return cluster_num_to_central_index
 
 
+def find_pattern_for_cluster(central_graph, graph_list):
+    # Finds the number of graphs in graph_list isomorphic to each possible subgraph of central_graph
+    # Used to generalize a pattern that applies to most nodes in a cluster
+
+    patterns_to_num_matches = {}
+
+    for node_set in nx.weakly_connected_components(central_graph):
+        subgraph_pattern = central_graph.subgraph(node_set)
+        # TODO: handle edge and node attributes
+
+        num_matches = 0
+        for graph in graph_list:
+            matcher = nx.algorithms.isomorphism.DiGraphMatcher(graph, subgraph_pattern)
+            if matcher.subgraph_is_isomorphic():
+                num_matches += 1
+        patterns_to_num_matches[subgraph_pattern] = num_matches
+
+    return patterns_to_num_matches
+
+
+def get_pattern_from_clusters(digraphs_list, distance_matrix, labels):
+
+    cluster_to_central_graph_index = get_central_graph_per_cluster(labels, distance_matrix)
+
+    graph_viewer = GraphViewer()
+
+    cluster_num_to_cluster_pattern = []
+
+    for cluster_num, graph_index in cluster_to_central_graph_index.items():
+
+        if cluster_num == -1:
+            continue
+
+        graph_viewer.prepare_mdp_networkx_for_visualization(digraphs_list[graph_index])
+        graph_viewer.prepare_networkx_for_visualization(digraphs_list[graph_index])
+
+        graph_viewer.visualize_networkx_graph(digraphs_list[graph_index], html_file="central_graph_in_cluster_{}.html".format(cluster_num))
+
+        cluster_digraph_list = []
+        for i, label in enumerate(labels):
+            if label == cluster_num:
+                cluster_digraph_list.append(digraphs_list[i])
+
+        cluster_pattern = find_pattern_for_cluster(digraphs_list[graph_index], cluster_digraph_list)
+        cluster_num_to_cluster_pattern.append(cluster_pattern)
+
+    return cluster_num_to_cluster_pattern
+
+
 def dbscan_cluster(distance_matrix):
 
     # Finds elbow point of NearestNeighbors graph to find optimal epsilon value
@@ -102,47 +151,12 @@ def dbscan_cluster(distance_matrix):
     return labels
 
 
-def find_pattern_for_cluster(central_graph, graph_list):
-    # Finds the number of graphs in graph_list isomorphic to each possible subgraph of central_graph
-    # Used to generalize a pattern that applies to most nodes in a cluster
-
-    patterns_to_num_matches = {}
-
-    for node_set in nx.weakly_connected_components(central_graph):
-        subgraph_pattern = central_graph.subgraph(node_set)
-        # TODO: handle edge and node attributes
-
-        num_matches = 0
-        for graph in graph_list:
-            matcher = nx.algorithms.isomorphism.DiGraphMatcher(graph, subgraph_pattern)
-            # TODO: runtime bad -- research non NP-complete way to approximate?
-            if matcher.subgraph_is_isomorphic():
-                num_matches += 1
-        patterns_to_num_matches[subgraph_pattern] = num_matches
-
-    return patterns_to_num_matches
-
-
 def cluster_digraphs(digraphs_list, distance_matrix, cluster_option=ClusterOptions.DBSCAN):
 
     if cluster_option == ClusterOptions.DBSCAN:
         labels = dbscan_cluster(distance_matrix)
     else:
         raise NotImplementedError("Cluster method {} not implemented".format(cluster_option))
-
-    cluster_to_central_graph_index = get_central_graph_per_cluster(labels, distance_matrix)
-
-    graph_viewer = GraphViewer()
-
-    for cluster_num, graph_index in cluster_to_central_graph_index.items():
-
-        graph_viewer.prepare_mdp_networkx_for_visualization(digraphs_list[graph_index])
-        graph_viewer.prepare_networkx_for_visualization(digraphs_list[graph_index])
-
-        graph_viewer.visualize_networkx_graph(digraphs_list[graph_index], html_file="central_graph_in_cluster_{}.html".format(cluster_num))
-
-        # TODO: do this for each cluster properly
-        print(find_pattern_for_cluster(digraphs_list[graph_index], digraphs_list))
 
     return labels
 
