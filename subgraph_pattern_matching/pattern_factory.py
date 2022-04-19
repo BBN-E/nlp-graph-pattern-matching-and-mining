@@ -1,4 +1,4 @@
-from io.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
+from io_utils.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
 
 from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
 from patterns.dp_mdp.relaxed_ccomp_pattern import relaxed_ccomp_pattern
