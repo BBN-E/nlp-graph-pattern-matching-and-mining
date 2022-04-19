@@ -7,7 +7,7 @@ import numpy as np
 
 from local_pattern_finder import LocalPatternFinder, ParseTypes
 from annotation.ingestion.event_ingester import EventIngester
-from pattern_factory import serialize_pattern_graphs, deserialize_pattern_graphs
+from io.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
 from clustering.distance_metrics import create_distance_matrix, approximate_graph_edit_distance
 from cluster_patterns import cluster_digraphs, get_pattern_from_clusters
 

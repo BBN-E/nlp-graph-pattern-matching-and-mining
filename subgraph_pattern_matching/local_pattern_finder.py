@@ -185,7 +185,7 @@ if __name__ == '__main__':
     config_to_annotation_subgraphs = LPF.grid_search(annotations=ace_english_corpus.train_annotations,
                                                      search_directions=[DAGSearchDirection.BOTH])
 
-    from pattern_factory import serialize_pattern_graphs
+    from io.io_utils import serialize_pattern_graphs
 
     for i, (key, digraph_list) in enumerate(config_to_annotation_subgraphs.items()):
         json_dump = serialize_pattern_graphs(digraph_list)
