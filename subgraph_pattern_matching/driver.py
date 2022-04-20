@@ -72,7 +72,7 @@ def main(args):
     for serifxml_path in serifxml_paths:
         logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_patterns(serif_doc, Factory.patterns, visualize=args.visualize))
+        all_matches.extend(extract_patterns(serif_doc, Factory.patterns))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
