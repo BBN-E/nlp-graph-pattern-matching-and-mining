@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @timer
-def extract_patterns(serif_doc, prepared_patterns, visualize=False):
+def extract_patterns(serif_doc, prepared_patterns):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -27,8 +27,6 @@ def extract_patterns(serif_doc, prepared_patterns, visualize=False):
 
     GB = GraphBuilder()
     document_graph = GB.serif_doc_to_networkx(serif_doc)
-    if visualize:
-        GB.visualize_networkx_graph(document_graph)
 
     matches = []
     for pattern in prepared_patterns:
@@ -105,7 +103,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-l', '--list', action='store_true', help='input is list of serifxmls rather than serifxml path')
-    parser.add_argument('-v', '--visualize', action='store_true')
     # parser.add_argument('-o', '--output', type=str)
     args = parser.parse_args()
 
