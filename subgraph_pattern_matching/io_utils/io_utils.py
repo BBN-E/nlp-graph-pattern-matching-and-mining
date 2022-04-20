@@ -8,7 +8,7 @@ def serialize_patterns(pattern_list):
         json_dict = pattern.to_json()
         json_data.append(json_dict)
 
-    json_dump = json.dumps(json_data)
+    json_dump = json.dumps(json_data, indent=4)
     return json_dump
 
 
@@ -41,7 +41,7 @@ def serialize_pattern_graphs(pattern_graphs):
         jgraph = json_graph.node_link_data(digraph)
         json_data.append(jgraph)
 
-    json_dump = json.dumps(json_data)
+    json_dump = json.dumps(json_data, indent=4)
     return json_dump
 
 
