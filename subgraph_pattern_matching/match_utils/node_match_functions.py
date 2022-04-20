@@ -36,27 +36,3 @@ def node_multiple_attrs_match(*match_fns):
         return all(match_fn(n1, n2) for match_fn in match_fns)
 
     return node_multiple_attrs_match_fn
-
-#######################################################
-#######   SINGLE ATTR NODE MATCHING FUNCTIONS   #######
-#######################################################
-
-def node_modal_type_match(n1, n2):
-    return node_attr_match(n1, n2, attr=ModalNodeAttrs.modal_node_type)
-
-def node_special_name_match(n1, n2):
-    if not node_modal_type_match(n1, n2):
-        return False
-    return node_attr_match(n1, n2, attr=ModalNodeAttrs.special_name)
-
-def node_upos_match(n1, n2):
-    return node_attr_match(n1, n2, attr=TokenNodeAttrs.upos)
-
-def node_incoming_dep_rel_match(n1, n2):
-    return node_attr_match(n1, n2, attr=TokenNodeAttrs.incoming_dep_rel)
-
-def node_text_match(n1, n2):
-    return node_attr_match(n1, n2, attr=TokenNodeAttrs.text)
-
-def node_amr_match(n1, n2):
-    return node_attr_match(n1, n2, attr=AMRNodeAttrs.content)

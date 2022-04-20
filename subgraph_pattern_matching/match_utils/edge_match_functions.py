@@ -32,16 +32,3 @@ def edge_multiple_attrs_match(*match_fns):
         return all(match_fn(e1, e2) for match_fn in match_fns)
 
     return edge_multiple_attrs_match_fn
-
-#######################################################
-#######   SINGLE ATTR EDGE MATCHING FUNCTIONS   #######
-#######################################################
-
-def edge_modal_relation_match(e1, e2):
-    return edge_attr_match(e1, e2, attr=ModalEdgeAttrs.modal_relation)
-
-def edge_syntactic_relation_match(e1, e2):
-    return edge_attr_match(e1, e2, attr=SyntaxEdgeAttrs.dep_rel)
-
-def edge_amr_relation_match(e1, e2):
-    return edge_attr_match(e1, e2, attr=AMREdgeAttrs.amr_relation)

@@ -4,28 +4,32 @@ from constants.pattern.node.pattern_modal_nodes import PatternModalNodes
 from constants.pattern.node.pattern_token_nodes import PatternTokenNodes
 from constants.pattern.edge.pattern_edges import PatternEdges
 
-from match_utils.node_match_functions import node_multiple_attrs_match, node_modal_type_match, node_special_name_match, \
-    node_upos_match, node_incoming_dep_rel_match
-from match_utils.edge_match_functions import edge_type_match
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from patterns.pattern import Pattern
 
 
 def author_conceiver_event_edge_pattern_1():
     '''event token is VERB with incoming root relation'''
 
-    pattern = nx.DiGraph()
+    pattern_graph = nx.DiGraph()
 
-    pattern.add_nodes_from([
+    pattern_graph.add_nodes_from([
         PatternModalNodes.AUTHOR_CONCEIVER_NODE,
         PatternModalNodes.EVENT_NODE,
         PatternTokenNodes.ROOT_VERB_EVENT_TOKEN_NODE
     ])
 
-    pattern.add_edges_from([
+    pattern_graph.add_edges_from([
         PatternEdges.AUTHOR_CONCEIVER_EVENT_EDGE,
         PatternEdges.EVENT_TOKEN_EDGE
     ])
 
-    return pattern, node_multiple_attrs_match(node_modal_type_match,
-                                              node_special_name_match,
-                                              node_upos_match,
-                                              node_incoming_dep_rel_match), edge_type_match
+    node_attrs = [ModalNodeAttrs.modal_node_type,
+                  ModalNodeAttrs.special_name,
+                  TokenNodeAttrs.upos,
+                  TokenNodeAttrs.incoming_dep_rel]
+    edge_attrs = [EdgeAttrs.edge_type]
+
+    return Pattern('author_conceiver_event_edge_1', pattern_graph, node_attrs, edge_attrs)

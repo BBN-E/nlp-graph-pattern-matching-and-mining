@@ -1,11 +1,12 @@
 from .basic_claim_pattern import build_basic_claim_pattern
 
-from match_utils.node_match_functions import node_modal_type_match
-from match_utils.edge_match_functions import edge_type_match
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
+from patterns.pattern import Pattern
 
 def grounded_conceiver_event_edge_pattern():
 
-    pattern = build_basic_claim_pattern()
+    pattern_graph = build_basic_claim_pattern()
 
-    return pattern, node_modal_type_match, edge_type_match
+    return Pattern('grounded_conciever_event_edge', pattern_graph, [NodeAttrs.node_type], [EdgeAttrs.edge_type])

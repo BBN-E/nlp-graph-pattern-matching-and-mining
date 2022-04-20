@@ -28,7 +28,7 @@ ID_DELIMITER = "_"
 class GraphViewer:
 
     def mdp_node_label (self, G, node):
-        if G.nodes[node][ModalNodeAttrs.special_name] != 'Null':
+        if ModalNodeAttrs.special_name in G.nodes[node] and G.nodes[node][ModalNodeAttrs.special_name] != 'Null':
             label = G.nodes[node][ModalNodeAttrs.special_name]
         elif ModalNodeAttrs.modal_node_type in G.nodes[node]:
             label = G.nodes[node][ModalNodeAttrs.modal_node_type]

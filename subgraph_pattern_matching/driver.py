@@ -18,21 +18,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @timer
-def prepare_patterns():
-    '''one-time method to create ready-to-use patterns with corresponding node_match and edge_match functions'''
-
-    Factory = PatternFactory()
-
-    prepared_patterns = []
-    for pattern_id, pattern in Factory.patterns.items():
-    # for pattern_id, pattern in Factory.amr_patterns.items():
-        pattern_graph, node_match, edge_match = pattern()
-        prepared_patterns.append((pattern_id, (pattern_graph, node_match, edge_match)))
-
-    return prepared_patterns
-
-@timer
-def extract_patterns(serif_doc, prepared_patterns, visualize=False):
+def extract_patterns(serif_doc, prepared_patterns):
     '''
     :param serif_doc:
     :param visualize: whether to generate a pyviz visualization of graph
@@ -41,16 +27,16 @@ def extract_patterns(serif_doc, prepared_patterns, visualize=False):
 
     GB = GraphBuilder()
     document_graph = GB.serif_doc_to_networkx(serif_doc)
-    if visualize:
-        GB.visualize_networkx_graph(document_graph)
 
     matches = []
-    for (pattern_id, (pattern_graph, node_match, edge_match)) in prepared_patterns:
+    for pattern in prepared_patterns:
+
+        pattern_id = pattern.pattern_id
 
         logging.info(pattern_id)
-        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
-                                                                   node_match=node_match,
-                                                                   edge_match=edge_match)
+        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern.pattern_graph,
+                                                                   node_match=pattern.node_match,
+                                                                   edge_match=pattern.edge_match)
         pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
 
         # TODO create on-match-filter API that is not ad-hoc
@@ -82,11 +68,11 @@ def main(args):
         serifxml_paths = [args.input]
 
     all_matches = []
-    prepared_patterns = prepare_patterns()
+    Factory = PatternFactory()
     for serifxml_path in serifxml_paths:
         logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_patterns(serif_doc, prepared_patterns, visualize=args.visualize))
+        all_matches.extend(extract_patterns(serif_doc, Factory.patterns))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()
@@ -117,7 +103,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-l', '--list', action='store_true', help='input is list of serifxmls rather than serifxml path')
-    parser.add_argument('-v', '--visualize', action='store_true')
     # parser.add_argument('-o', '--output', type=str)
     args = parser.parse_args()
 

@@ -9,19 +9,22 @@ from constants.common.types.edge_types import EdgeTypes
 
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 
-from match_utils.node_match_functions import node_multiple_attrs_match, node_modal_type_match, node_text_match
-from match_utils.edge_match_functions import edge_syntactic_relation_match
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+
+from patterns.pattern import Pattern
 
 
 def according_to_pattern():
-    pattern = build_basic_claim_pattern()
+    pattern_graph = build_basic_claim_pattern()
 
-    pattern.add_nodes_from([
+    pattern_graph.add_nodes_from([
         ('ACCORDING_TOKEN_NODE',
          {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.text: 'according'})
     ])
 
-    pattern.add_edges_from([
+    pattern_graph.add_edges_from([
 
         # EventToken -(obl)-> ConceiverToken
         (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
@@ -32,6 +35,8 @@ def according_to_pattern():
          {EdgeAttrs.edge_type: EdgeTypes.syntax, SyntaxEdgeAttrs.dep_rel: 'case'})
     ])
 
+    node_attrs = [ModalNodeAttrs.modal_node_type, TokenNodeAttrs.text]
+    edge_attrs = [SyntaxEdgeAttrs.dep_rel]
+
     # return pattern, node_modal_type_and_text_match, edge_syntactic_relation_match
-    return pattern, node_multiple_attrs_match(node_modal_type_match, \
-                                              node_text_match), edge_syntactic_relation_match
+    return Pattern('according_to', pattern_graph, node_attrs, edge_attrs)
