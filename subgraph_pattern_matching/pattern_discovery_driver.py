@@ -4,7 +4,7 @@ import numpy as np
 
 from local_pattern_finder import LocalPatternFinder, ParseTypes
 from annotation.ingestion.event_ingester import EventIngester
-from io.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
+from io_utils.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
 from clustering.distance_metrics import create_distance_matrix, approximate_graph_edit_distance
 from clustering.cluster_graphs import cluster_digraphs
 from clustering.generalize_patterns import get_pattern_from_clusters
@@ -89,10 +89,10 @@ def main(args):
 
 if __name__ == '__main__':
     '''
-    PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python 
-    python3 
-    /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching/pattern_discovery_driver.py 
-    --output /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/pattern-discovery-4-18 
+    PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python \
+    python3 \
+    /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching/pattern_discovery_driver.py \
+    --output /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/pattern-discovery-4-18 \
     --save_digraphs
     '''
 

@@ -1,4 +1,5 @@
-from io.io_utils import serialize_patterns, deserialize_patterns
+
+from io_utils.io_utils import serialize_patterns, deserialize_patterns
 
 from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
 from patterns.dp_mdp.relaxed_ccomp_pattern import relaxed_ccomp_pattern
