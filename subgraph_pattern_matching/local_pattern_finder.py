@@ -162,29 +162,29 @@ class LocalPatternFinder():
         return config_to_annotation_subgraphs
 
 
-def read_from_corpus(corpus):
+def read_corpus(corpus_id):
 
     from annotation.ingestion.event_ingester import EventIngester
     from annotation.ingestion.ner_ingester import NERIngester
     from annotation.ingestion.relation_ingester import RelationIngester
 
-    if corpus == "TACRED":
-        corpus = RelationIngester().ingest_tacred()
-    elif corpus == "CONLL_ENGLISH":
-        corpus = NERIngester().ingest_conll()
-    elif corpus == " ACE_ENGLISH":
-        corpus = EventIngester().ingest_ace()
-    elif corpus == "AIDA_TEST":
-        corpus = EventIngester().ingest_aida()
+    if corpus_id == "TACRED":
+        corpus_id = RelationIngester().ingest_tacred()
+    elif corpus_id == "CONLL_ENGLISH":
+        corpus_id = NERIngester().ingest_conll()
+    elif corpus_id == "ACE_ENGLISH":
+        corpus_id = EventIngester().ingest_ace()
+    elif corpus_id == "AIDA_TEST":
+        corpus_id = EventIngester().ingest_aida()
     else:
-        raise NotImplementedError("Corpus {} not implemented".format(corpus))
+        raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 
-    return corpus
+    return corpus_id
 
 
 def main(args):
 
-    corpus = read_from_corpus(args.annotation_corpus)
+    corpus = read_corpus(args.annotation_corpus)
 
     LPF = LocalPatternFinder()
     parse_types = [ParseTypes[p] for p in args.parse_types]
