@@ -30,10 +30,7 @@ class Pattern():
 
             match_funcs.append(node_match_closure)
 
-        def node_multiple_attrs_match_closure(n1, n2):
-            node_multiple_attrs_match(match_funcs)
-
-        return node_multiple_attrs_match_closure
+        return node_multiple_attrs_match(*match_funcs)
 
     @property
     def edge_match(self):
@@ -45,10 +42,8 @@ class Pattern():
 
             match_funcs.append(edge_match_closure)
 
-        def edge_multiple_match_closure(n1, n2):
-            edge_multiple_attrs_match(match_funcs)
+        return edge_multiple_attrs_match(*match_funcs)
 
-        return edge_multiple_match_closure
 
     def to_json(self):
         jgraph = json_graph.node_link_data(self._pattern_graph)
