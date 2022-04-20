@@ -48,4 +48,4 @@ def as_reported_by_pattern():
 
     edge_attrs = [SyntaxEdgeAttrs.dep_rel]
 
-    return Pattern('as_reported_by_pattern', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('as_reported_by', pattern_graph, node_attrs, edge_attrs)

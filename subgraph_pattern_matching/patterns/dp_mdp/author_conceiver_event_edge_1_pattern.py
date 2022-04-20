@@ -32,4 +32,4 @@ def author_conceiver_event_edge_pattern_1():
                   TokenNodeAttrs.incoming_dep_rel]
     edge_attrs = [EdgeAttrs.edge_type]
 
-    return Pattern('author_conceiver_event_edge_pattern_1', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('author_conceiver_event_edge_1', pattern_graph, node_attrs, edge_attrs)

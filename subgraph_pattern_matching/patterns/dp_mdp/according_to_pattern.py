@@ -39,4 +39,4 @@ def according_to_pattern():
     edge_attrs = [SyntaxEdgeAttrs.dep_rel]
 
     # return pattern, node_modal_type_and_text_match, edge_syntactic_relation_match
-    return Pattern('according_to_pattern', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('according_to', pattern_graph, node_attrs, edge_attrs)

@@ -40,4 +40,4 @@ def relaxed_ccomp_one_hop_pattern():
 
     edge_attrs = [SyntaxEdgeAttrs.dep_rel]
 
-    return Pattern('relaxed_ccomp_one_hop_pattern', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('relaxed_ccomp_one_hop', pattern_graph, node_attrs, edge_attrs)

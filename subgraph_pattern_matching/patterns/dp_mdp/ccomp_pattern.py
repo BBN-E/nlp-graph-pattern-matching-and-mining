@@ -1,7 +1,6 @@
 from .basic_claim_pattern import build_basic_claim_pattern
 
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
 
 from constants.pattern.node.pattern_token_nodes import PatternTokenNodes
@@ -36,4 +35,4 @@ def ccomp_pattern():
 
     edge_attrs =  [SyntaxEdgeAttrs.dep_rel]
 
-    return Pattern('ccomp_pattern', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('ccomp', pattern_graph, node_attrs, edge_attrs)

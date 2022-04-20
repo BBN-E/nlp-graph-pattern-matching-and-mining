@@ -38,4 +38,4 @@ def relaxed_ccomp_pattern():
 
     edge_attrs = [SyntaxEdgeAttrs.dep_rel]
 
-    return Pattern('relaxed_ccomp_pattern', pattern_graph, node_attrs, edge_attrs)
+    return Pattern('relaxed_ccomp', pattern_graph, node_attrs, edge_attrs)

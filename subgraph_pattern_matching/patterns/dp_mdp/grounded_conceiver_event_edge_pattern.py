@@ -9,4 +9,4 @@ def grounded_conceiver_event_edge_pattern():
 
     pattern_graph = build_basic_claim_pattern()
 
-    return Pattern('grounded_conciever_event_edge_pattern', pattern_graph, [NodeAttrs.node_type], [EdgeAttrs.edge_type])
+    return Pattern('grounded_conciever_event_edge', pattern_graph, [NodeAttrs.node_type], [EdgeAttrs.edge_type])
