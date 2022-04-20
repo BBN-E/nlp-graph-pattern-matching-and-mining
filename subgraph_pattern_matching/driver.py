@@ -24,10 +24,10 @@ def prepare_patterns():
     Factory = PatternFactory()
 
     prepared_patterns = []
-    for pattern_id, pattern in Factory.patterns.items():
-    # for pattern_id, pattern in Factory.amr_patterns.items():
-        pattern_graph, node_match, edge_match = pattern()
-        prepared_patterns.append((pattern_id, (pattern_graph, node_match, edge_match)))
+    for pattern_id, pattern_func in Factory.patterns.items():
+    # for pattern_id, pattern_func in Factory.amr_patterns.items():
+        pattern = pattern_func()
+        prepared_patterns.append(pattern)
 
     return prepared_patterns
 
@@ -45,12 +45,14 @@ def extract_patterns(serif_doc, prepared_patterns, visualize=False):
         GB.visualize_networkx_graph(document_graph)
 
     matches = []
-    for (pattern_id, (pattern_graph, node_match, edge_match)) in prepared_patterns:
+    for pattern in prepared_patterns:
+
+        pattern_id = pattern.pattern_id
 
         logging.info(pattern_id)
-        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern_graph,
-                                                                   node_match=node_match,
-                                                                   edge_match=edge_match)
+        pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(document_graph, pattern.pattern_graph,
+                                                                   node_match=pattern.node_match,
+                                                                   edge_match=pattern.edge_match)
         pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
 
         # TODO create on-match-filter API that is not ad-hoc

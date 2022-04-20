@@ -45,8 +45,6 @@ def node_modal_type_match(n1, n2):
     return node_attr_match(n1, n2, attr=ModalNodeAttrs.modal_node_type)
 
 def node_special_name_match(n1, n2):
-    if not node_modal_type_match(n1, n2):
-        return False
     return node_attr_match(n1, n2, attr=ModalNodeAttrs.special_name)
 
 def node_upos_match(n1, n2):

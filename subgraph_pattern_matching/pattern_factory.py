@@ -1,4 +1,4 @@
-from io.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
+from io.io_utils import serialize_patterns, deserialize_patterns
 
 from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
 from patterns.dp_mdp.relaxed_ccomp_pattern import relaxed_ccomp_pattern
@@ -18,56 +18,45 @@ class PatternFactory():
 
     def __init__(self):
 
-        self.patterns = {'ccomp': ccomp_pattern,
-                         'relaxed_ccomp': relaxed_ccomp_pattern,
-                         'relaxed_ccomp_one_hop': relaxed_ccomp_one_hop_pattern,
-                         'according_to': according_to_pattern,
-                         # 'author_conceiver_event_edge_0': self.author_conceiver_event_edge_pattern_0,
-                         'author_conceiver_event_edge_1': author_conceiver_event_edge_pattern_1,
-                         'author_conceiver_event_edge_2': author_conceiver_event_edge_pattern_2,
-                         'author_conceiver_event_edge_3': author_conceiver_event_edge_pattern_3,
-                         'as_reported_by': as_reported_by_pattern}
+        self.patterns = [ccomp_pattern,
+                         relaxed_ccomp_pattern,
+                         relaxed_ccomp_one_hop_pattern,
+                         according_to_pattern,
+                         # author_conceiver_event_edge_pattern_0,
+                         author_conceiver_event_edge_pattern_1,
+                         author_conceiver_event_edge_pattern_2,
+                         author_conceiver_event_edge_pattern_3,
+                         as_reported_by_pattern]
 
-        self.basic_patterns = {'grounded_conceiver_event_edge': grounded_conceiver_event_edge_pattern}
+        self.basic_patterns = [grounded_conceiver_event_edge_pattern]
 
         # self.amr_patterns = self.create_propbank_frames_patterns()
-        self.amr_patterns = {'person_says_x_pattern': person_says_x_pattern}
+        self.amr_patterns = [person_says_x_pattern]
 
         self.loaded_patterns = {}
 
-    def load_patterns(self, json_dump, is_file_path=False, node_match=None, edge_match=None):
+    def load_patterns(self, json_dump, is_file_path=False):
 
-        pattern_graph_list = deserialize_pattern_graphs(json_dump, is_file_path)
-
-        for i, graph in enumerate(pattern_graph_list):
-            def pattern_function():
-                return graph, node_match, edge_match
-
-            self.loaded_patterns["pattern_" + str(i)] = pattern_function
+        self.loaded_patterns = deserialize_patterns(json_dump, is_file_path)
 
         return self.loaded_patterns
 
     def serialize_factory_patterns(self):
-        pattern_graph_list = []
-        for pattern_id, pattern in self.patterns.items():
-            pattern_graph, __, __ = pattern()
-            pattern_graph_list.append(pattern_graph)
-
-        return serialize_pattern_graphs(pattern_graph_list)
+        return serialize_patterns(self.patterns)
 
 
 if __name__ == '__main__':
     Factory = PatternFactory()
     pattern_graphs = Factory.serialize_factory_patterns()
-    deserialized = deserialize_pattern_graphs(pattern_graphs)
+    deserialized = deserialize_patterns(pattern_graphs)
     from view_utils.graph_viewer import GraphViewer
 
     graph_viewer = GraphViewer()
 
-    for index, graph in enumerate(deserialized):
-        graph_viewer.prepare_mdp_networkx_for_visualization(graph)
-        graph_viewer.prepare_networkx_for_visualization(graph)
-        graph_viewer.visualize_networkx_graph(graph, html_file="serialization_sample_{}.html".format(index))
+    for index, pattern in enumerate(deserialized):
+        graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
+        graph_viewer.prepare_networkx_for_visualization(pattern.pattern_graph)
+        graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file="serialization_sample_{}.html".format(index))
 
 
 # def create_propbank_frames_patterns(self):

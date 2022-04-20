@@ -7,19 +7,20 @@ from constants.common.types.edge_types import EdgeTypes
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 from constants.pattern.node.pattern_token_nodes import PatternTokenNodes
 
-from match_utils.node_match_functions import node_multiple_attrs_match, node_modal_type_match, node_upos_match
-from match_utils.edge_match_functions import edge_syntactic_relation_match
-
+from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+from patterns.pattern import Pattern
 
 def relaxed_ccomp_one_hop_pattern():
-    pattern = build_basic_claim_pattern()
+    pattern_graph = build_basic_claim_pattern()
 
-    pattern.add_nodes_from([
+    pattern_graph.add_nodes_from([
         PatternTokenNodes.SIP_TOKEN_NODE,
         PatternTokenNodes.CCOMP_TOKEN_NODE  # parent of event token
     ])
 
-    pattern.add_edges_from([
+    pattern_graph.add_edges_from([
 
         # SIP -(nsubj)-> ConceiverToken
         (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID, PatternTokenNodeIDs.CONCEIVER_TOKEN_NODE_ID,
@@ -34,5 +35,9 @@ def relaxed_ccomp_one_hop_pattern():
          {EdgeAttrs.edge_type: EdgeTypes.syntax})
     ])
 
-    return pattern, node_multiple_attrs_match(node_modal_type_match, \
-                                              node_upos_match), edge_syntactic_relation_match
+    node_attrs = [ModalNodeAttrs.modal_node_type,
+                  TokenNodeAttrs.upos]
+
+    edge_attrs = [SyntaxEdgeAttrs.dep_rel]
+
+    return Pattern('relaxed_ccomp_one_hop_pattern', pattern_graph, node_attrs, edge_attrs)
