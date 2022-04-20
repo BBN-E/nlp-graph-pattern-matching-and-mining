@@ -1,13 +1,12 @@
-import os, json
 import argparse
 import logging
 import networkx as nx
-from collections import defaultdict
 
 import serifxml3
 
 from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
+from local_pattern_finder import read_corpus
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 
 from utils.timer import timer
@@ -66,9 +65,11 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
 
 def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc):
     '''
+
+    :param nx_graph:
+    :param patterns:
     :param serif_doc:
-    :param visualize: whether to generate a pyviz visualization of graph
-    :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
+    :return: :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
     '''
 
     matches = []
@@ -111,25 +112,33 @@ def main(args):
     else:
         serifxml_paths = [args.input]
 
-    # GraphBuilder object to construct nx graphs from parses
+    # GraphBuilder object to construct nx graphs from parsed serif docs
     GB = GraphBuilder()
 
+    # create patterns
     patterns = prepare_patterns()
 
+    # extract patterns from every serifxml
     all_matches = []
     for serifxml_path in serifxml_paths:
 
         logging.info(serifxml_path)
 
+        # create serif_doc and convert to networkx graph(s)
         serif_doc = serifxml3.Document(serifxml_path)
         nx_graphs = serif_doc_to_nx_graphs(serif_doc=serif_doc,
                                            graph_builder=GB,
                                            per_sentence=args.per_sentence)
 
+        # do subgraph pattern matching for every nx graph
         for nx_graph in nx_graphs:
             all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
                                                               serif_doc=serif_doc,
                                                               patterns=patterns))
+
+    # if decoding over annotated corpus, ingest gold corpus and do evaluation
+    if args.evaluation_corpus:
+        evaluation_corpus = read_corpus(corpus_id=args.evaluation_corpus)
 
     # match_corpus = MatchCorpus(all_matches)
     # match_corpus.extraction_stats()
@@ -163,6 +172,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--per_sentence', action='store_true', help='whether to create nx graphs per individual sentence '
                                                                     'or for entire document (depends on whether the serifxmls'
                                                                     'have document-level parses such as MDP/TDP or not)')
+    # parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction')
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
                         help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False)
     # parser.add_argument('-o', '--output', type=str)
