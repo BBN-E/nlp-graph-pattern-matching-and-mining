@@ -32,6 +32,8 @@ class Pattern():
 
     def make_node_match(self):
         match_funcs = []
+
+        # https://stackoverflow.com/questions/54288926/python-loops-and-closures
         for attr in self._node_attrs:
 
             if attr == NodeAttrs.node_type:

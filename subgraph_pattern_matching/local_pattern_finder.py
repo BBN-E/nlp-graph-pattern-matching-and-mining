@@ -1,10 +1,11 @@
 from enum import Enum
 import networkx as nx
 from tqdm import tqdm
+import argparse
 
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
-
+from io_utils.io_utils import serialize_pattern_graphs
 
 class ParseTypes(Enum):
     '''which parses to look at'''
@@ -106,6 +107,31 @@ class LocalPatternFinder():
         return edge_induced_subgraph
 
 
+    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction):
+
+        annotation_subgraphs_for_configuration = []
+
+        # loop over annotations
+        for ann in tqdm(annotations, desc="annotations", position=3, leave=False):
+
+            # if annotation consists of multiple tokens, compose their k-hop subgraphs
+            token_k_hop_neighborhoods = []
+            for token_node_id in ann.token_node_ids:
+                token_k_hop_neighborhoods.append(
+                    self.return_k_hop_neighborhood_of_node(G=ann.networkx_graph,
+                                                           node_id=token_node_id,
+                                                           k=k,
+                                                           parse_types=parse_types,
+                                                           search_direction=search_direction))
+
+            ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
+            if len(ann_k_hop_neighborhood) == 0:
+                continue
+            annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
+
+        return annotation_subgraphs_for_configuration
+
+
     def grid_search(self,
                     annotations,
                     k_values=[1,2,3,4,5],
@@ -129,68 +155,57 @@ class LocalPatternFinder():
                 for search_direction in tqdm(search_directions, desc='search combinations', position=2, leave=False):
 
                     config = (k, tuple(parse_types), search_direction)
-                    annotation_subgraphs_for_configuration = []
+                    annotation_subgraphs_for_configuration = self.get_annotation_subgraphs(annotations, k, parse_types, search_direction)
 
-                    # loop over annotations
-                    for ann in tqdm(annotations, desc="annotations", position=3, leave=False):
-
-                        # if annotation consists of multiple tokens, compose their k-hop subgraphs
-                        token_k_hop_neighborhoods = []
-                        for token_node_id in ann.token_node_ids:
-                            token_k_hop_neighborhoods.append(
-                                self.return_k_hop_neighborhood_of_node(G=ann.networkx_graph,
-                                                                       node_id=token_node_id,
-                                                                       k=k,
-                                                                       parse_types=parse_types,
-                                                                       search_direction=search_direction))
-
-                        ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
-                        if len(ann_k_hop_neighborhood) == 0:
-                            continue
-                        annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
                     config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
 
         return config_to_annotation_subgraphs
 
 
-if __name__ == '__main__':
-
-    # from graph_builder import GraphBuilder
-    # import serifxml3
-    #
-    # serif_doc = serifxml3.Document("/nfs/raid66/u11/users/brozonoy-ad/mtdp_runs/universal_parse/output.amr/universal_sentence.xml")
-    #
-    # GB = GraphBuilder()
-    # G = GB.serif_doc_to_networkx(serif_doc)
-    #
-    # LPF = LocalPatternFinder()
-    # # import pdb; pdb.set_trace()
-    #
-    # g = LPF.return_k_hop_neighborhood_of_node(G, 'smile__a12', k=5, parse_types=[ParseTypes.DP, ParseTypes.AMR], search_direction=DAGSearchDirection.BOTH)
-    # import pdb; pdb.set_trace()
-    #
-    # # LPF.return_kth_neighborhood_of_node(G, )
-
-    # from annotation.ingestion.ner_ingester import NERIngester
-    # conll_english_corpus = NERIngester().ingest_conll(language='english')  # annotation.annotation_corpus.AnnotationCorpus
-    #
-    # LPF = LocalPatternFinder()
-    # config_to_annotation_subgraphs = LPF.grid_search(annotations=conll_english_corpus.train_annotations)
-
+def read_from_corpus(corpus):
 
     from annotation.ingestion.event_ingester import EventIngester
-    ace_english_corpus = EventIngester().ingest_aida()  # annotation.annotation_corpus.AnnotationCorpus
+    from annotation.ingestion.ner_ingester import NERIngester
+    from annotation.ingestion.relation_ingester import RelationIngester
+
+    if corpus == "TACRED":
+        corpus = RelationIngester().ingest_tacred()
+    elif corpus == "CONLL_ENGLISH":
+        corpus = NERIngester().ingest_conll()
+    elif corpus == " ACE_ENGLISH":
+        corpus = EventIngester().ingest_ace()
+    elif corpus == "AIDA_TEST":
+        corpus = EventIngester().ingest_aida()
+    else:
+        raise NotImplementedError("Corpus {} not implemented".format(corpus))
+
+    return corpus
+
+
+def main(args):
+
+    corpus = read_from_corpus(args.annotation_corpus)
 
     LPF = LocalPatternFinder()
-    config_to_annotation_subgraphs = LPF.grid_search(annotations=ace_english_corpus.train_annotations,
-                                                     search_directions=[DAGSearchDirection.BOTH])
+    parse_types = [ParseTypes[p] for p in args.parse_types]
 
-    from io.io_utils import serialize_pattern_graphs
+    annotation_subgraphs = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
+                                                        k=args.k_hop_neighborhoods,
+                                                        parse_types=parse_types,
+                                                        search_direction=DAGSearchDirection[args.search_direction])
+    json_dump = serialize_pattern_graphs(annotation_subgraphs)
 
-    for i, (key, digraph_list) in enumerate(config_to_annotation_subgraphs.items()):
-        json_dump = serialize_pattern_graphs(digraph_list)
+    with open(args.output, 'w') as f:
+        f.write(json_dump)
 
-        with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/aida_digraphs/digraphs_{}.json".format(i), 'w') as f:
-            f.write(json_dump)
 
-    import pdb; pdb.set_trace()
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--annotation_corpus', type=str, required=True)
+    parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('-k', '--k_hop_neighborhoods', type=int, default=1)
+    parser.add_argument('-p', '--parse_types', nargs="*", type=str, default=PARSE_TYPE_COMBINATIONS)
+    parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
+    args = parser.parse_args()
+    main(args)

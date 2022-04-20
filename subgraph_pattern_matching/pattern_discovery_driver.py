@@ -42,7 +42,7 @@ def main(args):
 
         # TODO: ParseTypes not json serializable, figure out an encoding
         with open(os.path.join(args.output, "index_to_config.json"), 'w') as index_to_config_f:
-            json.dump(index_to_config_key, index_to_config_f, default=str)
+            json.dump(index_to_config_key, index_to_config_f, default=str, indent=4)
 
         return
 
