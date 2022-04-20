@@ -37,8 +37,8 @@ class Pattern():
             if attr == NodeAttrs.node_type:
                 return node_type_match
             else:
-                def node_match_closure(n1, n2):
-                    return node_attr_match(n1, n2, attr)
+                def node_match_closure(n1, n2, attr_val=attr):
+                    return node_attr_match(n1, n2, attr_val)
 
             match_funcs.append(node_match_closure)
         self._node_match = node_multiple_attrs_match(*match_funcs)
@@ -51,8 +51,8 @@ class Pattern():
             if attr == EdgeAttrs.edge_type:
                 return edge_type_match
             else:
-                def edge_match_closure(e1, e2):
-                    return edge_attr_match(e1, e2, attr)
+                def edge_match_closure(e1, e2, attr_val=attr):
+                    return edge_attr_match(e1, e2, attr_val)
 
             match_funcs.append(edge_match_closure)
         self._edge_match = edge_multiple_attrs_match(*match_funcs)
