@@ -19,22 +19,22 @@ class PatternFactory():
 
     def __init__(self):
 
-        self.patterns = [ccomp_pattern,
-                         relaxed_ccomp_pattern,
-                         relaxed_ccomp_one_hop_pattern,
-                         according_to_pattern,
+        self.patterns = [ccomp_pattern(),
+                         relaxed_ccomp_pattern(),
+                         relaxed_ccomp_one_hop_pattern(),
+                         according_to_pattern(),
                          # author_conceiver_event_edge_pattern_0,
-                         author_conceiver_event_edge_pattern_1,
-                         author_conceiver_event_edge_pattern_2,
-                         author_conceiver_event_edge_pattern_3,
-                         as_reported_by_pattern]
+                         author_conceiver_event_edge_pattern_1(),
+                         author_conceiver_event_edge_pattern_2(),
+                         author_conceiver_event_edge_pattern_3(),
+                         as_reported_by_pattern()]
 
-        self.basic_patterns = [grounded_conceiver_event_edge_pattern]
+        self.basic_patterns = [grounded_conceiver_event_edge_pattern()]
 
         # self.amr_patterns = self.create_propbank_frames_patterns()
-        self.amr_patterns = [person_says_x_pattern]
+        self.amr_patterns = [person_says_x_pattern()]
 
-        self.loaded_patterns = {}
+        self.loaded_patterns = []
 
     def load_patterns(self, json_dump, is_file_path=False):
 
@@ -49,7 +49,7 @@ class PatternFactory():
 if __name__ == '__main__':
     Factory = PatternFactory()
     pattern_graphs = Factory.serialize_factory_patterns()
-    deserialized = deserialize_patterns(pattern_graphs)
+    deserialized = Factory.load_patterns(pattern_graphs)
     from view_utils.graph_viewer import GraphViewer
 
     graph_viewer = GraphViewer()

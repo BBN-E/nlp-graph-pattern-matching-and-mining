@@ -18,20 +18,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 @timer
-def prepare_patterns():
-    '''one-time method to create ready-to-use patterns with corresponding node_match and edge_match functions'''
-
-    Factory = PatternFactory()
-
-    prepared_patterns = []
-    for pattern_id, pattern_func in Factory.patterns.items():
-    # for pattern_id, pattern_func in Factory.amr_patterns.items():
-        pattern = pattern_func()
-        prepared_patterns.append(pattern)
-
-    return prepared_patterns
-
-@timer
 def extract_patterns(serif_doc, prepared_patterns, visualize=False):
     '''
     :param serif_doc:
@@ -84,11 +70,11 @@ def main(args):
         serifxml_paths = [args.input]
 
     all_matches = []
-    prepared_patterns = prepare_patterns()
+    Factory = PatternFactory()
     for serifxml_path in serifxml_paths:
         logging.info(serifxml_path)
         serif_doc = serifxml3.Document(serifxml_path)
-        all_matches.extend(extract_patterns(serif_doc, prepared_patterns, visualize=args.visualize))
+        all_matches.extend(extract_patterns(serif_doc, Factory.patterns, visualize=args.visualize))
 
     match_corpus = MatchCorpus(all_matches)
     match_corpus.extraction_stats()

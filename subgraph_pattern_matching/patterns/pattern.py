@@ -5,7 +5,7 @@ from networkx.readwrite import json_graph
 
 class Pattern():
 
-    def __init__(self, pattern_id, pattern_graph=None, node_attrs=None, edge_attrs=None):
+    def __init__(self, pattern_id=None, pattern_graph=None, node_attrs=None, edge_attrs=None):
 
         self._pattern_id = pattern_id
         self._pattern_graph = pattern_graph
