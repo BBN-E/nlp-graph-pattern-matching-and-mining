@@ -6,8 +6,6 @@ from kneed import KneeLocator
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 
-from io_utils.io_utils import deserialize_pattern_graphs
-
 
 class ClusterOptions(enum.Enum):
     DBSCAN = enum.auto()
@@ -42,7 +40,7 @@ def dbscan_cluster(distance_matrix):
     return labels
 
 
-def cluster_digraphs(digraphs_list, distance_matrix, cluster_option=ClusterOptions.DBSCAN):
+def cluster_patterns(distance_matrix, cluster_option=ClusterOptions.DBSCAN):
 
     if cluster_option == ClusterOptions.DBSCAN:
         labels = dbscan_cluster(distance_matrix)
@@ -53,12 +51,11 @@ def cluster_digraphs(digraphs_list, distance_matrix, cluster_option=ClusterOptio
 
 
 def main(args):
-    digraph_list = deserialize_pattern_graphs(args.digraphs_json, is_file_path=True)
 
     with open(args.distance_matrix, 'rb') as f:
         distance_matrix = np.load(f)
 
-    labels = cluster_digraphs(digraph_list, distance_matrix, ClusterOptions[args.cluster_option])
+    labels = cluster_patterns(distance_matrix, ClusterOptions[args.cluster_option])
 
     with open(args.output, 'w') as f:
         json.dump(labels.tolist(), f, indent=4)
@@ -67,7 +64,6 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--digraphs_json', type=str, required=True)
     parser.add_argument('-d', '--distance_matrix', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
     parser.add_argument('-c', '--cluster_option', type=str, default="DBSCAN")

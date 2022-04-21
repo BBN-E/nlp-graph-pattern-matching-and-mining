@@ -60,12 +60,12 @@ foreach my $k (@{$p->{K_VALUES}}) {
             $config =~ tr/ /_/ds;
 
             my $grid_config_dir = "$grid_dir/$config";
-            my $serialized_digraphs_path = "$grid_config_dir/digraphs.json";
+            my $serialized_patterns_path = "$grid_config_dir/patterns.json";
 
             my $find_local_patterns_job = runjobs([$create_output_dirs], "$JOB_NAME/$config/find_local_patterns", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
                                                   ["mkdir -p $grid_config_dir"],
                                                   ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
-                                                   "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_digraphs_path"]);
+                                                   "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_local_patterns_path"]);
 
             my @dist_matrix_batch_jobs = ();
 
@@ -76,7 +76,7 @@ foreach my $k (@{$p->{K_VALUES}}) {
 
                 my $dist_matrix_batch_job = runjobs([$create_batch_output_dir], "$JOB_NAME/$config/dist_matrix_batch/$i",
                                         ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/distance_matrix_batch.py --num_batches $p->{NUM_BATCHES} " .
-                                         "--stripe $i --output_file_path $batch_subdir/dist_matrix_split_$i --input_graphs $serialized_digraphs_path"]);
+                                         "--stripe $i --output_file_path $batch_subdir/dist_matrix_split_$i --input_graphs $serialized_local_patterns_path"]);
                 push(@dist_matrix_batch_jobs, $dist_matrix_batch_job);
             }
 
@@ -87,12 +87,12 @@ foreach my $k (@{$p->{K_VALUES}}) {
 
             my $clustering_job = runjobs([$combine_matrices_job], "$JOB_NAME/$config/cluster_graphs", {SGE_VIRTUAL_FREE => ["4G"]},
                                          ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/cluster_graphs.py  " .
-                                         "--digraphs_json $serialized_digraphs_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
+                                         "--distance_matrix $grid_config_dir/combined_distance_matrix.np " .
                                           "--output $grid_config_dir/labels.json --cluster_option $p->{CLUSTER_ALGORITHM} "]);
 
             my $generalize_patterns_job = runjobs([$clustering_job], "$JOB_NAME/$config/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
                                          ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
-                                         "--digraphs_json $serialized_digraphs_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
+                                         "--local_patterns_json $serialized_local_patterns_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
                                           "--labels $grid_config_dir/labels.json --output $grid_config_dir/patterns"]);
         }
     }
