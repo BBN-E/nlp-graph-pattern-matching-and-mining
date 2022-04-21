@@ -60,7 +60,7 @@ foreach my $k (@{$p->{K_VALUES}}) {
             $config =~ tr/ /_/ds;
 
             my $grid_config_dir = "$grid_dir/$config";
-            my $serialized_patterns_path = "$grid_config_dir/patterns.json";
+            my $serialized_local_patterns_path = "$grid_config_dir/patterns.json";
 
             my $find_local_patterns_job = runjobs([$create_output_dirs], "$JOB_NAME/$config/find_local_patterns", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
                                                   ["mkdir -p $grid_config_dir"],
