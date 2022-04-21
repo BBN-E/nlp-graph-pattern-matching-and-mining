@@ -68,7 +68,11 @@ class EventIngester(DocumentIngester):
                                                                           serif_sentence=serif_sentence,
                                                                           event_type=event_mention.event_type)
 
-                        event_frame_annotation = EventFrameAnnotation(nx_graph, event_trigger_annotation, event_argument_annotations)
+                        event_frame_annotation = EventFrameAnnotation(networkx_graph=nx_graph,
+                                                                      serif_doc=serif_doc,
+                                                                      serif_sentence=serif_sentence,
+                                                                      event_annotation=event_trigger_annotation,
+                                                                      arg_annotations=event_argument_annotations)
                         annotations_for_split.append(event_frame_annotation)
 
         return annotations_for_split

@@ -1,6 +1,8 @@
 from enum import Enum
 from abc import ABC, abstractmethod
 
+from graph_builder import ID_DELIMITER
+
 
 ##############################################################
 #####           ANNOTATION TYPES
@@ -82,6 +84,17 @@ class SimpleAnnotation(Annotation):
     @property
     def token_node_ids(self):
         return self._token_node_ids
+
+    @property
+    def serif_tokens(self):
+
+        if self._serif_doc:
+
+            _serif_token_ids = [_token_node_id.split(ID_DELIMITER)[-1] for _token_node_id in self._token_node_ids]
+            _serif_tokens = [self._serif_doc.lookup_id(_serif_token_id) for _serif_token_id in _serif_token_ids]
+            return _serif_tokens
+
+        return None
 
 
 class FrameAnnotation(Annotation):
