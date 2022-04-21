@@ -1,9 +1,4 @@
-import serifxml3
-
-from graph_builder import GraphBuilder
-
 from annotation.annotation import MentionAnnotation
-from annotation.annotation_corpus import AnnotationCorpus
 from annotation.ingestion.ingester import SentenceIngester
 
 CONLL_ENGLISH = {
@@ -49,6 +44,8 @@ class NERIngester(SentenceIngester):
 
                         ner_annotation = MentionAnnotation(networkx_graph=nx_graph,
                                                            token_node_ids=token_node_ids,
+                                                           serif_doc=split_serif_doc,
+                                                           serif_sentence=serif_sentence,
                                                            entity_type=mention.entity_type)
 
                         annotations_for_split.append(ner_annotation)

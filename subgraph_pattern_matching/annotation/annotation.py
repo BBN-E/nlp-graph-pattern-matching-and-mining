@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 #####           ANNOTATION TYPES
 ##############################################################
 
+
 class SimpleAnnotationTypes(Enum):
 
     MENTION = 'MENTION'
@@ -25,17 +26,22 @@ class FrameAnnotationTypes(Enum):
 #####           ABSTRACT ANNOTATION CLASSES
 ##############################################################
 
+
 class Annotation(ABC):
 
     @abstractmethod
-    def __init__(self, networkx_graph, annotation_type):
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, annotation_type):
         '''
 
         :param networkx_graph: networkx.classes.digraph.DiGraph
+        :param serif_doc: serif.theory.document.Document
+        :param serif_sentence: serif.theory.sentence.Sentence
         :param annotation_type: annotation.{Simple,Frame}AnnotationTypes.X
         '''
 
         self._networkx_graph = networkx_graph
+        self._serif_doc = serif_doc
+        self._serif_sentence = serif_sentence
         self._annotation_type = annotation_type
 
     @property
@@ -46,18 +52,31 @@ class Annotation(ABC):
     def networkx_graph(self):
         return self._networkx_graph
 
+    @property
+    def serif_doc(self):
+        return self._serif_doc
+
+    @property
+    def serif_sentence(self):
+        return self._serif_sentence
+
 
 class SimpleAnnotation(Annotation):
 
-    def __init__(self, networkx_graph, token_node_ids, annotation_type):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, annotation_type):
         '''
 
         :param networkx_graph: networkx.classes.digraph.DiGraph
         :param token_node_ids: list[str] for annotation token node ids in networkx graph
+        :param serif_doc: serif.theory.document.Document
+        :param serif_sentence: serif.theory.sentence.Sentence
         :param annotation_type: annotation.SimpleAnnotationTypes.X
         '''
 
-        super().__init__(networkx_graph, annotation_type)
+        super().__init__(networkx_graph=networkx_graph,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=annotation_type)
         self._token_node_ids = token_node_ids
 
     @property
@@ -67,14 +86,19 @@ class SimpleAnnotation(Annotation):
 
 class FrameAnnotation(Annotation):
 
-    def __init__(self, networkx_graph, annotation_type):
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, annotation_type):
         '''
 
         :param networkx_graph: networkx.classes.digraph.DiGraph
+        :param serif_doc: serif.theory.document.Document
+        :param serif_sentence: serif.theory.sentence.Sentence
         :param annotation_type: annotation.FrameAnnotationTypes.X
         '''
 
-        super().__init__(networkx_graph, annotation_type)
+        super().__init__(networkx_graph=networkx_graph,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=annotation_type)
 
     @property
     def frame(self):
@@ -101,10 +125,15 @@ class FrameAnnotation(Annotation):
 #####           SIMPLE ANNOTATION CLASSES
 ##############################################################
 
+
 class MentionAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, entity_type):
-        super().__init__(networkx_graph, token_node_ids, SimpleAnnotationTypes.MENTION)
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, entity_type):
+        super().__init__(networkx_graph=networkx_graph,
+                         token_node_ids=token_node_ids,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=SimpleAnnotationTypes.MENTION)
         self._entity_type = entity_type
 
     @property
@@ -114,8 +143,12 @@ class MentionAnnotation(SimpleAnnotation):
 
 class EventTriggerAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, event_type):
-        super().__init__(networkx_graph, token_node_ids, SimpleAnnotationTypes.EVENT_TRIGGER)
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, event_type):
+        super().__init__(networkx_graph=networkx_graph,
+                         token_node_ids=token_node_ids,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=SimpleAnnotationTypes.EVENT_TRIGGER)
         self._event_type = event_type
 
     @property
@@ -125,8 +158,12 @@ class EventTriggerAnnotation(SimpleAnnotation):
 
 class EventArgumentAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, role):
-        super().__init__(networkx_graph, token_node_ids, SimpleAnnotationTypes.EVENT_ARGUMENT)
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, role):
+        super().__init__(networkx_graph=networkx_graph,
+                         token_node_ids=token_node_ids,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=SimpleAnnotationTypes.EVENT_ARGUMENT)
         self._role = role
 
     @property
@@ -141,8 +178,11 @@ class EventArgumentAnnotation(SimpleAnnotation):
 
 class EntityEntityRelationAnnotation(FrameAnnotation):
 
-    def __init__(self, networkx_graph, left_entity, right_entity, relation_type):
-        super().__init__(networkx_graph, FrameAnnotationTypes.ENTITY_ENTITY_RELATION)
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, left_entity, right_entity, relation_type):
+        super().__init__(networkx_graph=networkx_graph,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=FrameAnnotationTypes.ENTITY_ENTITY_RELATION)
         self._frame = self.EntityEntityRelationFrame(left_entity, right_entity)
         self._components = [left_entity, right_entity]
         self._relation_type = relation_type
@@ -184,8 +224,11 @@ class EntityEntityRelationAnnotation(FrameAnnotation):
 
 
 class EventFrameAnnotation(FrameAnnotation):
-    def __init__(self, networkx_graph, event_annotation, arg_annotations):
-        super().__init__(networkx_graph, FrameAnnotationTypes.EVENT_FRAME)
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, event_annotation, arg_annotations):
+        super().__init__(networkx_graph=networkx_graph,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=FrameAnnotationTypes.EVENT_FRAME)
         self._frame = self.EventFrame(event_annotation, arg_annotations)
         self._components = [event_annotation]
         self._components.extend([a for a in arg_annotations])

@@ -3,7 +3,6 @@ from abc import ABC
 from graph_builder import GraphBuilder
 from abc import abstractmethod
 
-from annotation.annotation import MentionAnnotation
 from annotation.annotation_corpus import AnnotationCorpus
 from tqdm import tqdm
 
@@ -78,8 +77,9 @@ class DocumentIngester(Ingester):
     def docs_to_annotations(self, serif_docs, nx_graphs):
         '''
 
-       :param serif_docs: list[serifxml3.serif.theory.Document]
-       :param nx_graphs: list[networkx.classes.digraph.DiGraph]
-       :return: annotation.annotation_corpus.AnnotationCorpus
-       '''
+
+        :param serif_docs: list[serifxml3.serif.theory.Document]
+        :param nx_graphs: list[networkx.classes.digraph.DiGraph]
+        :return: annotation.annotation_corpus.AnnotationCorpus
+        '''
         pass
