@@ -4,11 +4,8 @@ from networkx.algorithms.similarity import optimize_graph_edit_distance
 
 
 def approximate_graph_edit_distance(G1, G2):
-    # TODO: Use edit distance that takes into consideration node_match and edge_match
-    node_match = None
-    edge_match = None
 
-    return next(optimize_graph_edit_distance(G1, G2, node_match, edge_match))
+    return next(optimize_graph_edit_distance(G1.pattern_graph, G2.pattern_graph, G1.node_match, G1.edge_match))
 
 
 def create_distance_matrix(local_patterns, similarity_measure, stripe=0, num_batches=1):

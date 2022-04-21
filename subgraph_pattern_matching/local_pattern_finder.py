@@ -3,9 +3,11 @@ import networkx as nx
 from tqdm import tqdm
 import argparse
 
+from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
-from io_utils.io_utils import serialize_pattern_graphs
+from io_utils.io_utils import serialize_patterns
+from patterns.pattern import Pattern
 
 class ParseTypes(Enum):
     '''which parses to look at'''
@@ -109,10 +111,10 @@ class LocalPatternFinder():
 
     def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction):
 
-        annotation_subgraphs_for_configuration = []
+        annotation_patterns_for_configuration = []
 
         # loop over annotations
-        for ann in tqdm(annotations, desc="annotations", position=3, leave=False):
+        for i, ann in enumerate(tqdm(annotations, desc="annotations", position=3, leave=False)):
 
             # if annotation consists of multiple tokens, compose their k-hop subgraphs
             token_k_hop_neighborhoods = []
@@ -127,9 +129,12 @@ class LocalPatternFinder():
             ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
             if len(ann_k_hop_neighborhood) == 0:
                 continue
-            annotation_subgraphs_for_configuration.append(ann_k_hop_neighborhood)
 
-        return annotation_subgraphs_for_configuration
+            annotation_pattern = Pattern("id_{}".format(i), ann_k_hop_neighborhood,
+                                         [NodeAttrs.node_type], [EdgeAttrs.edge_type])
+            annotation_patterns_for_configuration.append(annotation_pattern)
+
+        return annotation_patterns_for_configuration
 
 
     def grid_search(self,
@@ -162,38 +167,38 @@ class LocalPatternFinder():
         return config_to_annotation_subgraphs
 
 
-def read_from_corpus(corpus):
+def read_corpus(corpus_id):
 
     from annotation.ingestion.event_ingester import EventIngester
     from annotation.ingestion.ner_ingester import NERIngester
     from annotation.ingestion.relation_ingester import RelationIngester
 
-    if corpus == "TACRED":
-        corpus = RelationIngester().ingest_tacred()
-    elif corpus == "CONLL_ENGLISH":
-        corpus = NERIngester().ingest_conll()
-    elif corpus == " ACE_ENGLISH":
-        corpus = EventIngester().ingest_ace()
-    elif corpus == "AIDA_TEST":
-        corpus = EventIngester().ingest_aida()
+    if corpus_id == "TACRED":
+        corpus_id = RelationIngester().ingest_tacred()
+    elif corpus_id == "CONLL_ENGLISH":
+        corpus_id = NERIngester().ingest_conll()
+    elif corpus_id == "ACE_ENGLISH":
+        corpus_id = EventIngester().ingest_ace()
+    elif corpus_id == "AIDA_TEST":
+        corpus_id = EventIngester().ingest_aida()
     else:
-        raise NotImplementedError("Corpus {} not implemented".format(corpus))
+        raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 
-    return corpus
+    return corpus_id
 
 
 def main(args):
 
-    corpus = read_from_corpus(args.annotation_corpus)
+    corpus = read_corpus(args.annotation_corpus)
 
     LPF = LocalPatternFinder()
     parse_types = [ParseTypes[p] for p in args.parse_types]
 
-    annotation_subgraphs = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
+    annotation_patterns = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
                                                         k=args.k_hop_neighborhoods,
                                                         parse_types=parse_types,
                                                         search_direction=DAGSearchDirection[args.search_direction])
-    json_dump = serialize_pattern_graphs(annotation_subgraphs)
+    json_dump = serialize_patterns(annotation_patterns)
 
     with open(args.output, 'w') as f:
         f.write(json_dump)

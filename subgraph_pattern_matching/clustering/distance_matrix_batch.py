@@ -5,19 +5,11 @@ import argparse
 from networkx.readwrite import json_graph
 
 from distance_metrics import approximate_graph_edit_distance, create_distance_matrix
-
+from io_utils.io_utils import deserialize_patterns
 
 def main(args):
+    local_patterns = deserialize_patterns(args.input_graphs, is_file_path=True)
 
-    with open(args.input_graphs, 'r') as f:
-        node_link_data_list = json.load(f)
-
-    digraph_list = []
-    for node_link_data in node_link_data_list:
-        digraph = json_graph.node_link_graph(node_link_data)
-        digraph_list.append(digraph)
-
-    local_patterns = digraph_list
     distance_matrix = create_distance_matrix(local_patterns, approximate_graph_edit_distance,
                                              stripe=args.stripe, num_batches=args.num_batches)
 
