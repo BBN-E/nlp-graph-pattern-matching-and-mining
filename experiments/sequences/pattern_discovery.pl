@@ -23,7 +23,7 @@ BEGIN {
     $p = $user_params;
 }
 
-my $JOB_NAME;
+my $JOB_NAME = "pattern_discovery";
 
 # Process our arguments; pass the rest through to runjobs.
 Getopt::Long::Configure("pass_through");
