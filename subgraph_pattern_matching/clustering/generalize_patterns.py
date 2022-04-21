@@ -105,7 +105,6 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
         cur_pattern = patterns_list[graph_index].pattern_graph
 
         graph_viewer.prepare_mdp_networkx_for_visualization(cur_pattern)
-        graph_viewer.prepare_networkx_for_visualization(cur_pattern)
 
         html_file = os.path.join(output_dir, "central_graph_in_cluster_{}.html".format(cluster_num))
 
@@ -129,22 +128,32 @@ def main(args):
 
     pattern_list = deserialize_patterns(args.local_patterns_json, is_file_path=True)
 
-    with open(args.distance_matrix, 'rb') as f:
-        distance_matrix = np.load(f)
+    if args.distance_matrix and args.labels:
 
-    with open(args.labels, 'r') as f:
-        labels = json.load(f)
+        with open(args.distance_matrix, 'rb') as f:
+            distance_matrix = np.load(f)
 
-    print(get_pattern_from_clusters(pattern_list, distance_matrix, labels, args.output))
+        with open(args.labels, 'r') as f:
+            labels = json.load(f)
+
+        print(get_pattern_from_clusters(pattern_list, distance_matrix, labels, args.output))
+    else:
+        for patten in pattern_list:
+            graph_viewer = GraphViewer()
+
+            graph_viewer.prepare_mdp_networkx_for_visualization(patten.pattern_graph)
+            graph_viewer.prepare_networkx_for_visualization(patten.pattern_graph)
+            html_file = os.path.join(args.output, "graph_{}.html".format(patten.pattern_id))
+            graph_viewer.visualize_networkx_graph(patten.pattern_graph, html_file=html_file)
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--local_patterns_json', type=str, required=True)
-    parser.add_argument('-d', '--distance_matrix', type=str, required=True)
-    parser.add_argument('-l', '--labels', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('-d', '--distance_matrix', type=str, default=None)
+    parser.add_argument('-l', '--labels', type=str, default=None)
     args = parser.parse_args()
 
     main(args)
