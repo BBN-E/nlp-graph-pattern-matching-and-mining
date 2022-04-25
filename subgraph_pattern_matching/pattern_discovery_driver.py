@@ -4,7 +4,7 @@ import numpy as np
 
 from local_pattern_finder import LocalPatternFinder, ParseTypes
 from annotation.ingestion.event_ingester import EventIngester
-from io_utils.io_utils import serialize_pattern_graphs, deserialize_pattern_graphs
+from io_utils.io_utils import serialize_patterns, deserialize_patterns
 from clustering.distance_metrics import create_distance_matrix, approximate_graph_edit_distance
 from clustering.cluster_graphs import cluster_digraphs
 from clustering.generalize_patterns import get_pattern_from_clusters
@@ -33,11 +33,11 @@ def main(args):
             os.mkdir(digraph_dir)
 
         index_to_config_key = []
-        for i, (key, digraph_list) in enumerate(config_to_annotation_subgraphs.items()):
+        for i, (key, pattern_list) in enumerate(config_to_annotation_subgraphs.items()):
             index_to_config_key.append(key)
-            json_dump = serialize_pattern_graphs(digraph_list)
+            json_dump = serialize_patterns(pattern_list)
 
-            with open(digraph_dir + "/digraphs_{}.json".format(i), 'w') as f:
+            with open(digraph_dir + "/patterns_{}.json".format(i), 'w') as f:
                 f.write(json_dump)
 
         # TODO: ParseTypes not json serializable, figure out an encoding
@@ -59,9 +59,9 @@ def main(args):
             list_key[1] = tuple(list_key[1])
             key = tuple(list_key)
 
-            digraph_path = os.path.join(digraph_dir, "digraphs_{}.json".format(index))
-            digraph_list = deserialize_pattern_graphs(digraph_path, is_file_path=True)
-            config_to_annotation_subgraphs[key] = digraph_list
+            digraph_path = os.path.join(digraph_dir, "patterns_{}.json".format(index))
+            pattern_list = deserialize_patterns(digraph_path, is_file_path=True)
+            config_to_annotation_subgraphs[key] = pattern_list
 
             distance_matrix_path = os.path.join(distance_matrices_dir, "combined_distance_matrix_digraphs_{}.json.np".format(index))
             with open(distance_matrix_path, 'rb') as f:
@@ -70,8 +70,8 @@ def main(args):
                 distance_matrices[key] = distance_matrix
     else:
         # apply distance function on train set data
-        for key, digraph_list in enumerate(config_to_annotation_subgraphs.items()):
-            distance_matrix = create_distance_matrix(digraph_list)
+        for key, pattern_list in enumerate(config_to_annotation_subgraphs.items()):
+            distance_matrix = create_distance_matrix(pattern_list)
             distance_matrices[key] = distance_matrix
 
     # cluster local patterns on train set, create representative pattern from each cluster
