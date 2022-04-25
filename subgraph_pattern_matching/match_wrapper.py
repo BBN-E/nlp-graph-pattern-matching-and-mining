@@ -11,13 +11,14 @@ class MatchWrapper():
     Convenient wrapper to store isomorphism dicts and map matches back to serifxml
     '''
 
-    def __init__(self, match_node_id_to_pattern_node_id, pattern_id, serif_doc):
+    def __init__(self, match_node_id_to_pattern_node_id, pattern_id, serif_sentence, serif_doc):
         '''
         :param match_node_id_to_pattern_node_id: {'a1362': 'CONCEIVER_NODE', 'a1378': 'EVENT_NODE', 'policymakers_a95': 'CONCEIVER_TOKEN', 'epidemic_a91': 'EVENT_TOKEN', 'said_a96': 'SIP', 'need_a81': 'CCOMP_TOKEN'}
         :param serif_doc:
         '''
 
         self.serif_doc = serif_doc  # TODO why does this need to be instantiated for the references in self.pattern_node_id_to_serif_theory values to work?
+        self.serif_sentence = serif_sentence
         self.docid = serif_doc.docid
         self.pattern_id = pattern_id
 
@@ -62,6 +63,22 @@ class MatchCorpus():
         '''
 
         self.matches = matches
+
+    def organize_matches_by_serif_doc_and_serif_sentence(self, per_sentence=False):
+
+        if per_sentence:
+            match_dict = defaultdict(lambda: defaultdict(list))
+            for m in self.matches:
+                assert m.serif_doc is not None
+                assert m.serif_sentence is not None
+                match_dict[m.serif_doc.id][m.serif_sentence.id].append(m)
+        else:
+            match_dict = defaultdict(list)
+            for m in self.matches:
+                assert m.serif_doc is not None
+                match_dict[m.serif_doc.id].append(m)
+
+        return match_dict
 
     def random_sample(self, pattern_ids, sample_size=10):
         '''
