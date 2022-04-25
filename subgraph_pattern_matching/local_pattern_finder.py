@@ -64,6 +64,8 @@ class LocalPatternFinder():
         :return: DiGraph for k-hop neighborhood of source node with edges for only specified parse types
         '''
 
+        G.nodes[node_id][NodeAttrs.annotated] = True
+
         # nx.single_source_shortest_path returns dictionary from target node id to list of node ids corresponding to the
         #  shortest path from source to target; we only need to know which nodes are in the k-hop neighborhood of source
         #  node so we'll take the keys of that dictionary.
@@ -112,6 +114,8 @@ class LocalPatternFinder():
     def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction):
 
         annotation_patterns_for_configuration = []
+
+        print("# annotations: {}".format(len(annotations)))
 
         # loop over annotations
         for i, ann in enumerate(tqdm(annotations, desc="annotations", position=3, leave=False)):
