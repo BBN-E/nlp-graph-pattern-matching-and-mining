@@ -22,7 +22,7 @@ def create_corpus_directory(corpus_paths_dict):
 
     '''
 
-    corpus_dir = defaultdict()
+    corpus_dir = defaultdict(lambda: defaultdict())
 
     for SPLIT in ['TRAIN', 'DEV', 'TEST']:
 
@@ -70,6 +70,26 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=None):
                 bio_list[j] = mention_bio[i]
 
     return bio_list
+
+
+def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=None):
+    '''
+
+    :param serif_sentence: serif.theory.sentence.Sentence
+    :param matches_for_sentence: list[match_wrapper.MatchWrapper]
+    :param annotation_scheme:
+    :return:
+    '''
+
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+    if matches_for_sentence:
+        import pdb; pdb.set_trace()
+        for match in matches_for_sentence:
+            if match.serif_sentence is not None:
+                # match.match_to_serif_theory(match_id=, serif_doc=)
+                pass
+
 
 
 if __name__ == '__main__':

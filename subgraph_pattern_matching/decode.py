@@ -1,3 +1,4 @@
+import json
 import argparse
 import logging
 import networkx as nx
@@ -8,6 +9,8 @@ from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
 from local_pattern_finder import read_corpus
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
+
+from patterns.pattern import Pattern
 
 from utils.timer import timer
 
@@ -47,6 +50,20 @@ def prepare_patterns():
     return patterns
 
 
+def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json'):
+
+    with open(patterns_json_path, 'r') as f:
+        json_patterns = json.load(f)
+
+    patterns = []
+    for json_dict in json_patterns:
+        p = Pattern()
+        p.load_from_json(json_dict)
+        patterns.append(p)
+
+    return patterns
+
+
 def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     '''
     :param serif_doc:
@@ -63,13 +80,14 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     return nx_graphs
 
 
-def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc):
+def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence):
     '''
 
     :param nx_graph:
     :param patterns:
     :param serif_doc:
-    :return: :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
+    :param serif_sentence:
+    :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
     '''
 
     matches = []
@@ -94,7 +112,10 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc):
         ###########################################################################################################
 
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
-        pattern_matches = [MatchWrapper(m, pattern_id, serif_doc) for m in pattern_match_dicts]
+        pattern_matches = [MatchWrapper(match_node_id_to_pattern_node_id=m,
+                                        pattern_id=pattern_id,
+                                        serif_sentence=serif_sentence,
+                                        serif_doc=serif_doc) for m in pattern_match_dicts]
         if len(pattern_matches) > 0:
             logging.info("%s - %d", pattern_id, len(pattern_matches))
 
@@ -116,7 +137,10 @@ def main(args):
     GB = GraphBuilder()
 
     # create patterns
-    patterns = prepare_patterns()
+    if args.patterns_path:
+        patterns = prepare_serialized_patterns(patterns_json_path=args.patterns_path)
+    else:
+        patterns = prepare_patterns()
 
     # extract patterns from every serifxml
     all_matches = []
@@ -131,30 +155,63 @@ def main(args):
                                            per_sentence=args.per_sentence)
 
         # do subgraph pattern matching for every nx graph
-        for nx_graph in nx_graphs:
-            all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
+        if args.per_sentence:
+            for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences))[:10]:
+                logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
+                all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
+                                                                  serif_doc=serif_doc,
+                                                                  serif_sentence=serif_sentence,
+                                                                  patterns=patterns))
+        else:  # per-document
+            logging.info("doc:{}".format(serif_doc.docid))
+            all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graphs[0],
                                                               serif_doc=serif_doc,
+                                                              serif_sentence=None,
                                                               patterns=patterns))
+
+    match_corpus = MatchCorpus(all_matches)
+    matches_by_serif_id = match_corpus.organize_matches_by_serif_doc_and_serif_sentence(per_sentence=args.per_sentence)
 
     # if decoding over annotated corpus, ingest gold corpus and do evaluation
     if args.evaluation_corpus:
-        evaluation_corpus = read_corpus(corpus_id=args.evaluation_corpus)
 
-    # match_corpus = MatchCorpus(all_matches)
-    # match_corpus.extraction_stats()
-    # match_corpus.count_intersentence_conceiver_event_edges()
+        from evaluation.utils import create_corpus_directory, serif_sentence_to_ner_bio_list, \
+            serif_sentence_to_ner_bio_list_based_on_predictions
 
-    # conceiver_event_mtras = match_corpus.to_mtra_pairs()
-    # print(conceiver_event_mtras)
+        if args.evaluation_corpus == 'CONLL_ENGLISH':
 
-    # ccomp_family_random_sample = match_corpus.random_sample({'ccomp', 'relaxed_ccomp', 'relaxed_ccomp_one_hop'}, sample_size=10)
-    # according_to_random_sample = match_corpus.random_sample({'according_to'}, sample_size=10)
-    #
-    # for m in ccomp_family_random_sample:
-    #     print(m)
-    # print("\n\n====================\n====================\n\n")
-    # for m in according_to_random_sample:
-    #     print(m)
+            from annotation.ingestion.ner_ingester import CONLL_ENGLISH
+            conll_en_corpus_dir = create_corpus_directory(CONLL_ENGLISH)
+
+            # # get gold dev bio list
+            # assert len(conll_en_corpus_dir['DEV'].values()) == 1
+            # gold_dev_serif_doc = list(conll_en_corpus_dir['DEV'].values())[0]
+            # gold_dev_bio = [serif_sentence_to_ner_bio_list(serif_sentence=s) for s in gold_dev_serif_doc.sentences]
+            #
+            # # get pred dev bio list
+            # pred_dev_matches = matches_by_serif_id[gold_dev_serif_doc.id]
+            # pred_dev_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
+            #                                                                    matches_for_sentence=pred_dev_matches[s.id]) \
+            #                for s in gold_dev_serif_doc.sentences]
+
+            # get gold test bio list
+            assert len(conll_en_corpus_dir['TEST'].values()) == 1
+            gold_test_serif_doc = list(conll_en_corpus_dir['TEST'].values())[0]
+            gold_test_bio = [serif_sentence_to_ner_bio_list(s) for s in gold_test_serif_doc.sentences]
+
+            # get pred test bio list
+            pred_test_matches = matches_by_serif_id[gold_test_serif_doc.id]
+            pred_test_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
+                                                                                 matches_for_sentence=pred_test_matches[s.id]) \
+                            for s in gold_test_serif_doc.sentences]
+
+            for g,p in zip(gold_test_bio, pred_test_bio):
+                print(g)
+                print(p)
+                print("-------------------")
+
+        else:
+            raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
 
 
 if __name__ == '__main__':
@@ -166,15 +223,26 @@ if __name__ == '__main__':
     -l
     '''
 
+    '''
+    PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
+    python3 \
+    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
+    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
+    -s \
+    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json \
+    -e CONLL_ENGLISH
+    '''
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-l', '--list', action='store_true', help='input is list of serifxmls rather than serifxml path')
     parser.add_argument('-s', '--per_sentence', action='store_true', help='whether to create nx graphs per individual sentence '
                                                                     'or for entire document (depends on whether the serifxmls'
                                                                     'have document-level parses such as MDP/TDP or not)')
-    # parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction')
+    parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
+                        default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
-                        help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False)
+                        help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default='CONLL_ENGLISH')
     # parser.add_argument('-o', '--output', type=str)
     args = parser.parse_args()
 
