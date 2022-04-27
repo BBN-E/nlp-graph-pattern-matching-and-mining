@@ -76,14 +76,14 @@ foreach my $k (@{$p->{K_VALUES}}) {
 
                 for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
 
-                    my $dist_matrix_batch_job = runjobs([$create_batch_output_dir], "$JOB_NAME/$config/dist_matrix_batch/$i",
+                    my $dist_matrix_batch_job = runjobs([$create_batch_output_dir], "$JOB_NAME/$config/dist_matrix_batch/$i", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
                                             ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/distance_matrix_batch.py --num_batches $p->{NUM_BATCHES} " .
                                              "--stripe $i --output_file_path $batch_subdir/dist_matrix_split_$i --input_graphs $serialized_local_patterns_path"]);
                     push(@dist_matrix_batch_jobs, $dist_matrix_batch_job);
                 }
 
                 my $combine_matrices_job = runjobs(\@dist_matrix_batch_jobs, "$JOB_NAME/$config/combine_matrices",
-                                                  {SGE_VIRTUAL_FREE => ["4G", "8G"]},
+                                                  {SGE_VIRTUAL_FREE => ["8G", "16G"]},
                                                   ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/combine_distance_matrices.py --num_batches $p->{NUM_BATCHES} " .
                                                    "--input_dir_path $batch_subdir --output_file_path $grid_config_dir/combined_distance_matrix.np"]);
 

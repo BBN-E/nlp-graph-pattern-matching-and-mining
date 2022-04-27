@@ -20,7 +20,7 @@ def main(args):
 def combine_distance_matrices(distance_matrices, num_batches):
     row_len = distance_matrices[0].shape[0]
 
-    combined_distance_matrix = np.empty((row_len, row_len), int)
+    combined_distance_matrix = np.empty((row_len, row_len), float)
     for i in range(row_len):
         for j in range(i, row_len):
             batch_num = (i * row_len + j) % num_batches
