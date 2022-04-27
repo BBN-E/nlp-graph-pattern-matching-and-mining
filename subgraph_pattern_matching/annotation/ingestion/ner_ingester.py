@@ -2,9 +2,9 @@ from annotation.annotation import MentionAnnotation
 from annotation.ingestion.ingester import SentenceIngester
 
 CONLL_ENGLISH = {
-    'TRAIN': '/nfs/raid90/u10/users/brozonoy-ad/data/conll/serifxml/eng.train.xml',
-    'DEV': '/nfs/raid90/u10/users/brozonoy-ad/data/conll/serifxml/eng.testa.xml',
-    'TEST': '/nfs/raid90/u10/users/brozonoy-ad/data/conll/serifxml/eng.testb.xml'
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.train.xml',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testa.xml',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml'
 }
 
 CONLL_SPANISH = {

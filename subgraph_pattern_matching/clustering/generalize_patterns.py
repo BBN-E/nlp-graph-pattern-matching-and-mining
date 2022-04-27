@@ -4,8 +4,10 @@ import json
 import os
 
 from view_utils.graph_viewer import GraphViewer
-from io_utils.io_utils import deserialize_patterns
+from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
+from patterns.pattern import Pattern
+
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
     # Returns the index of the largest graph in each cluster
@@ -70,10 +72,10 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
     # Finds the number of graphs in graph_list isomorphic to each possible subgraph of central_graph
     # Used to generalize a pattern that applies to most nodes in a cluster
 
-    patterns_to_num_matches = {}
+    selected_patterns = []
     central_graph = central_pattern.pattern_graph
 
-    for node_set in nx.weakly_connected_components(central_graph):
+    for index, node_set in enumerate(nx.weakly_connected_components(central_graph)):
         subgraph_pattern = central_graph.subgraph(node_set)
         # TODO: handle edge and node attributes
 
@@ -83,9 +85,12 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
                                                                pattern.node_match, pattern.edge_match)
             if matcher.subgraph_is_isomorphic():
                 num_matches += 1
-        patterns_to_num_matches[subgraph_pattern] = num_matches
 
-    return patterns_to_num_matches
+        new_pattern = Pattern("selected_pattern_{}_{}".format(index, num_matches),
+                              central_pattern.node_match, central_pattern.edge_match)
+        selected_patterns.append(new_pattern)
+
+    return selected_patterns
 
 
 def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir):
@@ -95,7 +100,11 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
 
     graph_viewer = GraphViewer()
 
-    cluster_num_to_cluster_pattern = []
+    cluster_num_to_cluster_patterns = []
+
+    visualizations_dir = os.path.join(output_dir, "visualizations")
+    if not os.path.exists(visualizations_dir):
+        os.makedirs(visualizations_dir)
 
     for cluster_num, graph_index in cluster_to_central_graph_index.items():
 
@@ -105,9 +114,8 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
         cur_pattern = patterns_list[graph_index].pattern_graph
 
         graph_viewer.prepare_mdp_networkx_for_visualization(cur_pattern)
-        graph_viewer.prepare_networkx_for_visualization(cur_pattern)
 
-        html_file = os.path.join(output_dir, "central_graph_in_cluster_{}.html".format(cluster_num))
+        html_file = os.path.join(visualizations_dir, "central_graph_in_cluster_{}.html".format(cluster_num))
 
         graph_viewer.visualize_networkx_graph(cur_pattern, html_file=html_file)
 
@@ -116,10 +124,10 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
             if label == cluster_num:
                 cluster_pattern_list.append(patterns_list[i])
 
-        cluster_pattern = find_pattern_for_cluster(patterns_list[graph_index], cluster_pattern_list)
-        cluster_num_to_cluster_pattern.append(cluster_pattern)
+        cluster_patterns = find_pattern_for_cluster(patterns_list[graph_index], cluster_pattern_list)
+        cluster_num_to_cluster_patterns.append(cluster_patterns)
 
-    return cluster_num_to_cluster_pattern
+    return cluster_num_to_cluster_patterns
 
 
 def main(args):
@@ -129,22 +137,45 @@ def main(args):
 
     pattern_list = deserialize_patterns(args.local_patterns_json, is_file_path=True)
 
-    with open(args.distance_matrix, 'rb') as f:
-        distance_matrix = np.load(f)
+    if args.distance_matrix and args.labels:
 
-    with open(args.labels, 'r') as f:
-        labels = json.load(f)
+        with open(args.distance_matrix, 'rb') as f:
+            distance_matrix = np.load(f)
 
-    print(get_pattern_from_clusters(pattern_list, distance_matrix, labels, args.output))
+        with open(args.labels, 'r') as f:
+            labels = json.load(f)
+
+        cluster_num_to_cluster_patterns = get_pattern_from_clusters(pattern_list, distance_matrix, labels, args.output)
+
+        for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
+            json_dump = serialize_patterns(cluster_patterns)
+
+            with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
+                f.write(json_dump)
+
+    else:
+
+        visualizations_dir = os.path.join(args.output, "visualizations")
+        if not os.path.exists(visualizations_dir):
+            os.makedirs(visualizations_dir)
+
+        for i, pattern in enumerate(pattern_list):
+            graph_viewer = GraphViewer()
+            graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
+            graph_viewer.prepare_networkx_for_visualization(pattern.pattern_graph)
+            html_file = os.path.join(visualizations_dir, "graph_1{}.html".format(pattern.pattern_id))
+            graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file=html_file)
+            if i > 10:
+                break
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--local_patterns_json', type=str, required=True)
-    parser.add_argument('-d', '--distance_matrix', type=str, required=True)
-    parser.add_argument('-l', '--labels', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('-d', '--distance_matrix', type=str, default=None)
+    parser.add_argument('-l', '--labels', type=str, default=None)
     args = parser.parse_args()
 
     main(args)

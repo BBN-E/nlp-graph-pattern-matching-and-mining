@@ -153,7 +153,8 @@ class GraphViewer:
             net = Network(height='1000px', width='1800px', directed=True, layout=True, heading=sentence_text)
         else:
             net = Network(height='1000px', width='1800px', directed=True, layout=True)
-        net.from_nx(G)
+        net.from_nx(G, show_edge_weights=False)
+
         net.toggle_physics(False)
 
         # warning: due to bug in pyvis, using show_buttons and set_options together
