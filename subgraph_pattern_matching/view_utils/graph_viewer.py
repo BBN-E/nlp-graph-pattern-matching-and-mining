@@ -50,8 +50,6 @@ class GraphViewer:
             if node_type == NodeTypes.modal:
                  G.nodes[node]['color'] = "red"
                  G.nodes[node]['label'] = self.mdp_node_label(G,node)
-            else:
-                 G.nodes[node]['color'] = "blue"
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
             if edge_type == EdgeTypes.modal_constituent_token:
@@ -86,14 +84,12 @@ class GraphViewer:
     def prepare_sdp_networkx_for_visualization (self, G, root_level=0):
         self.prepare_networkx_for_visualization(G, root_level=root_level)
         for node in G.nodes:
-            G.nodes[node]['color'] = "blue"
             G.nodes[node]['label'] = self.token_node_label(G,node)
 
     def prepare_tok_networkx_for_visualization (self, G, root_level=0):
         self.prepare_networkx_for_visualization(G, root_level=root_level)
         # self.invert_node_levels(G)
         for node in G.nodes:
-            G.nodes[node]['color'] = "blue"
             G.nodes[node]['label'] = self.token_node_label(G,node)
 
     def prepare_amr_networkx_for_visualization (self, G, root_level=0):
@@ -103,8 +99,6 @@ class GraphViewer:
             if node_type == NodeTypes.amr:
                 G.nodes[node]['color'] = "orange"
                 G.nodes[node]['label'] = self.token_node_label(G,node)
-            else:
-                G.nodes[node]['color'] = "blue"
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
             if edge_type == EdgeTypes.amr_aligned_token:
@@ -142,6 +136,12 @@ class GraphViewer:
 
         for root in roots:
             self.add_level_to_syntactic_dependency_parse (G, root, level=root_level)
+
+        for node in G:
+            node_annotation_status = G.nodes[node].get(NodeAttrs.annotated, None)
+            if node_annotation_status:
+                G.nodes[node]['color'] = "pink"
+
 
     def add_level_to_syntactic_dependency_parse (self, G, node, level=0):
         G.nodes[node]['level'] = level
