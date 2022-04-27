@@ -3,9 +3,9 @@ from annotation.ingestion.ingester import DocumentIngester
 
 
 ACE_ENGLISH = {
-    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/datasets_to_serifxml/default/ACE/ACE_English/serifxmls/train/serifxmls.list',
-    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/datasets_to_serifxml/default/ACE/ACE_English/serifxmls/dev/serifxmls.list',
-    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/datasets_to_serifxml/default/ACE/ACE_English/serifxmls/test/serifxmls.list',
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/ACE_parsed/train.list',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/ACE_parsed/dev.list',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/ACE_parsed/test.list',
 }
 
 ACE_CHINESE = {
