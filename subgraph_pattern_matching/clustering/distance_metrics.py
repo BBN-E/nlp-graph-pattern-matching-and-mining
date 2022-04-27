@@ -11,8 +11,10 @@ def approximate_graph_edit_distance(G1, G2):
 def normalized_graph_edit_distance(G1, G2):
 
     edit_distance = next(optimize_graph_edit_distance(G1.pattern_graph, G2.pattern_graph, G1.node_match, G1.edge_match))
+    G1_size = len(G1.pattern_graph) + G1.pattern_graph.number_of_edges()
+    G2_size = len(G2.pattern_graph) + G2.pattern_graph.number_of_edges()
 
-    return edit_distance / (len(G1.pattern_graph)+len(G2.pattern_graph))
+    return edit_distance / (G1_size + G2_size)
 
 
 def create_distance_matrix(local_patterns, similarity_measure, stripe=0, num_batches=1):

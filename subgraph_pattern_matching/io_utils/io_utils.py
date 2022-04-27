@@ -2,6 +2,19 @@ import json
 from networkx.readwrite import json_graph
 from patterns.pattern import Pattern
 
+
+def combine_pattern_lists(json_dump_paths):
+    all_pattern_list = []
+    for json_dump_path in json_dump_paths:
+        pattern_list = deserialize_patterns(json_dump_path, is_file_path=True)
+        all_pattern_list.extend(pattern_list)
+
+    print(len(all_pattern_list))
+
+    json_dump = serialize_patterns(all_pattern_list)
+    return json_dump
+
+
 def serialize_patterns(pattern_list):
     json_data = []
     for pattern in pattern_list:
@@ -58,4 +71,17 @@ def deserialize_pattern_graphs(json_dump, is_file_path=False):
         digraph = json_graph.node_link_graph(jgraph)
         pattern_graphs.append(digraph)
 
+
     return pattern_graphs
+
+# if __name__ == '__main__':
+#
+#     file_paths = []
+#     with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.list", 'r') as f:
+#         for path in f.readlines():
+#             file_paths.append(path.strip())
+#
+#     json_dump = combine_pattern_lists(file_paths)
+#
+#     with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json", 'w') as out_f:
+#         out_f.write(json_dump)
