@@ -1,10 +1,6 @@
-import serifxml3
-
-from graph_builder import GraphBuilder
-
 from annotation.annotation import MentionAnnotation, EntityEntityRelationAnnotation
-from annotation.annotation_corpus import AnnotationCorpus
 from annotation.ingestion.ingester import SentenceIngester
+
 
 TACRED = {
     'TRAIN': '/nfs/raid90/u10/users/brozonoy-ad/data/tacred/serifxml/train.xml',
@@ -38,11 +34,15 @@ class RelationIngester(SentenceIngester):
 
                         left_mention_annotation = MentionAnnotation(networkx_graph=nx_graph,
                                                                     token_node_ids=left_token_node_ids,
+                                                                    serif_doc=split_serif_doc,
+                                                                    serif_sentence=serif_sentence,
                                                                     entity_type=rel_mention.left_mention.entity_type)
 
                         right_mention_annotation = MentionAnnotation(networkx_graph=nx_graph,
-                                                                    token_node_ids=right_token_node_ids,
-                                                                    entity_type=rel_mention.left_mention.entity_type)
+                                                                     token_node_ids=right_token_node_ids,
+                                                                     serif_doc=split_serif_doc,
+                                                                     serif_sentence=serif_sentence,
+                                                                     entity_type=rel_mention.left_mention.entity_type)
 
                         relation_annotation = EntityEntityRelationAnnotation(nx_graph, left_mention_annotation, right_mention_annotation, rel_mention.type)
                         annotations_for_split.append(relation_annotation)
