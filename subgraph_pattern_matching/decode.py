@@ -16,6 +16,7 @@ from utils.timer import timer
 
 
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
 def prepare_patterns():
@@ -205,7 +206,7 @@ def main(args):
                                                                                  matches_for_sentence=pred_test_matches[s.id]) \
                             for s in gold_test_serif_doc.sentences]
 
-            for g,p in zip(gold_test_bio, pred_test_bio):
+            for g,p in list(zip(gold_test_bio, pred_test_bio))[:10]:
                 print(g)
                 print(p)
                 print("-------------------")
