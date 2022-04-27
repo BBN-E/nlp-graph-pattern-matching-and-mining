@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import serifxml3
-
+from serif.theory.token import Token
 
 def create_corpus_directory(corpus_paths_dict):
     '''
@@ -29,7 +29,7 @@ def create_corpus_directory(corpus_paths_dict):
         if corpus_paths_dict[SPLIT].endswith('.xml'):
 
             serif_doc = serifxml3.Document(corpus_paths_dict[SPLIT])
-            corpus_dir[SPLIT][serif_doc.id] = serif_doc
+            corpus_dir[SPLIT][serif_doc.docid] = serif_doc
 
         else:  # assume list of serifxml paths
 
@@ -84,12 +84,23 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
     bio_list = ['O'] * len(serif_sentence.token_sequence)
 
     if matches_for_sentence:
-        import pdb; pdb.set_trace()
-        for match in matches_for_sentence:
-            if match.serif_sentence is not None:
-                # match.match_to_serif_theory(match_id=, serif_doc=)
-                pass
 
+        for match in matches_for_sentence:
+
+            if match.serif_sentence is not None:
+
+                for match_node_id, pattern_node_id in match.match_node_id_to_pattern_node_id.items():
+
+                    serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
+
+                    if serif_theory is not None:
+
+                        # match is serif Token
+                        if type(serif_theory) == Token:
+                            token = serif_theory
+                            bio_list[token.index()] = 'B'
+
+    return bio_list
 
 
 if __name__ == '__main__':
