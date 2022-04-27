@@ -62,6 +62,12 @@ class Annotation(ABC):
     def serif_sentence(self):
         return self._serif_sentence
 
+    @property
+    @abstractmethod
+    def category(self):
+        '''annotation category, e.g. "PER", "Attack.Bombing", "org-founder"'''
+        pass
+
 
 class SimpleAnnotation(Annotation):
 
@@ -153,6 +159,9 @@ class MentionAnnotation(SimpleAnnotation):
     def entity_type(self):
         return self._entity_type
 
+    @property
+    def category(self):
+        return self._entity_type
 
 class EventTriggerAnnotation(SimpleAnnotation):
 
@@ -168,6 +177,9 @@ class EventTriggerAnnotation(SimpleAnnotation):
     def event_type(self):
         return self._event_type
 
+    @property
+    def category(self):
+        return self._event_type
 
 class EventArgumentAnnotation(SimpleAnnotation):
 
@@ -183,6 +195,9 @@ class EventArgumentAnnotation(SimpleAnnotation):
     def role(self):
         return self._role
 
+    @property
+    def category(self):
+        return self._role
 
 # ##############################################################
 # #####           FRAME ANNOTATION CLASSES
@@ -209,6 +224,9 @@ class EntityEntityRelationAnnotation(FrameAnnotation):
     def relation_type(self):
         return self._relation_type
 
+    @property
+    def category(self):
+        return self._relation_type
 
 # class EventEventRelationAnnotation(FrameAnnotation):
 #
@@ -251,6 +269,9 @@ class EventFrameAnnotation(FrameAnnotation):
             self.event = event
             self.event_arguments = event_arguments
 
+    @property
+    def category(self):
+        return self._frame.event.event_type
 
 # class ClaimFrameAnnotation(FrameAnnotation):
 #
