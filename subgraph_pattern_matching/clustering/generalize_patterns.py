@@ -88,7 +88,7 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
                 num_matches += 1
 
         new_pattern = Pattern("selected_pattern_{}_{}".format(index, num_matches), subgraph_pattern,
-                              central_pattern.node_match, central_pattern.edge_match)
+                              central_pattern._node_attrs, central_pattern._edge_attrs)
         selected_patterns.append(new_pattern)
 
     return selected_patterns
