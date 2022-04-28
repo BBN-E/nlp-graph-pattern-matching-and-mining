@@ -89,14 +89,14 @@ class Pattern():
             self.make_edge_match()
 
     def get_annotated_node_ids(self):
-        node_id_to_annotation_status = set()
+        annotated_node_ids = set()
         for node in self.pattern_graph:
             if NodeAttrs.annotated in self.pattern_graph.nodes[node]:
-                node_id_to_annotation_status.add(node)
+                annotated_node_ids.add(node)
 
-        if len(node_id_to_annotation_status) <= 0:
+        if len(annotated_node_ids) <= 0:
             return None
 
-        return node_id_to_annotation_status
+        return annotated_node_ids
 
 
