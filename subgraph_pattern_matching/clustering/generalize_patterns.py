@@ -7,6 +7,9 @@ from view_utils.graph_viewer import GraphViewer
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
 from patterns.pattern import Pattern
+from collections import Counter
+from networkx.algorithms import isomorphism
+
 
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
@@ -131,10 +134,97 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
     return cluster_num_to_cluster_patterns
 
 
-def main(args):
+def add_counts_to_dict(mapping, node_or_edge_list, id_to_attribute_counts):
 
+    for id, attr_dict in node_or_edge_list:
+        for attr, value in attr_dict.items():
+
+            if attr not in id_to_attribute_counts[mapping[id]]:
+                id_to_attribute_counts[mapping[id]][attr] = {}
+
+            if value not in id_to_attribute_counts[mapping[id]][attr]:
+                id_to_attribute_counts[mapping[id]][attr][value] = 0
+
+            id_to_attribute_counts[mapping[id]][attr][value] += 1
+
+
+def majrotiy_wins_graph(patterns_list, labels, output_dir):
+
+    # create list of all graphs in the largest cluster
+    most_frequent_structure_patterns = []
+    label_count = Counter(labels)
+    most_common_label = label_count.most_common(1)[0][0]
+
+    for i, label in enumerate(labels):
+        if label == most_common_label:
+            most_frequent_structure_patterns.append(patterns_list[i])
+
+    # our most frequent pattern
+    stripped_graph = most_frequent_structure_patterns[0].pattern_graph.copy()
+
+    # maps nodes to dict that maps attributes to dicts of possible values and their counts
+    # dict (node, dict ( attr, ( dict (value, count ) ) )
+    node_to_attribute_counts = {}
+    edge_to_attribute_counts = {}
+
+    # our most frequent pattern, stripped of all node and edge attributes
+    for node_id, attr_dict in list(stripped_graph.nodes(data=True)):
+        node_to_attribute_counts[node_id] = {}
+        stripped_graph.nodes[node_id].clear()
+    for node1_id, node2_id, attr_dict in list(stripped_graph.edges(data=True)):
+        edge_to_attribute_counts[(node1_id, node2_id)] = {}
+        stripped_graph.edges[(node1_id, node2_id)].clear()
+
+    # count the frequency of each value of each attribute for each node and edge for each pattern
+    for pattern in most_frequent_structure_patterns:
+        cur_graph = pattern.pattern_graph
+
+        # create a mapping between each pattern and the abstract structure, to align attr recording
+        GM = isomorphism.DiGraphMatcher(cur_graph, stripped_graph)
+        assert(GM.is_isomorphic())
+        mapping = GM.mapping
+        add_counts_to_dict(mapping, list(cur_graph.nodes(data=True)), node_to_attribute_counts)
+
+        edge_mapping = {}
+        for edge in cur_graph.edges:
+            mapped_edge = (mapping[edge[0]], mapping[edge[1]])
+            edge_mapping[edge] = mapped_edge
+        edge_to_attr_list = []
+        for node1_id, node2_id, attr_dict in list(cur_graph.edges(data=True)):
+            edge_to_attr_list.append(((node1_id, node2_id), attr_dict))
+
+        add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
+
+    # set each atrribute of each node and edge to the most frequent value
+    # TODO: only add the most common attribute, value pairs
+
+    all_node_attrs = set()
+    node_attr_value_tuple_to_count = {}
+
+    for node_id, attr_dict in node_to_attribute_counts.items():
+        for attr, value_dict in attr_dict.items():
+            all_node_attrs.add(attr)
+            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+            stripped_graph.nodes[node_id][attr] = most_frequent_value_for_attr
+
+    all_edge_attrs = set()
+    for edge_id, attr_dict in edge_to_attribute_counts.items():
+        for attr, value_dict in attr_dict.items():
+            all_edge_attrs.add(attr)
+            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+            stripped_graph.edges[edge_id][attr] = most_frequent_value_for_attr
+
+    return [[Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs))]]
+
+
+def main(args):
     if not os.path.isdir(args.output):
         os.makedirs(args.output)
+
+    graph_viewer = GraphViewer()
+    visualizations_dir = os.path.join(args.output, "visualizations")
+    if not os.path.exists(visualizations_dir):
+        os.makedirs(visualizations_dir)
 
     pattern_list = deserialize_patterns(args.local_patterns_json, is_file_path=True)
 
@@ -146,7 +236,7 @@ def main(args):
         with open(args.labels, 'r') as f:
             labels = json.load(f)
 
-        cluster_num_to_cluster_patterns = get_pattern_from_clusters(pattern_list, distance_matrix, labels, args.output)
+        cluster_num_to_cluster_patterns = majrotiy_wins_graph(pattern_list, labels, args.output)
 
         for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
             json_dump = serialize_patterns(cluster_patterns)
@@ -154,9 +244,11 @@ def main(args):
             with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
                 f.write(json_dump)
 
-    visualizations_dir = os.path.join(args.output, "visualizations")
-    if not os.path.exists(visualizations_dir):
-        os.makedirs(visualizations_dir)
+            for i, cluster_pattern in enumerate(cluster_patterns):
+                graph_viewer.prepare_mdp_networkx_for_visualization(cluster_pattern.pattern_graph)
+                graph_viewer.prepare_amr_networkx_for_visualization(cluster_pattern.pattern_graph)
+                html_file = os.path.join(visualizations_dir, "majority_graph_{}.html".format(i))
+                graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
 
     examples_dir = os.path.join(visualizations_dir, "examples")
     if not os.path.exists(examples_dir):
@@ -164,7 +256,6 @@ def main(args):
 
     # Get 100 sample graphs to use as visualizations
     for i, pattern in enumerate(pattern_list[0::10]):
-        graph_viewer = GraphViewer()
         graph_viewer.prepare_amr_networkx_for_visualization(pattern.pattern_graph)
         graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
         html_file = os.path.join(examples_dir, "graph_1{}.html".format(pattern.pattern_id))

@@ -9,7 +9,32 @@ from sklearn.neighbors import NearestNeighbors
 
 class ClusterOptions(enum.Enum):
     DBSCAN = enum.auto()
+    IdenticalStructures = enum.auto()
 
+
+def group_identical_structures(distance_matrix):
+
+    clusters = []
+    labeled_indices = set()
+
+    for i, row in enumerate(distance_matrix):
+        if i in labeled_indices:
+            continue
+
+        cur_cluster = set()
+        for j, dist in enumerate(row):
+            if dist == 0:
+                cur_cluster.add(j)
+
+        clusters.append(cur_cluster)
+        labeled_indices |= cur_cluster
+
+    labels = [-1] * distance_matrix.shape[0]
+    for cluster_num, cluster_set in enumerate(clusters):
+        for i in list(cluster_set):
+            labels[i] = cluster_num
+
+    return labels
 
 def dbscan_cluster(distance_matrix):
 
@@ -37,13 +62,15 @@ def dbscan_cluster(distance_matrix):
     print("Estimated number of clusters: {}".format(n_clusters))
     print("Estimated number of noise points: {}".format(n_noise))
 
-    return labels
+    return labels.tolist()
 
 
 def cluster_patterns(distance_matrix, cluster_option=ClusterOptions.DBSCAN):
 
     if cluster_option == ClusterOptions.DBSCAN:
         labels = dbscan_cluster(distance_matrix)
+    elif cluster_option == ClusterOptions.IdenticalStructures:
+        labels = group_identical_structures(distance_matrix)
     else:
         raise NotImplementedError("Cluster method {} not implemented".format(cluster_option))
 
@@ -58,7 +85,7 @@ def main(args):
     labels = cluster_patterns(distance_matrix, ClusterOptions[args.cluster_option])
 
     with open(args.output, 'w') as f:
-        json.dump(labels.tolist(), f, indent=4)
+        json.dump(labels, f, indent=4)
 
 
 if __name__ == '__main__':

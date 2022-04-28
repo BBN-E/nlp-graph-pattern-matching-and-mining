@@ -9,7 +9,7 @@ from constants.common.attrs.node.node_attrs import NodeAttrs
 
 class Pattern():
 
-    def __init__(self, pattern_id=None, pattern_graph=None, node_attrs=None, edge_attrs=None):
+    def __init__(self, pattern_id=None, pattern_graph=None, node_attrs=None, edge_attrs=None, grid_search=None):
 
         self._pattern_id = pattern_id
         self._pattern_graph = pattern_graph
@@ -21,6 +21,7 @@ class Pattern():
             self.make_node_match()
         if edge_attrs:
             self.make_edge_match()
+        self.grid_search = grid_search
 
     @property
     def pattern_id(self):
@@ -75,7 +76,8 @@ class Pattern():
         json_dict = {'pattern_id': self._pattern_id,
                      'pattern_graph': jgraph,
                      'node_attrs': self._node_attrs,
-                     'edge_attrs': self._edge_attrs}
+                     'edge_attrs': self._edge_attrs,
+                     'grid_search': self.grid_search}
         return json_dict
 
     def load_from_json(self, json_dict):
@@ -83,6 +85,8 @@ class Pattern():
         self._pattern_graph = json_graph.node_link_graph(json_dict['pattern_graph'])
         self._node_attrs = json_dict['node_attrs']
         self._edge_attrs = json_dict['edge_attrs']
+        if json_dict['grid_search']:
+            self.grid_search = json_dict['grid_search']
         if self._node_attrs:
             self.make_node_match()
         if self._edge_attrs:
