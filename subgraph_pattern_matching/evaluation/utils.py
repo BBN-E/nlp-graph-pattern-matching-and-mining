@@ -93,6 +93,11 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
 
                     serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
 
+                    # Only match tokens that were part of the annotation in the pattern
+                    if match.annotated_node_ids:
+                        if pattern_node_id not in match.annotated_node_ids:
+                            continue
+
                     if serif_theory is not None:
 
                         # match is serif Token
