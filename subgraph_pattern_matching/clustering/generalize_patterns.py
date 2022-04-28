@@ -148,7 +148,7 @@ def add_counts_to_dict(mapping, node_or_edge_list, id_to_attribute_counts):
             id_to_attribute_counts[mapping[id]][attr][value] += 1
 
 
-def majrotiy_wins_graph(patterns_list, labels, output_dir):
+def majority_wins_graph(patterns_list, labels, output_dir):
 
     # create list of all graphs in the largest cluster
     most_frequent_structure_patterns = []
@@ -236,7 +236,7 @@ def main(args):
         with open(args.labels, 'r') as f:
             labels = json.load(f)
 
-        cluster_num_to_cluster_patterns = majrotiy_wins_graph(pattern_list, labels, args.output)
+        cluster_num_to_cluster_patterns = majority_wins_graph(pattern_list, labels, args.output)
 
         for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
             json_dump = serialize_patterns(cluster_patterns)
