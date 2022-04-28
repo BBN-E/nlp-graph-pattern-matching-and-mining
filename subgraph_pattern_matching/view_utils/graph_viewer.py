@@ -169,7 +169,7 @@ class GraphViewer:
         # net.show_buttons(True)
         self.set_node_spacing(net, 160, show_buttons=False)
 
-        print(html_file)
+        # print(html_file)
         net.write_html(html_file)
 
     def set_node_spacing(self, net, node_spacing, show_buttons=False):

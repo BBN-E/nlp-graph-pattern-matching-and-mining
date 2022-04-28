@@ -88,6 +88,15 @@ class Pattern():
         if self._edge_attrs:
             self.make_edge_match()
 
+    def get_annotated_node_ids(self):
+        node_id_to_annotation_status = set()
+        for node in self.pattern_graph:
+            if NodeAttrs.annotated in self.pattern_graph.nodes[node]:
+                node_id_to_annotation_status.add(node)
 
+        if len(node_id_to_annotation_status) <= 0:
+            return None
+
+        return node_id_to_annotation_status
 
 

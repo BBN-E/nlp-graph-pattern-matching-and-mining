@@ -122,7 +122,8 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         pattern_matches = [MatchWrapper(match_node_id_to_pattern_node_id=m,
                                         pattern_id=pattern_id,
                                         serif_sentence=serif_sentence,
-                                        serif_doc=serif_doc) for m in pattern_match_dicts]
+                                        serif_doc=serif_doc,
+                                        annotated_node_ids=pattern.get_annotated_node_ids()) for m in pattern_match_dicts]
 
         if len(pattern_matches) > 0:
             logging.info("%s - %d", pattern_id, len(pattern_matches))
@@ -130,6 +131,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         matches.extend(pattern_matches)
 
     if vis_path:
+
         graph_viewer.prepare_mdp_networkx_for_visualization(nx_graph)
         graph_viewer.prepare_amr_networkx_for_visualization(nx_graph)
 
@@ -225,7 +227,7 @@ def main(args):
             # gold_dev_bio = [serif_sentence_to_ner_bio_list(serif_sentence=s) for s in gold_dev_serif_doc.sentences]
             #
             # # get pred dev bio list
-            # pred_dev_matches = matches_by_serif_id[gold_dev_serif_doc.id]
+            # pred_dev_matches = matches_by_serif_id[gold_dev_serif_doc.docid]
             # pred_dev_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
             #                                                                    matches_for_sentence=pred_dev_matches[s.id]) \
             #                for s in gold_dev_serif_doc.sentences]
@@ -236,7 +238,7 @@ def main(args):
             gold_test_bio = [serif_sentence_to_ner_bio_list(s) for s in gold_test_serif_doc.sentences]
 
             # get pred test bio list
-            pred_test_matches = matches_by_serif_id[gold_test_serif_doc.id]
+            pred_test_matches = matches_by_serif_id[gold_test_serif_doc.docid]
             pred_test_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
                                                                                  matches_for_sentence=pred_test_matches[s.id]) \
                             for s in gold_test_serif_doc.sentences]
