@@ -88,6 +88,15 @@ class Pattern():
         if self._edge_attrs:
             self.make_edge_match()
 
+    def get_annotated_node_ids(self):
+        annotated_node_ids = set()
+        for node in self.pattern_graph:
+            if NodeAttrs.annotated in self.pattern_graph.nodes[node]:
+                annotated_node_ids.add(node)
 
+        if len(annotated_node_ids) <= 0:
+            return None
+
+        return annotated_node_ids
 
 

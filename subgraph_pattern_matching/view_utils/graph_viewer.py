@@ -141,6 +141,12 @@ class GraphViewer:
             node_annotation_status = G.nodes[node].get(NodeAttrs.annotated, None)
             if node_annotation_status:
                 G.nodes[node]['color'] = "pink"
+            elif 'color' not in G.nodes[node]:
+                G.nodes[node]['color'] = "blue"
+
+        for edge in G.edges:
+            if 'color' not in G.edges[edge]:
+                G.edges[edge]['color'] = "blue"
 
 
     def add_level_to_syntactic_dependency_parse (self, G, node, level=0):
@@ -163,7 +169,7 @@ class GraphViewer:
         # net.show_buttons(True)
         self.set_node_spacing(net, 160, show_buttons=False)
 
-        print(html_file)
+        # print(html_file)
         net.write_html(html_file)
 
     def set_node_spacing(self, net, node_spacing, show_buttons=False):
