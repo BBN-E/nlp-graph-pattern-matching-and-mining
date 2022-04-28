@@ -2,6 +2,7 @@ import json
 import argparse
 import logging
 import networkx as nx
+import os
 
 import serifxml3
 
@@ -14,6 +15,7 @@ from patterns.pattern import Pattern
 
 from utils.timer import timer
 
+from view_utils.graph_viewer import GraphViewer
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -80,7 +82,7 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     return nx_graphs
 
 
-def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence):
+def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path):
     '''
 
     :param nx_graph:
@@ -89,6 +91,9 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     :param serif_sentence:
     :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
     '''
+
+    if vis_path:
+        graph_viewer = GraphViewer()
 
     matches = []
     for pattern in patterns:
@@ -112,14 +117,43 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         ###########################################################################################################
 
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
+
         pattern_matches = [MatchWrapper(match_node_id_to_pattern_node_id=m,
                                         pattern_id=pattern_id,
                                         serif_sentence=serif_sentence,
                                         serif_doc=serif_doc) for m in pattern_match_dicts]
+
         if len(pattern_matches) > 0:
             logging.info("%s - %d", pattern_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
+
+    if vis_path:
+        graph_viewer.prepare_mdp_networkx_for_visualization(nx_graph)
+        graph_viewer.prepare_amr_networkx_for_visualization(nx_graph)
+
+        html_file = os.path.join(vis_path, "nx_graph_{}.html".format(serif_sentence.id))
+        graph_viewer.visualize_networkx_graph(nx_graph, html_file=html_file)
+        sentence_path = os.path.join(vis_path, "{}".format(serif_sentence.id))
+        if not os.path.isdir(sentence_path):
+            os.mkdir(sentence_path)
+        pattern_to_graph = {}
+        for match in matches:
+            if match.pattern_id not in pattern_to_graph:
+                pattern_to_graph[match.pattern_id] = []
+
+            matched_graph = nx_graph.copy()
+            pattern_to_graph[match.pattern_id].append(matched_graph)
+            graph_viewer.prepare_mdp_networkx_for_visualization(matched_graph)
+            graph_viewer.prepare_amr_networkx_for_visualization(matched_graph)
+
+            for node_id, __ in match.match_node_id_to_pattern_node_id.items():
+                matched_graph.nodes[node_id]['color'] = "Red"
+
+        for pattern_id, graphs in pattern_to_graph.items():
+            for i, graph in enumerate(graphs):
+                html_file = os.path.join(sentence_path, "{}_{}.html".format(pattern_id, i))
+                graph_viewer.visualize_networkx_graph(graph, html_file=html_file)
 
     return matches
 
@@ -161,7 +195,8 @@ def main(args):
                 all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
                                                                   serif_doc=serif_doc,
                                                                   serif_sentence=serif_sentence,
-                                                                  patterns=patterns))
+                                                                  patterns=patterns,
+                                                                  vis_path=args.visualization_path))
         else:  # per-document
             logging.info("doc:{}".format(serif_doc.docid))
             all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graphs[0],
@@ -205,7 +240,7 @@ def main(args):
                                                                                  matches_for_sentence=pred_test_matches[s.id]) \
                             for s in gold_test_serif_doc.sentences]
 
-            for g,p in zip(gold_test_bio, pred_test_bio):
+            for g,p in list(zip(gold_test_bio, pred_test_bio))[:10]:
                 print(g)
                 print(p)
                 print("-------------------")
@@ -243,6 +278,7 @@ if __name__ == '__main__':
                         default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
                         help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default='CONLL_ENGLISH')
+    parser.add_argument('-v', '--visualization_path', required=False, default=None)
     # parser.add_argument('-o', '--output', type=str)
     args = parser.parse_args()
 
