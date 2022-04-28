@@ -18,6 +18,7 @@ from utils.timer import timer
 from view_utils.graph_viewer import GraphViewer
 
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
 def prepare_patterns():

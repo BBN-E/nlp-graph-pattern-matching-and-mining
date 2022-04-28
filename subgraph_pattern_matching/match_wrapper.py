@@ -71,12 +71,12 @@ class MatchCorpus():
             for m in self.matches:
                 assert m.serif_doc is not None
                 assert m.serif_sentence is not None
-                match_dict[m.serif_doc.id][m.serif_sentence.id].append(m)
+                match_dict[m.serif_doc.docid][m.serif_sentence.id].append(m)
         else:
             match_dict = defaultdict(list)
             for m in self.matches:
                 assert m.serif_doc is not None
-                match_dict[m.serif_doc.id].append(m)
+                match_dict[m.serif_doc.docid].append(m)
 
         return match_dict
 
