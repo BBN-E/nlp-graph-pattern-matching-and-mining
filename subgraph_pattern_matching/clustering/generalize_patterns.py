@@ -160,7 +160,7 @@ def majority_wins_graph(patterns_list, labels, output_dir):
             most_frequent_structure_patterns.append(patterns_list[i])
 
     # our most frequent pattern
-    stripped_graph = most_frequent_structure_patterns[0].pattern_graph.copy()
+    stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
 
     # maps nodes to dict that maps attributes to dicts of possible values and their counts
     # dict (node, dict ( attr, ( dict (value, count ) ) )
@@ -196,23 +196,35 @@ def majority_wins_graph(patterns_list, labels, output_dir):
         add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
 
     # set each atrribute of each node and edge to the most frequent value
-    # TODO: only add the most common attribute, value pairs
-
     all_node_attrs = set()
-    node_attr_value_tuple_to_count = {}
+    attr_tuple_to_count = []
 
     for node_id, attr_dict in node_to_attribute_counts.items():
         for attr, value_dict in attr_dict.items():
             all_node_attrs.add(attr)
             most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            stripped_graph.nodes[node_id][attr] = most_frequent_value_for_attr
+            count = value_dict[most_frequent_value_for_attr]
+
+            attr_tuple_to_count.append( (count, "node", node_id, attr, most_frequent_value_for_attr) )
 
     all_edge_attrs = set()
     for edge_id, attr_dict in edge_to_attribute_counts.items():
         for attr, value_dict in attr_dict.items():
             all_edge_attrs.add(attr)
             most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            stripped_graph.edges[edge_id][attr] = most_frequent_value_for_attr
+            count = value_dict[most_frequent_value_for_attr]
+            attr_tuple_to_count.append((count, "edge", edge_id, attr, most_frequent_value_for_attr))
+
+    # only add the most common attribute, value pairs
+    attr_tuple_to_count.sort(key=operator.itemgetter(0), reverse=True)
+    for count, type, id, attr, value in attr_tuple_to_count:
+        if count < len(most_frequent_structure_patterns) * 0.66:
+            break
+
+        if type == "node":
+            stripped_graph.nodes[id][attr] = value
+        elif type == "edge":
+            stripped_graph.edges[id][attr] = value
 
     return [[Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs))]]
 
