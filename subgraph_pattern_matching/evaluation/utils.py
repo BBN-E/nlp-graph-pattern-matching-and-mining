@@ -44,7 +44,7 @@ def create_corpus_directory(corpus_paths_dict):
     return corpus_dir
 
 
-def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=None):
+def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme='identification-classification'):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -61,9 +61,15 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=None):
             if mention.tokens:
                 for i in range(len(mention.tokens)):
                     if i == 0:
-                        mention_bio.append(f'B-{mention.entity_type}')
+                        if annotation_scheme == 'identification-classification':
+                            mention_bio.append(f'B-{mention.entity_type}')
+                        else:  # 'identification'
+                            mention_bio.append('B')
                     else:
-                        mention_bio.append(f'I-{mention.entity_type}')
+                        if annotation_scheme == 'identification-classification':
+                            mention_bio.append(f'I-{mention.entity_type}')
+                        else:  # identification
+                            mention_bio.append('I')
 
             mention_token_indices = [t.index() for t in mention.tokens]
             for i, j in enumerate(mention_token_indices):
@@ -93,7 +99,7 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
 
                     serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
 
-                    # Only match tokens that were part of the annotation in the pattern
+                    # only match tokens that were part of the annotation in the pattern
                     if match.annotated_node_ids:
                         if pattern_node_id not in match.annotated_node_ids:
                             continue
