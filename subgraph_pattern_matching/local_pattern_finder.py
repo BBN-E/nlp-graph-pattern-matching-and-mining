@@ -118,7 +118,7 @@ class LocalPatternFinder():
         print("# annotations: {}".format(len(annotations)))
 
         # loop over annotations
-        for i, ann in enumerate(tqdm(annotations, desc="annotations", position=3, leave=False)):
+        for i, ann in enumerate(tqdm(annotations[0::15], desc="annotations", position=3, leave=False)):
 
             # if annotation consists of multiple tokens, compose their k-hop subgraphs
             token_k_hop_neighborhoods = []
@@ -134,8 +134,11 @@ class LocalPatternFinder():
             if len(ann_k_hop_neighborhood) == 0:
                 continue
 
+            parse_type_string = "-".join([str(p.value) for p in parse_types])
+
             annotation_pattern = Pattern("id_{}".format(i), ann_k_hop_neighborhood,
-                                         [NodeAttrs.node_type], [EdgeAttrs.edge_type])
+                                         [NodeAttrs.node_type], [EdgeAttrs.edge_type],
+                                         grid_search="{}_{}_{}".format(k, search_direction.value, parse_type_string))
             annotation_patterns_for_configuration.append(annotation_pattern)
 
         return annotation_patterns_for_configuration
