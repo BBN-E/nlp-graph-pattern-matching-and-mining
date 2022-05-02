@@ -118,10 +118,11 @@ class LocalPatternFinder():
         print("# annotations: {}".format(len(annotations)))
 
         # loop over annotations
-        for i, ann in enumerate(tqdm(annotations[0::15], desc="annotations", position=3, leave=False)):
+        for i, ann in enumerate(tqdm(annotations, desc="annotations", position=3, leave=False)):
 
-            if annotation_category != None and ann.category != annotation_category:
-                continue
+            if annotation_category != None and annotation_category != "all_categories":
+                if ann.category != annotation_category:
+                    continue
 
             # if annotation consists of multiple tokens, compose their k-hop subgraphs
             token_k_hop_neighborhoods = []
@@ -223,6 +224,6 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--k_hop_neighborhoods', type=int, default=1)
     parser.add_argument('-p', '--parse_types', nargs="*", type=str, default=PARSE_TYPE_COMBINATIONS)
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
-    parser.add_argument('-c', '--annotation_category', type=str, default=None)
+    parser.add_argument('-c', '--annotation_category', type=str, default="all_categories")
     args = parser.parse_args()
     main(args)
