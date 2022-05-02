@@ -54,29 +54,40 @@ my $create_output_dirs = runjobs(
     "mkdir -p $grid_dir");
 push(@setup_jobs, $create_output_dirs);
 
+my @annotations;
 
-my $annotation_categories_path = $p->{ANNOTATION_CATEGORIES};
+if ($p->{SPLIT_BY_CATEGORY}) {
+    my $annotation_categories_path = $p->{ANNOTATION_CATEGORIES};
 
-if (not($annotation_categories_path)) {
-    $annotation_categories_path = "$expt_dir/annotation_categories.list";
-    my $get_annotated_categories_job = runjobs([$create_output_dirs], "$JOB_NAME/get_annotated_categories", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
-                                                ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/annotation/get_annotation_categories.py " .
-                                                 "--annotation_corpus $p->{ANNOTATION_CORPUS} --output $annotation_categories_path"]);
-    push(@setup_jobs, $get_annotated_categories_job);
-    dojobs();
+    if (not($annotation_categories_path)) {
+        $annotation_categories_path = "$expt_dir/annotation_categories.list";
+        my $get_annotated_categories_job = runjobs([$create_output_dirs], "$JOB_NAME/get_annotated_categories", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
+                                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/annotation/get_annotation_categories.py " .
+                                                     "--annotation_corpus $p->{ANNOTATION_CORPUS} --output $annotation_categories_path"]);
+        push(@setup_jobs, $get_annotated_categories_job);
+        dojobs();
+    }
+    my $FH;
+    unless (open($FH, '<', $annotation_categories_path)) {
+       print STDERR "Could not open file '$annotation_categories_path': $!\n";
+       return undef;
+    }
+    chomp(@annotations = <$FH>);
+    close($FH);
+} else {
+    @annotations = ("all_categories");
 }
-my $FH;
-unless (open($FH, '<', $annotation_categories_path)) {
-   print STDERR "Could not open file '$annotation_categories_path': $!\n";
-   return undef
-}
-chomp(my @annotations = <$FH>);
-close($FH);
 
 foreach my $category (@annotations) {
-    my $category_dir = "$grid_dir/$category";
-    my $create_category_dir = runjobs(\@setup_jobs, "$JOB_NAME/$category/create_category_dir",
+
+    my @category_setup_jobs = @setup_jobs;
+    my $category_dir = "$grid_dir";
+    if ($p->{SPLIT_BY_CATEGORY}) {
+        $category_dir = "$grid_dir/$category";
+        my $create_category_dir = runjobs(\@setup_jobs, "$JOB_NAME/$category/create_category_dir",
                                       { SCRIPT => 1 },  "mkdir -p $category_dir");
+        push(@category_setup_jobs, $create_category_dir);
+    }
 
     foreach my $k (@{$p->{K_VALUES}}) {
         foreach my $parse_types (@{$p->{PARSE_TYPE_COMBINATIONS}}) {
@@ -88,7 +99,7 @@ foreach my $category (@annotations) {
                 my $grid_config_dir = "$category_dir/$config";
                 my $serialized_local_patterns_path = "$grid_config_dir/patterns.json";
 
-                my $find_local_patterns_job = runjobs([$create_category_dir], "$JOB_NAME/$category/$config/find_local_patterns", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
+                my $find_local_patterns_job = runjobs(\@category_setup_jobs, "$JOB_NAME/$category/$config/find_local_patterns", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
                                                       ["mkdir -p $grid_config_dir"],
                                                       ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
                                                        "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_local_patterns_path " .
