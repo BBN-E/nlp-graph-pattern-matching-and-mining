@@ -13,7 +13,7 @@ my $SPLIT_BY_CATEGORY = 0;
 
 # grid search parameters
 my @K_VALUES = (2,3);
-my @SEARCH_DIRECTIONS = ("BOTH");
+my @SEARCH_DIRECTIONS = ("BOTH, UP");
 my @PARSE_TYPE_COMBINATIONS = ("AMR", "AMR DP");
 
 my $CLUSTER_ALGORITHM;
