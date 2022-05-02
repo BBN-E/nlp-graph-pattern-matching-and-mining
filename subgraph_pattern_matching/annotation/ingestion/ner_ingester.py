@@ -1,4 +1,4 @@
-from annotation.annotation import MentionAnnotation
+from annotation.annotation_base import MentionAnnotation
 from annotation.ingestion.ingester import SentenceIngester
 
 CONLL_ENGLISH = {

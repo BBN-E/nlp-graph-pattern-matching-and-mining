@@ -111,7 +111,7 @@ class LocalPatternFinder():
         return edge_induced_subgraph
 
 
-    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction):
+    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None):
 
         annotation_patterns_for_configuration = []
 
@@ -119,6 +119,9 @@ class LocalPatternFinder():
 
         # loop over annotations
         for i, ann in enumerate(tqdm(annotations, desc="annotations", position=3, leave=False)):
+
+            if annotation_category != None and ann.category != annotation_category:
+                continue
 
             # if annotation consists of multiple tokens, compose their k-hop subgraphs
             token_k_hop_neighborhoods = []
@@ -178,17 +181,17 @@ def read_corpus(corpus_id):
     from annotation.ingestion.relation_ingester import RelationIngester
 
     if corpus_id == "TACRED":
-        corpus_id = RelationIngester().ingest_tacred()
+        corpus = RelationIngester().ingest_tacred()
     elif corpus_id == "CONLL_ENGLISH":
-        corpus_id = NERIngester().ingest_conll()
+        corpus = NERIngester().ingest_conll()
     elif corpus_id == "ACE_ENGLISH":
-        corpus_id = EventIngester().ingest_ace()
+        corpus = EventIngester().ingest_ace()
     elif corpus_id == "AIDA_TEST":
-        corpus_id = EventIngester().ingest_aida()
+        corpus = EventIngester().ingest_aida()
     else:
         raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 
-    return corpus_id
+    return corpus
 
 
 def main(args):
@@ -201,7 +204,8 @@ def main(args):
     annotation_patterns = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
                                                         k=args.k_hop_neighborhoods,
                                                         parse_types=parse_types,
-                                                        search_direction=DAGSearchDirection[args.search_direction])
+                                                        search_direction=DAGSearchDirection[args.search_direction],
+                                                        annotation_category=args.annotation_category)
     json_dump = serialize_patterns(annotation_patterns)
 
     with open(args.output, 'w') as f:
@@ -216,5 +220,6 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--k_hop_neighborhoods', type=int, default=1)
     parser.add_argument('-p', '--parse_types', nargs="*", type=str, default=PARSE_TYPE_COMBINATIONS)
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
+    parser.add_argument('-c', '--annotation_category', type=str, default=None)
     args = parser.parse_args()
     main(args)
