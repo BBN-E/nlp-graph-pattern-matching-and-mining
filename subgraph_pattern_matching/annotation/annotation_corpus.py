@@ -12,3 +12,10 @@ class AnnotationCorpus():
         self.train_annotations = train_annotations
         self.dev_annotations = dev_annotations
         self.test_annotations = test_annotations
+
+    def get_categories(self):
+        categories = set()
+        for annotation in self.train_annotations:
+            categories.add(annotation.category)
+
+        return list(categories)

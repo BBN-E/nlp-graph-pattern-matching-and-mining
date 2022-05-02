@@ -1,4 +1,4 @@
-from annotation.annotation import MentionAnnotation, EntityEntityRelationAnnotation
+from annotation.annotation_base import MentionAnnotation, EntityEntityRelationAnnotation
 from annotation.ingestion.ingester import SentenceIngester
 
 
