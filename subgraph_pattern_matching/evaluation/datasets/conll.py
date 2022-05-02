@@ -1,4 +1,5 @@
 from sklearn.metrics import classification_report
+from itertools import chain
 
 from evaluation.utils import create_corpus_directory, serif_sentence_to_ner_bio_list, \
     serif_sentence_to_ner_bio_list_based_on_predictions
@@ -33,4 +34,5 @@ def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_type='identificati
         print(p)
         print("-------------------")
 
-    print(classification_report(y_true=gold_bio, y_pred=pred_bio))
+    print(classification_report(y_true=list(chain(*gold_bio)),
+                                y_pred=list(chain(*pred_bio))))
