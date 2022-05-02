@@ -1,4 +1,4 @@
-from annotation.annotation import EventFrameAnnotation, EventTriggerAnnotation, EventArgumentAnnotation
+from annotation.annotation_base import EventFrameAnnotation, EventTriggerAnnotation, EventArgumentAnnotation
 from annotation.ingestion.ingester import DocumentIngester
 
 
