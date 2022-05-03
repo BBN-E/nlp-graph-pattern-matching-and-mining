@@ -49,6 +49,9 @@ class EventIngester(DocumentIngester):
                 if serif_sentence.event_mention_set:
                     for event_mention in serif_sentence.event_mention_set:
 
+                        if event_mention.event_type == "MTDP_EVENT":
+                            continue
+                            
                         event_argument_annotations = []
                         for event_arg in event_mention.arguments:
                             event_arg_token_node_ids = [self.graph_builder.token_to_feats(t)['id'] for t in event_arg.mention.tokens]

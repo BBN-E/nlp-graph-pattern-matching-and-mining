@@ -140,9 +140,20 @@ class LocalPatternFinder():
 
             parse_type_string = "-".join([str(p.value) for p in parse_types])
 
+
+            all_node_attrs = set()
+            all_edge_attrs = set()
+            for __, attr_dict in list(ann_k_hop_neighborhood.nodes(data=True)):
+                for attr, __ in attr_dict.items():
+                    all_node_attrs.add(attr)
+            for __, __, attr_dict in list(ann_k_hop_neighborhood.edges(data=True)):
+                for attr, __ in attr_dict.items():
+                    all_edge_attrs.add(attr)
+
             annotation_pattern = Pattern("id_{}".format(i), ann_k_hop_neighborhood,
-                                         [NodeAttrs.node_type], [EdgeAttrs.edge_type],
-                                         grid_search="{}_{}_{}".format(k, search_direction.value, parse_type_string))
+                                         list(all_node_attrs), list(all_edge_attrs),
+                                         grid_search="{}_{}_{}".format(k, search_direction.value, parse_type_string),
+                                         category=annotation_category)
             annotation_patterns_for_configuration.append(annotation_pattern)
 
         return annotation_patterns_for_configuration
