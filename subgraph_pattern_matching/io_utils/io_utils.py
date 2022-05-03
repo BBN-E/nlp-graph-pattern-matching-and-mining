@@ -74,14 +74,3 @@ def deserialize_pattern_graphs(json_dump, is_file_path=False):
 
     return pattern_graphs
 
-# if __name__ == '__main__':
-#
-#     file_paths = []
-#     with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.list", 'r') as f:
-#         for path in f.readlines():
-#             file_paths.append(path.strip())
-#
-#     json_dump = combine_pattern_lists(file_paths)
-#
-#     with open("/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json", 'w') as out_f:
-#         out_f.write(json_dump)
