@@ -149,12 +149,12 @@ foreach my $category (@annotations) {
 }
 
 my $list_pattern_paths_job = runjobs(\@generalized_patterns_jobs, "$JOB_NAME/list_pattern_paths", { SCRIPT => 1},
-                                   ["ls $expt_dir/*/*/patterns/patterns_cluster_*.json > $grid_dir/pattern_paths.list"]);
+                                   ["ls $grid_dir/*/*/patterns/patterns_cluster_*.json > $expt_dir/pattern_paths.list"]);
 
 my $combine_pattern_lists_job = runjobs([$list_pattern_paths_job], "$JOB_NAME/combine_pattern_paths",
                                        {SCRIPT => 1, SGE_VIRTUAL_FREE => ["4G"]},
                                        ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/combine_pattern_jsons.py " .
-                                        "--input_list $expt_dir/pattern_paths.list --output $grid_dir/all_patterns.json"]);
+                                        "--input_list $expt_dir/pattern_paths.list --output $expt_dir/all_patterns.json"]);
 
 # Execute the jobs now that scheduling has finished
 endjobs();
