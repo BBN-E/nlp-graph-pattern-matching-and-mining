@@ -20,7 +20,7 @@ def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_type='identificati
     assert len(conll_en_corpus_dir[SPLIT].values()) == 1
     gold_serif_doc = list(conll_en_corpus_dir[SPLIT].values())[0]
     gold_bio = [serif_sentence_to_ner_bio_list(serif_sentence=s,
-                                               annotation_scheme='identification') \
+                                               annotation_scheme=annotation_type) \
                 for s in gold_serif_doc.sentences]
 
     # get pred test bio list

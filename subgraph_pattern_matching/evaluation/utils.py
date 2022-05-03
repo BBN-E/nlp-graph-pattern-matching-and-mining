@@ -3,6 +3,7 @@ from collections import defaultdict
 import serifxml3
 from serif.theory.token import Token
 
+
 def create_corpus_directory(corpus_paths_dict):
     '''
 
@@ -74,6 +75,40 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme='identifica
             mention_token_indices = [t.index() for t in mention.tokens]
             for i, j in enumerate(mention_token_indices):
                 bio_list[j] = mention_bio[i]
+
+    return bio_list
+
+
+def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme='identification-classifiaction'):
+    '''
+
+    :param serif_sentence: serif.theory.sentence.Sentence
+    :param annotation_scheme: TODO: identification, identification-classification, BIO, IO
+    :return: list[str]
+    '''
+
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+    if serif_sentence.event_mention_set:
+        for event_mention in serif_sentence.event_mention_set:
+
+            event_mention_bio = []
+            if event_mention.tokens:
+                for i in range(len(event_mention.tokens)):
+                    if i == 0:
+                        if annotation_scheme == 'identification-classification':
+                            event_mention_bio.append(f'B-{event_mention.event_type}')
+                        else:  # 'identification'
+                            event_mention_bio.append('B')
+                    else:
+                        if annotation_scheme == 'identification-classification':
+                            event_mention_bio.append(f'I-{event_mention.event_type}')
+                        else:  # identification
+                            event_mention_bio.append('I')
+
+            event_mention_token_indices = [t.index() for t in event_mention.tokens]
+            for i, j in enumerate(event_mention_token_indices):
+                bio_list[j] = event_mention_bio[i]
 
     return bio_list
 

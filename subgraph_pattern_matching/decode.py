@@ -53,7 +53,7 @@ def prepare_patterns():
     return patterns
 
 
-def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json'):
+def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll-debug-patterns-v2/grid_config/LOC/6-BOTH-AMR_DP/patterns.json'):
 
     with open(patterns_json_path, 'r') as f:
         json_patterns = json.load(f)
@@ -100,7 +100,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     for pattern in patterns:
 
         pattern_id = pattern.pattern_id
-        logging.info(pattern_id)
+        # logging.info(pattern_id)
 
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(nx_graph, pattern.pattern_graph,
                                                                    node_match=pattern.node_match,
@@ -123,9 +123,12 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
                                         pattern_id=pattern_id,
                                         serif_sentence=serif_sentence,
                                         serif_doc=serif_doc,
-                                        annotated_node_ids=pattern.get_annotated_node_ids()) for m in pattern_match_dicts]
+                                        annotated_node_ids=pattern.get_annotated_node_ids(),
+                                        category=pattern.category
+                                        ) for m in pattern_match_dicts]
 
         if len(pattern_matches) > 0:
+            logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
             logging.info("%s - %d", pattern_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
@@ -193,8 +196,8 @@ def main(args):
 
         # do subgraph pattern matching for every nx graph
         if args.per_sentence:
-            for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences))[:10]:
-                logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
+            for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences)):
+                # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
                 all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
                                                                   serif_doc=serif_doc,
                                                                   serif_sentence=serif_sentence,
@@ -241,9 +244,9 @@ if __name__ == '__main__':
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
     /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
-    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
+    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.train.xml \
     -s \
-    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json \
+    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll-debug-patterns-v2/grid_config/LOC/6-BOTH-AMR_DP/patterns.json \
     -e CONLL_ENGLISH
     '''
 
