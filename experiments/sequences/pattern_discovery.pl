@@ -78,12 +78,14 @@ if ($p->{SPLIT_BY_CATEGORY}) {
     @annotations = ("all_categories");
 }
 
+
+my @generalized_patterns_jobs = ();
+
 foreach my $category (@annotations) {
 
     my @category_setup_jobs = @setup_jobs;
-    my $category_dir = "$grid_dir";
+    my $category_dir = "$grid_dir/$category";
     if ($p->{SPLIT_BY_CATEGORY}) {
-        $category_dir = "$grid_dir/$category";
         my $create_category_dir = runjobs(\@setup_jobs, "$JOB_NAME/$category/create_category_dir",
                                       { SCRIPT => 1 },  "mkdir -p $category_dir");
         push(@category_setup_jobs, $create_category_dir);
@@ -133,16 +135,26 @@ foreach my $category (@annotations) {
                     my $generalize_patterns_job = runjobs([$clustering_job], "$JOB_NAME/$category/$config/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
                                  ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
                                  "--local_patterns_json $serialized_local_patterns_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
-                                  "--labels $grid_config_dir/labels.json --output $grid_config_dir/patterns"]);
+                                  "--labels $grid_config_dir/labels.json --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY}"]);
+                    push(@generalized_patterns_jobs, $generalize_patterns_job);
                 } else {
                     my $generalize_patterns_job = runjobs([$find_local_patterns_job], "$JOB_NAME/$category/$config/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
                                      ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
-                                     "--local_patterns_json $serialized_local_patterns_path --output $grid_config_dir/patterns"]);
+                                     "--local_patterns_json $serialized_local_patterns_path --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY}"]);
+                    push(@generalized_patterns_jobs, $generalize_patterns_job);
                 }
             }
         }
     }
 }
+
+my $list_pattern_paths_job = runjobs(\@generalized_patterns_jobs, "$JOB_NAME/list_pattern_paths", { SCRIPT => 1},
+                                   ["ls $expt_dir/*/*/patterns/patterns_cluster_*.json > $grid_dir/pattern_paths.list"]);
+
+my $combine_pattern_lists_job = runjobs([$list_pattern_paths_job], "$JOB_NAME/combine_pattern_paths",
+                                       {SCRIPT => 1, SGE_VIRTUAL_FREE => ["4G"]},
+                                       ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/combine_pattern_jsons.py " .
+                                        "--input_list $expt_dir/pattern_paths.list --output $grid_dir/all_patterns.json"]);
 
 # Execute the jobs now that scheduling has finished
 endjobs();

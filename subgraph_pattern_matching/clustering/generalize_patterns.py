@@ -3,6 +3,8 @@ import argparse
 import json
 import os
 import operator
+import enum
+
 from view_utils.graph_viewer import GraphViewer
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
@@ -10,6 +12,10 @@ from patterns.pattern import Pattern
 from collections import Counter
 from networkx.algorithms import isomorphism
 
+
+class GeneralizationStrategy(enum.Enum):
+    Ungeneralized = enum.auto()
+    MajorityWins = enum.auto()
 
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
@@ -229,10 +235,35 @@ def majority_wins_graph(patterns_list, labels, output_dir):
     return [[Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs))]]
 
 
-def main(args):
-    if not os.path.isdir(args.output):
-        os.makedirs(args.output)
+def majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir):
 
+    assert(args.labels)
+
+    with open(args.labels, 'r') as f:
+        labels = json.load(f)
+
+    cluster_num_to_cluster_patterns = majority_wins_graph(pattern_list, labels, args.output)
+
+    for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
+        json_dump = serialize_patterns(cluster_patterns)
+
+        with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
+            f.write(json_dump)
+
+        for i, cluster_pattern in enumerate(cluster_patterns):
+            graph_viewer.prepare_mdp_networkx_for_visualization(cluster_pattern.pattern_graph)
+            graph_viewer.prepare_amr_networkx_for_visualization(cluster_pattern.pattern_graph)
+            html_file = os.path.join(visualizations_dir, "majority_graph_{}.html".format(i))
+            graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
+
+
+def ungeneralized_strategy(args, pattern_list):
+    json_dump = serialize_patterns(pattern_list)
+    with open(os.path.join(args.output, "patterns_cluster_0.json"), 'w') as f:
+        f.write(json_dump)
+
+
+def main(args):
     graph_viewer = GraphViewer()
     visualizations_dir = os.path.join(args.output, "visualizations")
     if not os.path.exists(visualizations_dir):
@@ -240,27 +271,15 @@ def main(args):
 
     pattern_list = deserialize_patterns(args.local_patterns_json, is_file_path=True)
 
-    if args.distance_matrix and args.labels:
+    if not os.path.isdir(args.output):
+        os.makedirs(args.output)
 
-        with open(args.distance_matrix, 'rb') as f:
-            distance_matrix = np.load(f)
-
-        with open(args.labels, 'r') as f:
-            labels = json.load(f)
-
-        cluster_num_to_cluster_patterns = majority_wins_graph(pattern_list, labels, args.output)
-
-        for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
-            json_dump = serialize_patterns(cluster_patterns)
-
-            with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
-                f.write(json_dump)
-
-            for i, cluster_pattern in enumerate(cluster_patterns):
-                graph_viewer.prepare_mdp_networkx_for_visualization(cluster_pattern.pattern_graph)
-                graph_viewer.prepare_amr_networkx_for_visualization(cluster_pattern.pattern_graph)
-                html_file = os.path.join(visualizations_dir, "majority_graph_{}.html".format(i))
-                graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
+    if GeneralizationStrategy[args.strategy] == GeneralizationStrategy.MajorityWins:
+        majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir)
+    elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.Ungeneralized:
+        ungeneralized_strategy(args, pattern_list)
+    else:
+        raise NotImplementedError("Generalization strategy {} not implemented".format(args.strategy))
 
     examples_dir = os.path.join(visualizations_dir, "examples")
     if not os.path.exists(examples_dir):
@@ -270,7 +289,7 @@ def main(args):
     for i, pattern in enumerate(pattern_list[0::10]):
         graph_viewer.prepare_amr_networkx_for_visualization(pattern.pattern_graph)
         graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
-        html_file = os.path.join(examples_dir, "graph_1{}.html".format(pattern.pattern_id))
+        html_file = os.path.join(examples_dir, "graph_{}.html".format(pattern.pattern_id))
         graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file=html_file)
         if i > 100:
             break
@@ -281,6 +300,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-g', '--local_patterns_json', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('-s', '--strategy', type=str, required=True)
     parser.add_argument('-d', '--distance_matrix', type=str, default=None)
     parser.add_argument('-l', '--labels', type=str, default=None)
     args = parser.parse_args()
