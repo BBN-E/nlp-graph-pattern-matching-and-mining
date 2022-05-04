@@ -6,7 +6,7 @@ from evaluation.utils import create_corpus_directory, serif_sentence_to_ner_bio_
 from annotation.ingestion.ner_ingester import CONLL_ENGLISH
 
 
-def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_type='identification'):
+def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_scheme='identification-classification'):
     '''
 
     :param matches_by_serif_id: {docid: {sent_id: match}}
@@ -20,13 +20,14 @@ def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_type='identificati
     assert len(conll_en_corpus_dir[SPLIT].values()) == 1
     gold_serif_doc = list(conll_en_corpus_dir[SPLIT].values())[0]
     gold_bio = [serif_sentence_to_ner_bio_list(serif_sentence=s,
-                                               annotation_scheme=annotation_type) \
+                                               annotation_scheme=annotation_scheme) \
                 for s in gold_serif_doc.sentences]
 
     # get pred test bio list
     pred_matches = matches_by_serif_id[gold_serif_doc.docid]
     pred_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
-                                                                    matches_for_sentence=pred_matches[s.id]) \
+                                                                    matches_for_sentence=pred_matches[s.id],
+                                                                    annotation_scheme=annotation_scheme) \
                      for s in gold_serif_doc.sentences]
 
     for g, p in list(zip(gold_bio, pred_bio))[:10]:

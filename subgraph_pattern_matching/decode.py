@@ -53,16 +53,19 @@ def prepare_patterns():
     return patterns
 
 
-def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll-debug-patterns-v2/grid_config/LOC/6-BOTH-AMR_DP/patterns.json'):
+def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json'):
 
     with open(patterns_json_path, 'r') as f:
         json_patterns = json.load(f)
 
     patterns = []
+    seen_pattern_ids = set()
     for json_dict in json_patterns:
         p = Pattern()
         p.load_from_json(json_dict)
-        patterns.append(p)
+        if not p.pattern_id in seen_pattern_ids:
+            patterns.append(p)
+            seen_pattern_ids.add(p.pattern_id)
 
     return patterns
 
@@ -219,7 +222,9 @@ def main(args):
         if args.evaluation_corpus == 'CONLL_ENGLISH':
 
             from evaluation.datasets.conll import score_conll
-            score_conll(matches_by_serif_id=matches_by_serif_id, SPLIT='TEST')
+            score_conll(matches_by_serif_id=matches_by_serif_id,
+                        SPLIT='TEST',
+                        annotation_scheme='identification-classification')
 
         elif args.evaluation_corpus == 'ACE_ENGLISH':
 
@@ -244,9 +249,9 @@ if __name__ == '__main__':
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
     /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
-    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.train.xml \
+    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
     -s \
-    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll-debug-patterns-v2/grid_config/LOC/6-BOTH-AMR_DP/patterns.json \
+    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json \
     -e CONLL_ENGLISH
     '''
 
