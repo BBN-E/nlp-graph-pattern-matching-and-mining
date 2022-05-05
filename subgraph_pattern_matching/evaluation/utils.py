@@ -194,8 +194,8 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
 
                 if len(serif_tokens_for_match) > 0:
 
-                    contiguous_tokens = chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens_for_match)
-                    for chunk in contiguous_tokens:
+                    contiguous_token_chunks = chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens_for_match)
+                    for chunk in contiguous_token_chunks:
                         for i, token in enumerate(chunk):
                             if i == 0:
                                 bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == "identification-classification" else "B"
@@ -214,6 +214,7 @@ def chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens):
     :return: list[list[serif.theory.token.Token]]
     '''
 
+    serif_tokens = sorted(serif_tokens, key=lambda t: t.index())
     contiguous_tokens = []
 
     chunk = [serif_tokens[0]]
