@@ -198,9 +198,9 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
                     for chunk in contiguous_token_chunks:
                         for i, token in enumerate(chunk):
                             if i == 0:
-                                bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == "identification-classification" else "B"
+                                bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
                             else:
-                                bio_list[token.index()] = f"I-{match.category}" if annotation_scheme == "identification-classification" else "I"
+                                bio_list[token.index()] = f"I-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
 
     return bio_list
 
