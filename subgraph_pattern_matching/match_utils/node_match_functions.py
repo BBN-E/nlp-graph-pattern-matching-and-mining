@@ -3,6 +3,8 @@ from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
 from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 
+from constants.special_symbols import DISJUNCTION, EMPTY
+
 
 def node_type_match(n1, n2):
     '''
@@ -27,8 +29,7 @@ def node_attr_match(n1, n2, attr):
        ((attr in n2) and (attr not in n1)):
         return True  # if one of the nodes is underspecified w.r.t. attr, then the attrs match
     # return n1.get(attr, None) == n2.get(attr, None)
-    # TODO is "ε" epsilon char usable in all settings?
-    return n1.get(attr, "ε") in set(n2.get(attr, "ε").split("|"))  # permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
+    return n1.get(attr, EMPTY) in set(n2.get(attr, EMPTY).split(DISJUNCTION))  # permit pattern node n2 to specify conjunction of attrs, e.g. "VERB|ADJ"
 
 def node_multiple_attrs_match(*match_fns):
 

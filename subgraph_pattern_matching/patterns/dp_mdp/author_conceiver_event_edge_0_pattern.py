@@ -10,7 +10,7 @@ from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from patterns.pattern import Pattern
 
 def author_conceiver_event_edge_pattern_0():
-    '''event token is VERB|ADJ with incoming root relation'''
+    '''event token is VERB or ADJ with incoming root relation'''
 
     pattern_graph = nx.DiGraph()
 

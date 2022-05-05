@@ -5,6 +5,8 @@ from constants.common.attrs.edge.modal_constitutent_token_edge_attrs import Moda
 from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 
+from constants.special_symbols import DISJUNCTION, EMPTY
+
 
 def edge_type_match(e1, e2):
     return e1[EdgeAttrs.edge_type] == e2[EdgeAttrs.edge_type]  # syntax, modal_dependency, constituent_token
@@ -23,8 +25,7 @@ def edge_attr_match(e1, e2, attr):
        ((attr in e2) and (attr not in e1)):
         return True  # if one of the nodes is underspecified w.r.t. attr, then the attrs match
     # return e1.get(attr, None) == e2.get(attr, None)
-    # TODO is "ε" epsilon char usable in all settings?
-    return e1.get(attr, "ε") in set(e2.get(attr, "ε").split("|"))  # permit pattern edge e2 to specify conjunction of attrs, e.g. "nsubj|dobj"
+    return e1.get(attr, EMPTY) in set(e2.get(attr, EMPTY).split(DISJUNCTION))  # permit pattern edge e2 to specify conjunction of attrs, e.g. "nsubj|dobj"
 
 def edge_multiple_attrs_match(*match_fns):
 
