@@ -1,12 +1,12 @@
 from sklearn.metrics import classification_report
 from itertools import chain
 
-from evaluation.utils import create_corpus_directory, serif_sentence_to_ner_bio_list, \
+from evaluation.utils import AnnotationScheme, create_corpus_directory, serif_sentence_to_ner_bio_list, \
     serif_sentence_to_ner_bio_list_based_on_predictions
 from annotation.ingestion.ner_ingester import CONLL_ENGLISH
 
 
-def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_scheme='identification-classification'):
+def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param matches_by_serif_id: {docid: {sent_id: match}}

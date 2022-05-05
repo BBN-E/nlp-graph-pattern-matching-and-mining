@@ -227,9 +227,10 @@ def main(args):
         if args.evaluation_corpus == 'CONLL_ENGLISH':
 
             from evaluation.datasets.conll import score_conll
+            from evaluation.utils import AnnotationScheme
             score_conll(matches_by_serif_id=matches_by_serif_id,
                         SPLIT='TEST',
-                        annotation_scheme='identification-classification')
+                        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
 
         elif args.evaluation_corpus == 'ACE_ENGLISH':
 

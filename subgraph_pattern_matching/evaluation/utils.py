@@ -53,7 +53,7 @@ def create_corpus_directory(corpus_paths_dict):
     return corpus_dir
 
 
-def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme='identification-classification'):
+def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -70,12 +70,12 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme='identifica
             if mention.tokens:
                 for i in range(len(mention.tokens)):
                     if i == 0:
-                        if annotation_scheme == 'identification-classification':
+                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                             mention_bio.append(f'B-{mention.entity_type}')
                         else:  # 'identification'
                             mention_bio.append('B')
                     else:
-                        if annotation_scheme == 'identification-classification':
+                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                             mention_bio.append(f'I-{mention.entity_type}')
                         else:  # identification
                             mention_bio.append('I')
@@ -87,7 +87,7 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme='identifica
     return bio_list
 
 
-def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme='identification-classifiaction'):
+def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -104,12 +104,12 @@ def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme='ide
             if event_mention.tokens:
                 for i in range(len(event_mention.tokens)):
                     if i == 0:
-                        if annotation_scheme == 'identification-classification':
+                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                             event_mention_bio.append(f'B-{event_mention.event_type}')
                         else:  # 'identification'
                             event_mention_bio.append('B')
                     else:
-                        if annotation_scheme == 'identification-classification':
+                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                             event_mention_bio.append(f'I-{event_mention.event_type}')
                         else:  # identification
                             event_mention_bio.append('I')
@@ -121,7 +121,7 @@ def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme='ide
     return bio_list
 
 
-def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme='identification-classifiaction'):
+def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -141,12 +141,12 @@ def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme='id
 
                         for i in range(len(event_argument.value.tokens)):
                             if i == 0:
-                                if annotation_scheme == 'identification-classification':
+                                if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                                     event_argument_bio.append(f'B-{event_argument.role}')
                                 else:  # 'identification'
                                     event_argument_bio.append('B')
                             else:
-                                if annotation_scheme == 'identification-classification':
+                                if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                                     event_argument_bio.append(f'I-{event_argument.role}')
                                 else:  # identification
                                     event_argument_bio.append('I')
@@ -158,7 +158,7 @@ def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme='id
     return bio_list
 
 
-def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme='identification-classification'):
+def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
