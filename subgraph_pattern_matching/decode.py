@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
+@timer
 def prepare_patterns():
 
     from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
@@ -53,6 +54,7 @@ def prepare_patterns():
     return patterns
 
 
+@timer
 def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json'):
 
     with open(patterns_json_path, 'r') as f:
@@ -70,6 +72,7 @@ def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/m
     return patterns
 
 
+@timer
 def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     '''
     :param serif_doc:
@@ -86,7 +89,8 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     return nx_graphs
 
 
-def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path):
+# @timer
+def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path=None):
     '''
 
     :param nx_graph:
@@ -167,6 +171,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     return matches
 
 
+@timer
 def main(args):
 
     # read serifxml path(s)

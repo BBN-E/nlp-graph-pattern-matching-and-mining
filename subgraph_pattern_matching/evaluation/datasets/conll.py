@@ -30,10 +30,12 @@ def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_scheme='identifica
                                                                     annotation_scheme=annotation_scheme) \
                      for s in gold_serif_doc.sentences]
 
-    for g, p in list(zip(gold_bio, pred_bio))[:10]:
-        print(g)
-        print(p)
-        print("-------------------")
+    for i, (g, p) in enumerate(list(zip(gold_bio, pred_bio))):
+        if g != p:
+            print(i)
+            print(g)
+            print(p)
+            print("-------------------")
 
     print(classification_report(y_true=list(chain(*gold_bio)),
                                 y_pred=list(chain(*pred_bio))))
