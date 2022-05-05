@@ -2,7 +2,7 @@ import json
 from random import sample
 from collections import defaultdict
 
-from graph_builder import ID_DELIMITER
+from constants.special_symbols import ID_DELIMITER
 from constants.pattern.id.pattern_modal_node_ids import PatternModalNodeIDs
 
 

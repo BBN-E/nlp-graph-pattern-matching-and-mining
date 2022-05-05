@@ -21,9 +21,6 @@ from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 
-ID_DELIMITER = "_"
-
-
 
 class GraphViewer:
 
