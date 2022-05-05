@@ -2,7 +2,7 @@ import json
 from random import sample
 from collections import defaultdict
 
-from graph_builder import ID_DELIMITER
+from constants.special_symbols import ID_DELIMITER
 from constants.pattern.id.pattern_modal_node_ids import PatternModalNodeIDs
 
 
@@ -11,7 +11,13 @@ class MatchWrapper():
     Convenient wrapper to store isomorphism dicts and map matches back to serifxml
     '''
 
-    def __init__(self, match_node_id_to_pattern_node_id, pattern_id, serif_sentence, serif_doc, annotated_node_ids=None):
+    def __init__(self,
+                 match_node_id_to_pattern_node_id,
+                 pattern_id,
+                 serif_sentence,
+                 serif_doc,
+                 annotated_node_ids=None,
+                 category=None):
         '''
         :param match_node_id_to_pattern_node_id: {'a1362': 'CONCEIVER_NODE', 'a1378': 'EVENT_NODE', 'policymakers_a95': 'CONCEIVER_TOKEN', 'epidemic_a91': 'EVENT_TOKEN', 'said_a96': 'SIP', 'need_a81': 'CCOMP_TOKEN'}
         :param serif_doc:
@@ -29,6 +35,7 @@ class MatchWrapper():
                                                 for pattern, match_id in self.pattern_node_id_to_match_node_id.items()}
 
         self.annotated_node_ids = annotated_node_ids
+        self.category = category
 
     def match_to_serif_theory(self, match_id, serif_doc):
 

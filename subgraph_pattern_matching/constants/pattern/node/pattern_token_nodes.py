@@ -5,6 +5,9 @@ from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 from constants.common.types.node_types import NodeTypes
 
+from constants.special_symbol import DISJUNCTION
+
+
 class PatternTokenNodes(PatternNodes):
 
     SIP_TOKEN_NODE = (PatternTokenNodeIDs.SIP_TOKEN_NODE_ID,
@@ -18,7 +21,7 @@ class PatternTokenNodes(PatternNodes):
 
     ROOT_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,
                              {NodeAttrs.node_type: NodeTypes.token,
-                              TokenNodeAttrs.upos: 'VERB|ADJ',
+                              TokenNodeAttrs.upos: DISJUNCTION.join(['VERB', 'ADJ']),
                               TokenNodeAttrs.incoming_dep_rel: 'root'})
 
     ROOT_VERB_EVENT_TOKEN_NODE = (PatternTokenNodeIDs.EVENT_TOKEN_NODE_ID,

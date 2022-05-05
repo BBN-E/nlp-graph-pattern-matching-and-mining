@@ -1,7 +1,7 @@
 from enum import Enum
 from abc import ABC, abstractmethod
 
-from graph_builder import ID_DELIMITER
+from constants.special_symbols import ID_DELIMITER
 
 
 ##############################################################

@@ -13,6 +13,8 @@ from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 
+from constants.special_symbols import DISJUNCTION
+
 from patterns.pattern import Pattern
 
 
@@ -21,7 +23,7 @@ def as_reported_by_pattern():
 
     pattern_graph.add_nodes_from([
         ('REPORTED_TOKEN_NODE',
-         {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.text: 'reported|stated'})
+         {NodeAttrs.node_type: NodeTypes.token, TokenNodeAttrs.text: DISJUNCTION.join(['reported', 'stated'])})
     ])
 
     pattern_graph.add_nodes_from([

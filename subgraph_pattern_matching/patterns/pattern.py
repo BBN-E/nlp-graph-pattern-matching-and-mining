@@ -87,7 +87,7 @@ class Pattern():
         self._pattern_graph = json_graph.node_link_graph(json_dict['pattern_graph'])
         self._node_attrs = json_dict['node_attrs']
         self._edge_attrs = json_dict['edge_attrs']
-        if json_dict['grid_search']:
+        if json_dict.get('grid_search', None):
             self.grid_search = json_dict['grid_search']
         if json_dict['category']:
             self.category = json_dict['category']

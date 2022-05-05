@@ -21,6 +21,7 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
+@timer
 def prepare_patterns():
 
     from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
@@ -53,20 +54,25 @@ def prepare_patterns():
     return patterns
 
 
-def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json'):
+@timer
+def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json'):
 
     with open(patterns_json_path, 'r') as f:
         json_patterns = json.load(f)
 
     patterns = []
+    seen_pattern_ids = set()
     for json_dict in json_patterns:
         p = Pattern()
         p.load_from_json(json_dict)
-        patterns.append(p)
+        if not p.pattern_id in seen_pattern_ids:
+            patterns.append(p)
+            seen_pattern_ids.add(p.pattern_id)
 
     return patterns
 
 
+@timer
 def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     '''
     :param serif_doc:
@@ -83,7 +89,8 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
     return nx_graphs
 
 
-def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path):
+# @timer
+def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path=None):
     '''
 
     :param nx_graph:
@@ -100,7 +107,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     for pattern in patterns:
 
         pattern_id = pattern.pattern_id
-        logging.info(pattern_id)
+        # logging.info(pattern_id)
 
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(nx_graph, pattern.pattern_graph,
                                                                    node_match=pattern.node_match,
@@ -123,9 +130,12 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
                                         pattern_id=pattern_id,
                                         serif_sentence=serif_sentence,
                                         serif_doc=serif_doc,
-                                        annotated_node_ids=pattern.get_annotated_node_ids()) for m in pattern_match_dicts]
+                                        annotated_node_ids=pattern.get_annotated_node_ids(),
+                                        category=pattern.category
+                                        ) for m in pattern_match_dicts]
 
         if len(pattern_matches) > 0:
+            logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
             logging.info("%s - %d", pattern_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
@@ -161,6 +171,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     return matches
 
 
+@timer
 def main(args):
 
     # read serifxml path(s)
@@ -193,8 +204,8 @@ def main(args):
 
         # do subgraph pattern matching for every nx graph
         if args.per_sentence:
-            for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences))[:10]:
-                logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
+            for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences)):
+                # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
                 all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
                                                                   serif_doc=serif_doc,
                                                                   serif_sentence=serif_sentence,
@@ -213,46 +224,24 @@ def main(args):
     # if decoding over annotated corpus, ingest gold corpus and do evaluation
     if args.evaluation_corpus:
 
-        from evaluation.utils import create_corpus_directory, serif_sentence_to_ner_bio_list, \
-            serif_sentence_to_ner_bio_list_based_on_predictions
-
         if args.evaluation_corpus == 'CONLL_ENGLISH':
 
-            from annotation.ingestion.ner_ingester import CONLL_ENGLISH
-            conll_en_corpus_dir = create_corpus_directory(CONLL_ENGLISH)
+            from evaluation.datasets.conll import score_conll
+            from evaluation.utils import AnnotationScheme
+            score_conll(matches_by_serif_id=matches_by_serif_id,
+                        SPLIT='TEST',
+                        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
 
-            # # get gold dev bio list
-            # assert len(conll_en_corpus_dir['DEV'].values()) == 1
-            # gold_dev_serif_doc = list(conll_en_corpus_dir['DEV'].values())[0]
-            # gold_dev_bio = [serif_sentence_to_ner_bio_list(serif_sentence=s) for s in gold_dev_serif_doc.sentences]
-            #
-            # # get pred dev bio list
-            # pred_dev_matches = matches_by_serif_id[gold_dev_serif_doc.docid]
-            # pred_dev_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
-            #                                                                    matches_for_sentence=pred_dev_matches[s.id]) \
-            #                for s in gold_dev_serif_doc.sentences]
+        elif args.evaluation_corpus == 'ACE_ENGLISH':
 
-            # get gold test bio list
-            assert len(conll_en_corpus_dir['TEST'].values()) == 1
-            gold_test_serif_doc = list(conll_en_corpus_dir['TEST'].values())[0]
-            gold_test_bio = [serif_sentence_to_ner_bio_list(s) for s in gold_test_serif_doc.sentences]
-
-            # get pred test bio list
-            pred_test_matches = matches_by_serif_id[gold_test_serif_doc.docid]
-            pred_test_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
-                                                                                 matches_for_sentence=pred_test_matches[s.id]) \
-                            for s in gold_test_serif_doc.sentences]
-
-            for g,p in list(zip(gold_test_bio, pred_test_bio))[:10]:
-                print(g)
-                print(p)
-                print("-------------------")
+            pass
 
         else:
             raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
 
 
 if __name__ == '__main__':
+    # extract claims with predefined patterns
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
@@ -261,13 +250,14 @@ if __name__ == '__main__':
     -l
     '''
 
+    # extract named entities with inferred serialized patterns
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
     /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
     -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
     -s \
-    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json \
+    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json \
     -e CONLL_ENGLISH
     '''
 

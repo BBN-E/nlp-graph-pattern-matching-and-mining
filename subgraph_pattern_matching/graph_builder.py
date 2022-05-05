@@ -28,11 +28,11 @@ from constants.common.types.node_types import NodeTypes
 
 from utils.verify_graph_compliance import verify_graph_compliance
 
+from constants.special_symbols import ID_DELIMITER
+
 
 logging.basicConfig(level=logging.INFO)
 
-
-ID_DELIMITER = "__"
 
 class GraphBuilder():
 
