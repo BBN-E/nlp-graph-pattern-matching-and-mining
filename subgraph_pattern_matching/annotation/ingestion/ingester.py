@@ -9,8 +9,15 @@ from tqdm import tqdm
 
 class Ingester(ABC):
 
-    def __init__(self):
-        self.graph_builder = GraphBuilder()
+    def __init__(self, parse_types=None):
+        '''
+        :param parse_types: None or {'dp': True, 'mdp': False, 'tdp': False, 'amr': True}
+        '''
+
+        if not parse_types:
+            self.graph_builder = GraphBuilder(dp=True, amr=True, mdp=False, tdp=False)
+        else:  # custom parse types
+            self.graph_builder = GraphBuilder(**parse_types)
 
 
 class SentenceIngester(Ingester):

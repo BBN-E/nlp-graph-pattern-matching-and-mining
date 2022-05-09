@@ -189,20 +189,26 @@ class LocalPatternFinder():
         return config_to_annotation_subgraphs
 
 
-def read_corpus(corpus_id):
+def read_corpus(corpus_id, parse_types=None):
+    '''
+
+    :param corpus_id: str
+    :param parse_types: None or {'dp': True, 'mdp': False, 'tdp': False, 'amr': True}
+    :return:
+    '''
 
     from annotation.ingestion.event_ingester import EventIngester
     from annotation.ingestion.ner_ingester import NERIngester
     from annotation.ingestion.relation_ingester import RelationIngester
 
     if corpus_id == "TACRED":
-        corpus = RelationIngester().ingest_tacred()
+        corpus = RelationIngester(parse_types).ingest_tacred()
     elif corpus_id == "CONLL_ENGLISH":
-        corpus = NERIngester().ingest_conll()
+        corpus = NERIngester(parse_types).ingest_conll()
     elif corpus_id == "ACE_ENGLISH":
-        corpus = EventIngester().ingest_ace()
+        corpus = EventIngester(parse_types).ingest_ace()
     elif corpus_id == "AIDA_TEST":
-        corpus = EventIngester().ingest_aida()
+        corpus = EventIngester(parse_types).ingest_aida()
     else:
         raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 
@@ -211,10 +217,12 @@ def read_corpus(corpus_id):
 
 def main(args):
 
-    corpus = read_corpus(args.annotation_corpus)
+    parse_types = [ParseTypes[p] for p in args.parse_types]
+    parse_types_kwargs = {parse_type.name.lower(): (parse_type in parse_types) for parse_type in ParseTypes}
+
+    corpus = read_corpus(args.annotation_corpus, parse_types=parse_types_kwargs)
 
     LPF = LocalPatternFinder()
-    parse_types = [ParseTypes[p] for p in args.parse_types]
 
     annotation_patterns = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
                                                         k=args.k_hop_neighborhoods,
