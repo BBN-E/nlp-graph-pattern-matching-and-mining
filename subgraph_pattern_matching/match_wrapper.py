@@ -37,6 +37,17 @@ class MatchWrapper():
         self.annotated_node_ids = annotated_node_ids
         self.category = category
 
+    def to_pickle(self):
+
+        return {
+            "docid": self.docid,
+            "sent_no": self.serif_sentence.sent_no,
+            "pattern_id": self.pattern_id,
+            "match_node_id_to_pattern_node_id": self.match_node_id_to_pattern_node_id,
+            "annotated_node_ids": self.annotated_node_ids,
+            "category": self.category
+        }
+
     def match_to_serif_theory(self, match_id, serif_doc):
 
         serif_id = match_id.split(ID_DELIMITER)[-1]

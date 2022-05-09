@@ -8,6 +8,7 @@ import serifxml3
 
 from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
+from evaluate import evaluate
 from local_pattern_finder import read_corpus
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 
@@ -100,9 +101,6 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
     :return: list[subgraph_pattern_matching.match_wrapper.MatchWrapper]
     '''
 
-    if vis_path:
-        graph_viewer = GraphViewer()
-
     matches = []
     for pattern in patterns:
 
@@ -135,13 +133,13 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
                                         ) for m in pattern_match_dicts]
 
         if len(pattern_matches) > 0:
-            logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
+            # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
             logging.info("%s - %d", pattern_id, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
     if vis_path:
-
+        graph_viewer = GraphViewer()
         graph_viewer.prepare_mdp_networkx_for_visualization(nx_graph)
         graph_viewer.prepare_amr_networkx_for_visualization(nx_graph)
 
@@ -192,52 +190,59 @@ def main(args):
 
     # extract patterns from every serifxml
     all_matches = []
+    serif_doc_graph_pairs = []
+    serif_docs = []
     for serifxml_path in serifxml_paths:
-
         logging.info(serifxml_path)
 
         # create serif_doc and convert to networkx graph(s)
         serif_doc = serifxml3.Document(serifxml_path)
+        serif_docs.append(serif_doc)
         nx_graphs = serif_doc_to_nx_graphs(serif_doc=serif_doc,
                                            graph_builder=GB,
                                            per_sentence=args.per_sentence)
 
-        # do subgraph pattern matching for every nx graph
         if args.per_sentence:
             for nx_graph, serif_sentence in list(zip(nx_graphs, serif_doc.sentences)):
-                # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
-                all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
-                                                                  serif_doc=serif_doc,
-                                                                  serif_sentence=serif_sentence,
-                                                                  patterns=patterns,
-                                                                  vis_path=args.visualization_path))
-        else:  # per-document
+                serif_doc_graph_pairs.append((nx_graph, serif_doc, serif_sentence))
+        else:
+            serif_doc_graph_pairs.append((nx_graphs[0], serif_doc))
+
+    if args.per_sentence:
+        for i, (nx_graph, serif_doc, serif_sentence) in enumerate(serif_doc_graph_pairs):
+            if i % args.num_batches != args.stripe:
+                continue
+            logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
+            all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
+                                                              serif_doc=serif_doc,
+                                                              serif_sentence=serif_sentence,
+                                                              patterns=patterns,
+                                                              vis_path=args.visualization_path))
+    else:  # per-document
+        for i, (nx_graph, serif_doc) in enumerate(serif_doc_graph_pairs):
+
+            if i % args.num_batches != args.stripe:
+                continue
             logging.info("doc:{}".format(serif_doc.docid))
-            all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graphs[0],
+            all_matches.extend(extract_patterns_from_nx_graph(nx_graph=nx_graph,
                                                               serif_doc=serif_doc,
                                                               serif_sentence=None,
                                                               patterns=patterns))
+    if args.output:
+        import pickle
 
-    match_corpus = MatchCorpus(all_matches)
-    matches_by_serif_id = match_corpus.organize_matches_by_serif_doc_and_serif_sentence(per_sentence=args.per_sentence)
+        pkl_matches = []
+        for match in all_matches:
+            pkl_matches.append(match.to_pickle())
+
+        with open(args.output, 'wb') as f:
+            pickle.dump(pkl_matches, f)
 
     # if decoding over annotated corpus, ingest gold corpus and do evaluation
     if args.evaluation_corpus:
-
-        if args.evaluation_corpus == 'CONLL_ENGLISH':
-
-            from evaluation.datasets.conll import score_conll
-            from evaluation.utils import AnnotationScheme
-            score_conll(matches_by_serif_id=matches_by_serif_id,
-                        SPLIT='TEST',
-                        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
-
-        elif args.evaluation_corpus == 'ACE_ENGLISH':
-
-            pass
-
-        else:
-            raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
+        match_corpus = MatchCorpus(all_matches)
+        matches_by_serif_id = match_corpus.organize_matches_by_serif_doc_and_serif_sentence(per_sentence=args.per_sentence)
+        evaluate(args.evaluation_corpus, matches_by_serif_id)
 
 
 if __name__ == '__main__':
@@ -254,7 +259,7 @@ if __name__ == '__main__':
     '''
     PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
     python3 \
-    /nfs/raid66/u11/users/brozonoy-ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
+    /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
     -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
     -s \
     -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json \
@@ -270,9 +275,14 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
                         default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
-                        help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default='CONLL_ENGLISH')
+                        help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default=None)
     parser.add_argument('-v', '--visualization_path', required=False, default=None)
-    # parser.add_argument('-o', '--output', type=str)
+
+    # runjobs commands
+    parser.add_argument('-m' '--pickle_matches', action='store_true', help="whether to store matches as a pickle object")
+    parser.add_argument('--stripe', type=int, required=False, default=0)
+    parser.add_argument('-b', '--num_batches', type=int, help="number of batches", required=False, default=1)
+    parser.add_argument('-o', '--output', type=str, required=False, default=None, help="directory to print pickled dicts representing MatchWrapper objects to")
     args = parser.parse_args()
 
     main(args)
