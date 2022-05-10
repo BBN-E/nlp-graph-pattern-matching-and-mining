@@ -69,16 +69,16 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=AnnotationS
             mention_bio = []
             if mention.tokens:
                 for i in range(len(mention.tokens)):
-                    if i == 0:
-                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
-                            mention_bio.append(f'B-{mention.entity_type}')
-                        else:  # 'identification'
-                            mention_bio.append('B')
-                    else:
-                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
-                            mention_bio.append(f'I-{mention.entity_type}')
-                        else:  # identification
-                            mention_bio.append('I')
+                    # if i == 0:
+                    #     if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                    #         mention_bio.append(f'B-{mention.entity_type}')
+                    #     else:  # 'identification'
+                    #         mention_bio.append('B')
+                    # else:
+                    if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                        mention_bio.append(f'I-{mention.entity_type}')
+                    else:  # identification
+                        mention_bio.append('I')
 
             mention_token_indices = [t.index() for t in mention.tokens]
             for i, j in enumerate(mention_token_indices):
@@ -197,10 +197,10 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
                     contiguous_token_chunks = chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens_for_match)
                     for chunk in contiguous_token_chunks:
                         for i, token in enumerate(chunk):
-                            if i == 0:
-                                bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
-                            else:
-                                bio_list[token.index()] = f"I-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
+                            # if i == 0:
+                            #     bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
+                            # else:
+                            bio_list[token.index()] = f"I-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
 
     return bio_list
 
