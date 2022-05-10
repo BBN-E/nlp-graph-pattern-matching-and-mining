@@ -45,6 +45,13 @@ PARSE_TYPE_COMBINATIONS = [
     [ParseTypes.DP, ParseTypes.MDP, ParseTypes.TDP, ParseTypes.AMR]
 ]
 
+def get_parse_type_kwargs(str_encoding):
+    k, search_direction, parse_type_str = str_encoding.split('_')
+    parse_types = [ParseTypes(int(p)) for p in parse_type_str.split("-")]
+    parse_types_kwargs = {parse_type.name.lower(): (parse_type in parse_types) for parse_type in ParseTypes}
+
+    return parse_types_kwargs
+
 
 class LocalPatternFinder():
 

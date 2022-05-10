@@ -12,7 +12,7 @@ my $INPUT_CORPUS = "/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.te
 my $PATTERNS_PATH = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json";
 
 my $EVALUATION_CORPUS = "CONLL_ENGLISH";
-my $NUM_BATCHES = 500;
+my $NUM_BATCHES = 400;
 
 
 return {
