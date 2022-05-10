@@ -1,8 +1,13 @@
 import argparse
+import logging
 import pickle
 import os
 from match_wrapper import MatchWrapper, MatchCorpus
 import serifxml3
+
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
+
 
 def evaluate(evaluation_corpus, matches_by_serif_id):
     if evaluation_corpus == 'CONLL_ENGLISH':

@@ -11,8 +11,8 @@ TACRED = {
 
 class RelationIngester(SentenceIngester):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parse_types=None):
+        super().__init__(parse_types=parse_types)
 
     def ingest_tacred(self):
         return self.ingest_serifxml(TACRED)

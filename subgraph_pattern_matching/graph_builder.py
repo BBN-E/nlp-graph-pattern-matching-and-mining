@@ -36,8 +36,13 @@ logging.basicConfig(level=logging.INFO)
 
 class GraphBuilder():
 
-    def __init__(self):
-        pass
+    def __init__(self, dp=True, amr=True, mdp=False, tdp=False):
+        '''specify which parse types we want to load into nx graph'''
+
+        self.dp = dp
+        self.amr = amr
+        self.mdp = mdp
+        self.tdp = tdp
 
     def serif_doc_to_networkx(self, serif_doc):
         '''
@@ -54,19 +59,22 @@ class GraphBuilder():
                 token_id = token_feats['id']
                 disconnected_tokens_digraph.add_node(token_id, **token_feats)
 
-        document_level_modal_dependencies_graph = self.modal_dependency_parse_to_networkx(serif_doc)
-        document_level_temporal_dependencies_graph = self.temporal_dependency_parse_to_networkx(serif_doc)
-        sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
-        sentence_level_amr_graphs = [self.amr_parse_to_networkx(s) for s in serif_doc.sentences]
+        union_of_parse_graphs = [disconnected_tokens_digraph]
+        if self.mdp:
+            # document_level_modal_dependencies_graphs = [self.modal_dependency_parse_to_networkx(serif_doc)]
+            union_of_parse_graphs.append(self.modal_dependency_parse_to_networkx(serif_doc))
+        if self.tdp:
+            # document_level_temporal_dependencies_graphs = [self.temporal_dependency_parse_to_networkx(serif_doc)]
+            union_of_parse_graphs.append(self.temporal_dependency_parse_to_networkx(serif_doc))
+        if self.dp:
+            # sentence_level_dependency_syntax_graphs = [self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences]
+            union_of_parse_graphs.extend([self.syntactic_dependency_parse_to_networkx(s) for s in serif_doc.sentences])
+        if self.amr:
+            # sentence_level_amr_graphs = [self.amr_parse_to_networkx(s) for s in serif_doc.sentences]
+            union_of_parse_graphs.extend([self.amr_parse_to_networkx(s) for s in serif_doc.sentences])
 
         # compose into one document-level networkx DiGraph
-        G = nx.algorithms.operators.compose_all(
-                [disconnected_tokens_digraph] + \
-                [document_level_modal_dependencies_graph] + \
-                [document_level_temporal_dependencies_graph] + \
-                sentence_level_dependency_syntax_graphs + \
-                sentence_level_amr_graphs
-            )
+        G = nx.algorithms.operators.compose_all(union_of_parse_graphs)
 
         if not nx.algorithms.dag.is_directed_acyclic_graph(G):
             logging.warning("Cycle detected in graph for %s" % serif_doc.id)
