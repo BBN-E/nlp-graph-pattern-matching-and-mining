@@ -84,11 +84,12 @@ class LocalPatternFinder():
         # get subgraph induced by nodes in k-hop neighborhood of source node
         neighborhood_subgraph = G.subgraph(neighborhood_nodes)
 
-        # prune neighborhood subgraph by specified parse types (remove all other edges)
-        pruned_neighborhood_subgraph = self.get_edge_induced_subgraph_for_parse_types(neighborhood_subgraph,
-                                                                                      parse_types=parse_types)
+        # # prune neighborhood subgraph by specified parse types (remove all other edges)
+        # pruned_neighborhood_subgraph = self.get_edge_induced_subgraph_for_parse_types(neighborhood_subgraph,
+        #                                                                               parse_types=parse_types)
 
-        return pruned_neighborhood_subgraph
+        # return pruned_neighborhood_subgraph
+        return neighborhood_subgraph
 
 
     def get_edge_induced_subgraph_for_parse_types(self, G, parse_types=[ParseTypes.DP]):
@@ -135,6 +136,7 @@ class LocalPatternFinder():
                                                            search_direction=search_direction))
 
             ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
+            ann_k_hop_neighborhood = ann.networkx_graph.subgraph(ann_k_hop_neighborhood.nodes())  # get node-induced subgraph, assume it will have no edges of unwanted parse types
             if len(ann_k_hop_neighborhood) == 0:
                 continue
 
