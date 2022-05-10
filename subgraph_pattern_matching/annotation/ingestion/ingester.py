@@ -22,8 +22,8 @@ class Ingester(ABC):
 
 class SentenceIngester(Ingester):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parse_types=None):
+        super().__init__(parse_types=parse_types)
 
     def ingest_serifxml(self, data):
         train_serif_doc = serifxml3.Document(data['TRAIN'])
@@ -54,8 +54,8 @@ class SentenceIngester(Ingester):
 
 class DocumentIngester(Ingester):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parse_types=None):
+        super().__init__(parse_types=parse_types)
 
     def ingest_serifxmls_from_list(self, data):
         train_serif_docs, train_nx_graphs = self.get_nx_graphs_from_serif_list(data['TRAIN'])

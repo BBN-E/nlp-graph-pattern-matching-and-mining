@@ -23,8 +23,8 @@ AIDA_TEST = {
 
 class EventIngester(DocumentIngester):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parse_types=None):
+        super().__init__(parse_types=parse_types)
 
     def ingest_ace(self, language='english'):
 
