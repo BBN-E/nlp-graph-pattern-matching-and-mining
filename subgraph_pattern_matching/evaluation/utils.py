@@ -205,6 +205,14 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
     return bio_list
 
 
+def serif_sentence_to_event_trigger_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+    pass
+
+
+def serif_sentence_to_event_argument_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+    pass
+
+
 def chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens):
     '''
 
