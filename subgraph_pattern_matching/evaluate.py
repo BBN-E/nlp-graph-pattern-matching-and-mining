@@ -3,6 +3,7 @@ import logging
 import pickle
 import os
 from match_wrapper import MatchWrapper, MatchCorpus
+from patterns.pattern import Pattern
 import serifxml3
 
 logging.basicConfig(level=logging.DEBUG)
@@ -54,11 +55,10 @@ def main(args):
     all_matches = []
     for match_dict in match_dicts:
         match = MatchWrapper(match_node_id_to_pattern_node_id=match_dict['match_node_id_to_pattern_node_id'],
-                            pattern_id=match_dict['pattern_id'],
-                            serif_sentence=docid_to_doc[match_dict['docid']].sentences[match_dict['sent_no']],
-                            serif_doc=docid_to_doc[match_dict['docid']],
-                            annotated_node_ids=match_dict['annotated_node_ids'],
-                            category=match_dict['category'])
+                             pattern=Pattern().load_from_json(match_dict['pattern']),
+                             serif_sentence=docid_to_doc[match_dict['docid']].sentences[match_dict['sent_no']],
+                             serif_doc=docid_to_doc[match_dict['docid']],
+                             category=match_dict['category'])
         all_matches.append(match)
 
     match_corpus = MatchCorpus(all_matches)
