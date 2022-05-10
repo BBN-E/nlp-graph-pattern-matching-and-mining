@@ -82,6 +82,7 @@ class Pattern():
                      'category': self.category}
         return json_dict
 
+    # TODO should this be a @cls method?
     def load_from_json(self, json_dict):
         self._pattern_id = json_dict['pattern_id']
         self._pattern_graph = json_graph.node_link_graph(json_dict['pattern_graph'])
