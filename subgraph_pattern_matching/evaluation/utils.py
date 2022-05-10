@@ -12,6 +12,13 @@ class AnnotationScheme(Enum):
     IDENTIFICATION_CLASSIFICATION = 3
 
 
+class KnowledgeElement(Enum):
+
+    NAMED_ENTITY = 1
+    EVENT_TRIGGER = 2
+    EVENT_ARGUMENT = 3
+
+
 def create_corpus_directory(corpus_paths_dict):
     '''
 
@@ -87,7 +94,7 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=AnnotationS
     return bio_list
 
 
-def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+def serif_sentence_to_event_trigger_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -121,7 +128,7 @@ def serif_sentence_event_trigger_bio_list(serif_sentence, annotation_scheme=Anno
     return bio_list
 
 
-def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+def serif_sentence_to_event_argument_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
@@ -158,11 +165,17 @@ def serif_sentence_event_argument_bio_list(serif_sentence, annotation_scheme=Ann
     return bio_list
 
 
-def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+def serif_sentence_to_bio_list_based_on_predictions(
+        serif_sentence,
+        matches_for_sentence,
+        ke=KnowledgeElement.NAMED_ENTITY,
+        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION
+):
     '''
 
     :param serif_sentence: serif.theory.sentence.Sentence
     :param matches_for_sentence: list[match_wrapper.MatchWrapper]
+    :param ke:
     :param annotation_scheme:
     :return:
     '''
@@ -179,13 +192,21 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
                 serif_tokens_for_match = []
                 for match_node_id, pattern_node_id in match.match_node_id_to_pattern_node_id.items():
 
-                    serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
-
                     # only match tokens that were part of the annotation in the pattern
-                    if match.annotated_node_ids:
-                        if pattern_node_id not in match.annotated_node_ids:
+
+                    if ke == KnowledgeElement.NAMED_ENTITY:
+                        ke_node_ids = match.pattern.get_named_entity_node_ids()
+                    elif ke == KnowledgeElement.EVENT_TRIGGER:
+                        ke_node_ids = match.pattern.get_event_trigger_node_ids()
+                    elif ke == KnowledgeElement.EVENT_ARGUMENT:
+                        ke_node_ids = match.pattern.get_event_argument_node_ids()
+                    else: raise NotImplementedError
+
+                    if ke_node_ids:
+                        if pattern_node_id not in ke_node_ids:
                             continue
 
+                    serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
                     if serif_theory is not None:
 
                         # match is serif Token
@@ -194,23 +215,17 @@ def serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence, matches_
 
                 if len(serif_tokens_for_match) > 0:
 
-                    contiguous_token_chunks = chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens_for_match)
+                    contiguous_token_chunks = chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(
+                        serif_tokens_for_match)
                     for chunk in contiguous_token_chunks:
                         for i, token in enumerate(chunk):
                             # if i == 0:
                             #     bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
                             # else:
-                            bio_list[token.index()] = f"I-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
+                            bio_list[
+                                token.index()] = f"I-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
 
     return bio_list
-
-
-def serif_sentence_to_event_trigger_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
-    pass
-
-
-def serif_sentence_to_event_argument_bio_list_based_on_predictions(serif_sentence, matches_for_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
-    pass
 
 
 def chunk_up_list_of_tokens_into_lists_of_contiguous_tokens(serif_tokens):
