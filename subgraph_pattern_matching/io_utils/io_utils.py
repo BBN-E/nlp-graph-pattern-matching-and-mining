@@ -1,7 +1,7 @@
 import json
 from networkx.readwrite import json_graph
 from patterns.pattern import Pattern
-
+import os
 
 def combine_pattern_lists(json_dump_paths):
     all_pattern_list = []
@@ -71,6 +71,22 @@ def deserialize_pattern_graphs(json_dump, is_file_path=False):
         digraph = json_graph.node_link_graph(jgraph)
         pattern_graphs.append(digraph)
 
-
     return pattern_graphs
+
+
+def split_by_config(file_path, output_dir):
+
+    config_to_pattern_list = {}
+
+    patterns = deserialize_patterns(file_path, is_file_path=True)
+    for pattern in patterns:
+        if pattern.grid_search not in config_to_pattern_list:
+            config_to_pattern_list[pattern.grid_search] = []
+
+        config_to_pattern_list[pattern.grid_search].append(pattern)
+
+    for config, pattern_list in config_to_pattern_list.items():
+        serialized_patterns = serialize_patterns(pattern_list)
+        with open(os.path.join(output_dir, config + ".json"), 'w') as f:
+            f.write(serialized_patterns)
 

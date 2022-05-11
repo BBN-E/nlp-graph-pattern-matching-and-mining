@@ -104,15 +104,14 @@ class GraphBuilder():
             token_id = token_feats['id']
             disconnected_tokens_digraph.add_node(token_id, **token_feats)
 
-        sentence_level_dependency_syntax_graph = self.syntactic_dependency_parse_to_networkx(serif_sentence)
-        sentence_level_amr_graph = self.amr_parse_to_networkx(serif_sentence)
+        union_of_parse_graphs = [disconnected_tokens_digraph]
+        if self.dp:
+            union_of_parse_graphs.append(self.syntactic_dependency_parse_to_networkx(serif_sentence))
+        if self.amr:
+            union_of_parse_graphs.append(self.amr_parse_to_networkx(serif_sentence))
 
         # compose into one sentence-level networkx DiGraph
-        G = nx.algorithms.operators.compose_all(
-                [disconnected_tokens_digraph] + \
-                [sentence_level_dependency_syntax_graph] + \
-                [sentence_level_amr_graph]
-            )
+        G = nx.algorithms.operators.compose_all(union_of_parse_graphs)
 
         if not nx.algorithms.dag.is_directed_acyclic_graph(G):
             logging.warning("Cycle detected in graph for %s" % serif_sentence.id)

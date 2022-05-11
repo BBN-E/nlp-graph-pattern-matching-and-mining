@@ -9,7 +9,7 @@ my $PYTHON3= "env PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/
 
 
 my $INPUT_CORPUS = "/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml -s";
-my $PATTERNS_PATH = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json";
+my $PATTERNS_PATH = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-11-22-conll-test-2/all_patterns.json";
 
 my $EVALUATION_CORPUS = "CONLL_ENGLISH";
 my $NUM_BATCHES = 500;

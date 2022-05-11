@@ -9,7 +9,7 @@ import serifxml3
 from graph_builder import GraphBuilder
 from match_wrapper import MatchWrapper, MatchCorpus
 from evaluate import evaluate
-from local_pattern_finder import read_corpus
+from local_pattern_finder import get_parse_type_kwargs
 from constants.pattern.id.pattern_token_node_ids import PatternTokenNodeIDs
 
 from patterns.pattern import Pattern
@@ -180,7 +180,10 @@ def main(args):
         serifxml_paths = [args.input]
 
     # GraphBuilder object to construct nx graphs from parsed serif docs
-    GB = GraphBuilder()
+    if args.config:
+        GB = GraphBuilder(get_parse_type_kwargs(args.config))
+    else:
+        GB = GraphBuilder()
 
     # create patterns
     if args.patterns_path:
@@ -283,6 +286,7 @@ if __name__ == '__main__':
     parser.add_argument('--stripe', type=int, required=False, default=0)
     parser.add_argument('-b', '--num_batches', type=int, help="number of batches", required=False, default=1)
     parser.add_argument('-o', '--output', type=str, required=False, default=None, help="directory to print pickled dicts representing MatchWrapper objects to")
+    parser.add_argument('-c', '--config', type=str, required=False, default=None)
     args = parser.parse_args()
 
     main(args)
