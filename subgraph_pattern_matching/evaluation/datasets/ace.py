@@ -18,39 +18,49 @@ def score_ace(matches_by_serif_id, SPLIT='TEST', annotation_scheme=AnnotationSch
 
     for gold_serif_doc_id, gold_serif_doc in ace_corpus_dir[SPLIT].items():
 
-        # get gold test bio lists
-        gold_event_trigger_bio.extend([serif_sentence_to_event_trigger_bio_list(serif_sentence=s,
-                                                                                annotation_scheme=annotation_scheme) for s in gold_serif_doc.sentences])
-        gold_event_argument_bio.extend([serif_sentence_to_event_argument_bio_list(serif_sentence=s,
-                                                                                  annotation_scheme=annotation_scheme) for s in gold_serif_doc.sentences])
+        # gold event trigger bio lists
+        gold_event_trigger_bio_for_doc = [serif_sentence_to_event_trigger_bio_list(serif_sentence=s,
+                                                                                   annotation_scheme=annotation_scheme) \
+                                          for s in gold_serif_doc.sentences]
+        gold_event_trigger_bio.extend(gold_event_trigger_bio_for_doc)
 
-        # get pred test bio lists
+        # gold event argument bio lists
+        gold_event_argument_bio_for_doc = [serif_sentence_to_event_argument_bio_list(serif_sentence=s,
+                                                                                  annotation_scheme=annotation_scheme) for s in gold_serif_doc.sentences]
+        gold_event_argument_bio.extend(gold_event_argument_bio_for_doc)
+
+        # pred event trigger bio lists
         pred_matches = matches_by_serif_id[gold_serif_doc.docid]
-        pred_event_trigger_bio.extend([serif_sentence_to_bio_list_based_on_predictions(serif_sentence=s,
+        pred_event_trigger_bio_for_doc = [serif_sentence_to_bio_list_based_on_predictions(serif_sentence=s,
                                                                                        matches_for_sentence=pred_matches[s.id],
                                                                                        ke=KnowledgeElement.EVENT_TRIGGER,
                                                                                        annotation_scheme=annotation_scheme) \
-                                       for s in gold_serif_doc.sentences])
-        pred_event_argument_bio.extend([serif_sentence_to_bio_list_based_on_predictions(serif_sentence=s,
+                                       for s in gold_serif_doc.sentences]
+        pred_event_trigger_bio.extend(pred_event_trigger_bio_for_doc)
+
+        # pred event argument bio lists
+        pred_event_argument_bio_for_doc = [serif_sentence_to_bio_list_based_on_predictions(serif_sentence=s,
                                                                                         matches_for_sentence=pred_matches[s.id],
                                                                                         ke=KnowledgeElement.EVENT_ARGUMENT,
                                                                                         annotation_scheme=annotation_scheme) \
-                                        for s in gold_serif_doc.sentences])
+                                        for s in gold_serif_doc.sentences]
+        pred_event_argument_bio.extend(pred_event_argument_bio_for_doc)
 
+        for i, (g, p) in enumerate(list(zip(gold_event_trigger_bio_for_doc, pred_event_trigger_bio_for_doc))):
+            if g != p:
+                print(i)
+                print(g)
+                print(p)
+                print("-------------------")
+                # import pdb; pdb.set_trace()
 
-    for i, (g, p) in enumerate(list(zip(gold_event_trigger_bio, pred_event_trigger_bio)))[:5]:
-        if g != p:
-            print(i)
-            print(g)
-            print(p)
-            print("-------------------")
-
-    for i, (g, p) in enumerate(list(zip(gold_event_argument_bio, pred_event_argument_bio)))[:5]:
-        if g != p:
-            print(i)
-            print(g)
-            print(p)
-            print("-------------------")
+        for i, (g, p) in enumerate(list(zip(gold_event_argument_bio_for_doc, pred_event_argument_bio_for))):
+            if g != p:
+                print(i)
+                print(g)
+                print(p)
+                print("-------------------")
+                # import pdb; pdb.set_trace()
 
     # event trigger
     print(classification_report(y_true=list(chain(*gold_event_trigger_bio)),
