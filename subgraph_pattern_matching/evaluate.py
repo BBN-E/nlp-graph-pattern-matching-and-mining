@@ -3,6 +3,7 @@ import logging
 import pickle
 import os
 from match_wrapper import MatchWrapper, MatchCorpus
+from patterns.pattern import Pattern
 import serifxml3
 
 logging.basicConfig(level=logging.DEBUG)
@@ -20,7 +21,12 @@ def evaluate(evaluation_corpus, matches_by_serif_id):
 
     elif evaluation_corpus == 'ACE_ENGLISH':
 
-        pass
+        from evaluation.datasets.ace import score_ace
+        from evaluation.utils import AnnotationScheme
+        score_ace(matches_by_serif_id=matches_by_serif_id,
+                  SPLIT='TEST',
+                  annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
+
 
     else:
         raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
@@ -48,12 +54,13 @@ def main(args):
 
     all_matches = []
     for match_dict in match_dicts:
+        pattern = Pattern()
+        pattern.load_from_json(match_dict['pattern'])
         match = MatchWrapper(match_node_id_to_pattern_node_id=match_dict['match_node_id_to_pattern_node_id'],
-                            pattern_id=match_dict['pattern_id'],
-                            serif_sentence=docid_to_doc[match_dict['docid']].sentences[match_dict['sent_no']],
-                            serif_doc=docid_to_doc[match_dict['docid']],
-                            annotated_node_ids=match_dict['annotated_node_ids'],
-                            category=match_dict['category'])
+                             pattern=pattern,
+                             serif_sentence=docid_to_doc[match_dict['docid']].sentences[match_dict['sent_no']],
+                             serif_doc=docid_to_doc[match_dict['docid']],
+                             category=match_dict['category'])
         all_matches.append(match)
 
     match_corpus = MatchCorpus(all_matches)

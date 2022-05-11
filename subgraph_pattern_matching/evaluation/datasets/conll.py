@@ -1,8 +1,8 @@
 from sklearn.metrics import classification_report
 from itertools import chain
 
-from evaluation.utils import AnnotationScheme, create_corpus_directory, serif_sentence_to_ner_bio_list, \
-    serif_sentence_to_ner_bio_list_based_on_predictions
+from evaluation.utils import AnnotationScheme, KnowledgeElement, create_corpus_directory, serif_sentence_to_ner_bio_list, \
+    serif_sentence_to_bio_list_based_on_predictions
 from annotation.ingestion.ner_ingester import CONLL_ENGLISH
 
 
@@ -25,9 +25,10 @@ def score_conll(matches_by_serif_id, SPLIT='TEST', annotation_scheme=AnnotationS
 
     # get pred test bio list
     pred_matches = matches_by_serif_id[gold_serif_doc.docid]
-    pred_bio = [serif_sentence_to_ner_bio_list_based_on_predictions(serif_sentence=s,
-                                                                    matches_for_sentence=pred_matches[s.id],
-                                                                    annotation_scheme=annotation_scheme) \
+    pred_bio = [serif_sentence_to_bio_list_based_on_predictions(serif_sentence=s,
+                                                                matches_for_sentence=pred_matches[s.id],
+                                                                ke=KnowledgeElement.NAMED_ENTITY,
+                                                                annotation_scheme=annotation_scheme) \
                      for s in gold_serif_doc.sentences]
 
     for i, (g, p) in enumerate(list(zip(gold_bio, pred_bio))):

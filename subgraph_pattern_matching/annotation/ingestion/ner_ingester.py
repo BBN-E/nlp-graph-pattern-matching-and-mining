@@ -1,5 +1,7 @@
+from constants.common.attrs.node.node_attrs import NodeAttrs
 from annotation.annotation_base import MentionAnnotation
 from annotation.ingestion.ingester import SentenceIngester
+
 
 CONLL_ENGLISH = {
     'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.train.xml',
@@ -41,6 +43,9 @@ class NERIngester(SentenceIngester):
                     if mention.tokens:
 
                         token_node_ids = [self.graph_builder.token_to_feats(t)['id'] for t in mention.tokens]
+                        for token_node_id in token_node_ids:
+                            nx_graph.nodes[token_node_id][NodeAttrs.annotated] = True
+                            nx_graph.nodes[token_node_id][NodeAttrs.named_entity] = mention.entity_type
 
                         ner_annotation = MentionAnnotation(networkx_graph=nx_graph,
                                                            token_node_ids=token_node_ids,

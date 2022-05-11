@@ -13,10 +13,9 @@ class MatchWrapper():
 
     def __init__(self,
                  match_node_id_to_pattern_node_id,
-                 pattern_id,
+                 pattern,
                  serif_sentence,
                  serif_doc,
-                 annotated_node_ids=None,
                  category=None):
         '''
         :param match_node_id_to_pattern_node_id: {'a1362': 'CONCEIVER_NODE', 'a1378': 'EVENT_NODE', 'policymakers_a95': 'CONCEIVER_TOKEN', 'epidemic_a91': 'EVENT_TOKEN', 'said_a96': 'SIP', 'need_a81': 'CCOMP_TOKEN'}
@@ -26,25 +25,24 @@ class MatchWrapper():
         self.serif_doc = serif_doc  # TODO why does this need to be instantiated for the references in self.pattern_node_id_to_serif_theory values to work?
         self.serif_sentence = serif_sentence
         self.docid = serif_doc.docid
-        self.pattern_id = pattern_id
+        self.pattern = pattern
 
         self.match_node_id_to_pattern_node_id = match_node_id_to_pattern_node_id
         self.pattern_node_id_to_match_node_id = dict(map(reversed, match_node_id_to_pattern_node_id.items()))
 
-        self.pattern_node_id_to_serif_theory = {pattern: self.match_to_serif_theory(match_id, serif_doc)
-                                                for pattern, match_id in self.pattern_node_id_to_match_node_id.items()}
+        self.pattern_node_id_to_serif_theory = {pattern_node_id: self.match_to_serif_theory(match_id, serif_doc)
+                                                for pattern_node_id, match_id in self.pattern_node_id_to_match_node_id.items()}
 
-        self.annotated_node_ids = annotated_node_ids
         self.category = category
 
     def to_pickle(self):
+        '''NOTE: serif objects can't be pickled, so pickle docid + sent_no instead for access'''
 
         return {
             "docid": self.docid,
             "sent_no": self.serif_sentence.sent_no,
-            "pattern_id": self.pattern_id,
+            "pattern": self.pattern.to_json(),
             "match_node_id_to_pattern_node_id": self.match_node_id_to_pattern_node_id,
-            "annotated_node_ids": self.annotated_node_ids,
             "category": self.category
         }
 

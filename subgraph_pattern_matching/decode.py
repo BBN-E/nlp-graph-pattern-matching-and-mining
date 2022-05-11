@@ -125,10 +125,9 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         pattern_match_dicts = list(map(dict, set(tuple(sorted(m.items())) for m in pattern_match_dicts)))  # deduplicate (sanity check)
 
         pattern_matches = [MatchWrapper(match_node_id_to_pattern_node_id=m,
-                                        pattern_id=pattern_id,
+                                        pattern=pattern,
                                         serif_sentence=serif_sentence,
                                         serif_doc=serif_doc,
-                                        annotated_node_ids=pattern.get_annotated_node_ids(),
                                         category=pattern.category
                                         ) for m in pattern_match_dicts]
 
