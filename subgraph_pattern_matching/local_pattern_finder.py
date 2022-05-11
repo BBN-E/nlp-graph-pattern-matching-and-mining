@@ -2,7 +2,7 @@ from enum import Enum
 import networkx as nx
 from tqdm import tqdm
 import argparse
-
+import re
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
@@ -44,6 +44,13 @@ PARSE_TYPE_COMBINATIONS = [
     [ParseTypes.DP, ParseTypes.AMR],
     [ParseTypes.DP, ParseTypes.MDP, ParseTypes.TDP, ParseTypes.AMR]
 ]
+
+def get_parse_type_kwargs(str_encoding):
+    k, search_direction, parse_type_str = re.split('\.|_', str_encoding)
+    parse_types = [ParseTypes(int(p)) for p in parse_type_str.split("-")]
+    parse_types_kwargs = {parse_type.name.lower(): (parse_type in parse_types) for parse_type in ParseTypes}
+
+    return parse_types_kwargs
 
 
 class LocalPatternFinder():
@@ -144,12 +151,14 @@ class LocalPatternFinder():
             all_edge_attrs = set()
             for __, attr_dict in list(ann_k_hop_neighborhood.nodes(data=True)):
                 for attr, __ in attr_dict.items():
+                    if attr is NodeAttrs.annotated:
+                        continue
                     all_node_attrs.add(attr)
             for __, __, attr_dict in list(ann_k_hop_neighborhood.edges(data=True)):
                 for attr, __ in attr_dict.items():
                     all_edge_attrs.add(attr)
 
-            grid_search_config = "{}.{}.{}".format(k, search_direction.value, parse_type_string)
+            grid_search_config = "{}_{}_{}".format(k, search_direction.value, parse_type_string)
             annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), ann_k_hop_neighborhood,
                                          list(all_node_attrs), list(all_edge_attrs),
                                          grid_search=grid_search_config,
