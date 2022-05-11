@@ -153,6 +153,8 @@ class LocalPatternFinder():
             all_edge_attrs = set()
             for __, attr_dict in list(ann_k_hop_neighborhood.nodes(data=True)):
                 for attr, __ in attr_dict.items():
+                    if attr is NodeAttrs.annotated:
+                        continue
                     all_node_attrs.add(attr)
             for __, __, attr_dict in list(ann_k_hop_neighborhood.edges(data=True)):
                 for attr, __ in attr_dict.items():
