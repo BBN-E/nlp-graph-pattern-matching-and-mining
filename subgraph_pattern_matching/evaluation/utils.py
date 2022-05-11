@@ -149,9 +149,9 @@ def serif_sentence_to_event_argument_bio_list(serif_sentence, annotation_scheme=
             if event_mention.event_type == 'MTDP_EVENT':
                 continue
 
-            event_argument_bio = []
             if event_mention.arguments:
                 for event_argument in event_mention.arguments:
+                    event_argument_bio = []
                     if event_argument.value.tokens:
 
                         for i in range(len(event_argument.value.tokens)):
