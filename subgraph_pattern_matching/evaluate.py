@@ -54,8 +54,10 @@ def main(args):
 
     all_matches = []
     for match_dict in match_dicts:
+        pattern = Pattern()
+        pattern.load_from_json(match_dict['pattern'])
         match = MatchWrapper(match_node_id_to_pattern_node_id=match_dict['match_node_id_to_pattern_node_id'],
-                             pattern=Pattern().load_from_json(match_dict['pattern']),
+                             pattern=pattern,
                              serif_sentence=docid_to_doc[match_dict['docid']].sentences[match_dict['sent_no']],
                              serif_doc=docid_to_doc[match_dict['docid']],
                              category=match_dict['category'])
