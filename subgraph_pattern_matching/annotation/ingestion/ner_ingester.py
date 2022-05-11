@@ -45,7 +45,7 @@ class NERIngester(SentenceIngester):
                         token_node_ids = [self.graph_builder.token_to_feats(t)['id'] for t in mention.tokens]
                         for token_node_id in token_node_ids:
                             nx_graph.nodes[token_node_id][NodeAttrs.annotated] = True
-                            nx_graph.nodes[token_node_id][NodeAttrs.named_entity] = True
+                            nx_graph.nodes[token_node_id][NodeAttrs.named_entity] = mention.entity_type
 
                         ner_annotation = MentionAnnotation(networkx_graph=nx_graph,
                                                            token_node_ids=token_node_ids,
