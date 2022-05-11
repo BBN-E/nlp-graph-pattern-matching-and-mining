@@ -54,7 +54,7 @@ def score_ace(matches_by_serif_id, SPLIT='TEST', annotation_scheme=AnnotationSch
                 print("-------------------")
                 # import pdb; pdb.set_trace()
 
-        for i, (g, p) in enumerate(list(zip(gold_event_argument_bio_for_doc, pred_event_argument_bio_for))):
+        for i, (g, p) in enumerate(list(zip(gold_event_argument_bio_for_doc, pred_event_argument_bio_for_doc))):
             if g != p:
                 print(i)
                 print(g)
