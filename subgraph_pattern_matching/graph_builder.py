@@ -511,3 +511,34 @@ class GraphBuilder():
         }
 
         return feats
+
+    def gspan_graph_to_networkx(self, gspan_graph, 
+                                node_labels=None, edge_labels=None):
+        colors = ["pink","blue","green"]
+        G = nx.DiGraph()
+        for vid in gspan_graph.vertices:
+            if node_labels is not None:
+                vlb = node_labels[int(gspan_graph.vertices[vid].vlb)]
+            else:
+                vlb = gspan_graph.vertices[vid].vlb
+            color = colors[int(gspan_graph.vertices[vid].vlb)]
+            G.add_node(vid, **{NodeAttrs.node_type : vlb,
+                               'label' : f"{vid}_{vlb}",
+                               'color' : color})
+        for vid1 in gspan_graph.vertices:
+            if node_labels is not None:
+                vlb1 = node_labels[int(gspan_graph.vertices[vid1].vlb)]
+            else:
+                vlb1 = gspan_graph.vertices[vid1].vlb
+            edges = gspan_graph.vertices[vid1].edges
+            for vid2 in edges:
+                if edge_labels is not None:
+                    elb = edge_labels[int(edges[vid2].elb)]
+                else:
+                    elb = edges[vid2].elb
+                if node_labels is not None:
+                    vlb2 = node_labels[(gspan_graph.vertices[vid2].vlb)]
+                else:
+                    vlb2 = gspan_graph.vertices[vid2].vlb
+                G.add_edge(vid1, vid2, **{EdgeAttrs.label : elb})
+        return G
