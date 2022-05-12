@@ -59,7 +59,10 @@ class EventIngester(DocumentIngester):
                             for token_node_id in event_arg_token_node_ids:
                                 nx_graph.nodes[token_node_id][NodeAttrs.annotated] = True
                                 nx_graph.nodes[token_node_id][NodeAttrs.event_argument] = event_arg.role
-                                nx_graph.nodes[token_node_id][NodeAttrs.event_frame_id] = event_mention.id
+                                if NodeAttrs.event_frame_id not in nx_graph.nodes[token_node_id]:
+                                    nx_graph.nodes[token_node_id][NodeAttrs.event_frame_id] = [event_mention.id]
+                                else:
+                                    nx_graph.nodes[token_node_id][NodeAttrs.event_frame_id].append(event_mention.id)
 
                             event_argument_annotation = EventArgumentAnnotation(networkx_graph=nx_graph,
                                                                                 token_node_ids=event_arg_token_node_ids,
