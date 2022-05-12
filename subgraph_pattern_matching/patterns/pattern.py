@@ -82,6 +82,7 @@ class Pattern():
                      'category': self.category}
         return json_dict
 
+    # TODO should this be a @cls method?
     def load_from_json(self, json_dict):
         self._pattern_id = json_dict['pattern_id']
         self._pattern_graph = json_graph.node_link_graph(json_dict['pattern_graph'])
@@ -94,15 +95,26 @@ class Pattern():
         if self._edge_attrs:
             self.make_edge_match()
 
-    def get_annotated_node_ids(self):
-        annotated_node_ids = set()
-        for node in self.pattern_graph:
-            if NodeAttrs.annotated in self.pattern_graph.nodes[node]:
-                annotated_node_ids.add(node)
+    def get_node_ids_with_attr(self, attr=NodeAttrs.annotated):
 
-        if len(annotated_node_ids) <= 0:
+        node_with_attr_ids = set()
+        for node in self.pattern_graph:
+            if attr in self.pattern_graph.nodes[node]:
+                node_with_attr_ids.add(node)
+
+        if len(node_with_attr_ids) <= 0:
             return None
 
-        return annotated_node_ids
+        return node_with_attr_ids
 
+    def get_annotated_node_ids(self):
+        return self.get_node_ids_with_attr(attr=NodeAttrs.annotated)
 
+    def get_named_entity_node_ids(self):
+        return self.get_node_ids_with_attr(attr=NodeAttrs.named_entity)
+
+    def get_event_trigger_node_ids(self):
+        return self.get_node_ids_with_attr(attr=NodeAttrs.event_trigger)
+
+    def get_event_argument_node_ids(self):
+        return self.get_node_ids_with_attr(attr=NodeAttrs.event_argument)

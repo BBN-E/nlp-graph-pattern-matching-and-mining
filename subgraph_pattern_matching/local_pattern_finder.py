@@ -71,8 +71,6 @@ class LocalPatternFinder():
         :return: DiGraph for k-hop neighborhood of source node with edges for only specified parse types
         '''
 
-        G.nodes[node_id][NodeAttrs.annotated] = True
-
         # nx.single_source_shortest_path returns dictionary from target node id to list of node ids corresponding to the
         #  shortest path from source to target; we only need to know which nodes are in the k-hop neighborhood of source
         #  node so we'll take the keys of that dictionary.
