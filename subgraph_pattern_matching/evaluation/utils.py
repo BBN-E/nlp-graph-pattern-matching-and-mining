@@ -283,13 +283,9 @@ def serif_event_mention_to_event_argument_bio_list_based_on_predictions(
         matches_for_sentence,
         annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION
 ):
-    if serif_event_mention.document.docid == 'AFP_ENG_20030401.0476' and serif_event_mention.id == 'a139':
-        import pdb; pdb.set_trace()
 
     serif_sentence = serif_event_mention.sentence
     bio_list = ['O'] * len(serif_sentence.token_sequence)
-
-    # import pdb; pdb.set_trace()
 
     matches_for_event_mention = [m for m in matches_for_sentence if m.pattern.event_frame_id == serif_event_mention.id]
     if not matches_for_event_mention:
@@ -297,11 +293,20 @@ def serif_event_mention_to_event_argument_bio_list_based_on_predictions(
 
     for match in matches_for_event_mention:
 
-        # keep only event arg nodes coming from frame id for current event mention
-        event_argument_node_ids = match.pattern.get_event_argument_node_ids()
-        event_argument_node_ids = [node_id for node_id in event_argument_node_ids \
+        # keep only event arg nodes associated with frame id for current event mention
+        event_argument_node_ids = {node_id for node_id in match.pattern.get_event_argument_node_ids() \
                                    if any([(x == serif_event_mention.id) \
-                                           for x in match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_frame_id]])]
+                                           for x in match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_frame_id] \
+                                          ])
+                                   }
+        event_argument_node_id_to_role = dict()
+        for node_id in event_argument_node_ids:
+            # look at all possible event frames this arg node participates in
+            for i, event_frame_id in enumerate(match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_frame_id]):
+                # only keep event arg node/role info if node corresponds to correct event frame
+                if event_frame_id == serif_event_mention.id:
+                    event_argument_node_ids.add(node_id)
+                    event_argument_node_id_to_role[node_id] = match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_argument][i]
 
         if match.serif_sentence is not None:
 
@@ -322,7 +327,8 @@ def serif_event_mention_to_event_argument_bio_list_based_on_predictions(
                         # match is serif Token
                         if type(serif_theory) == Token:
                             serif_tokens_for_match.append(serif_theory)
-                            event_argument_role_per_token.append(match.pattern.pattern_graph.nodes[pattern_node_id][NodeAttrs.event_argument])
+                            event_argument_role_per_token.append(event_argument_node_id_to_role[pattern_node_id])
+
 
                 if len(serif_tokens_for_match) > 0:
 

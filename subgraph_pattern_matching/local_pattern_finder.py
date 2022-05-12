@@ -3,6 +3,7 @@ import networkx as nx
 from tqdm import tqdm
 import argparse
 import re
+from annotation.annotation_base import FrameAnnotationTypes
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
@@ -162,7 +163,9 @@ class LocalPatternFinder():
             annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), ann_k_hop_neighborhood,
                                          list(all_node_attrs), list(all_edge_attrs),
                                          grid_search=grid_search_config,
-                                         category=annotation_category)
+                                         category=annotation_category,
+                                         event_frame_id=ann.frame.event.serif_event_mention.id \
+                                             if (ann.annotation_type == FrameAnnotationTypes.EVENT_FRAME) else None)
             annotation_patterns_for_configuration.append(annotation_pattern)
 
         return annotation_patterns_for_configuration
