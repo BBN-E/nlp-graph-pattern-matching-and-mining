@@ -62,13 +62,10 @@ def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/m
         json_patterns = json.load(f)
 
     patterns = []
-    seen_pattern_ids = set()
     for json_dict in json_patterns:
         p = Pattern()
         p.load_from_json(json_dict)
-        if not p.pattern_id in seen_pattern_ids:
-            patterns.append(p)
-            seen_pattern_ids.add(p.pattern_id)
+        patterns.append(p)
 
     return patterns
 
@@ -106,6 +103,9 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
 
         pattern_id = pattern.pattern_id
         # logging.info(pattern_id)
+
+        print(pattern._edge_attrs)
+        print(pattern._node_attrs)
 
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(nx_graph, pattern.pattern_graph,
                                                                    node_match=pattern.node_match,

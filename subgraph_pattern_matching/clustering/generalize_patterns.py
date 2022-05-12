@@ -4,6 +4,8 @@ import json
 import os
 import operator
 import enum
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
 from view_utils.graph_viewer import GraphViewer
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
@@ -156,83 +158,99 @@ def add_counts_to_dict(mapping, node_or_edge_list, id_to_attribute_counts):
 
 def majority_wins_graph(patterns_list, labels, output_dir):
 
-    # create list of all graphs in the largest cluster
-    most_frequent_structure_patterns = []
     label_count = Counter(labels)
-    most_common_label = label_count.most_common(1)[0][0]
+    generalized_patterns = []
 
-    for i, label in enumerate(labels):
-        if label == most_common_label:
-            most_frequent_structure_patterns.append(patterns_list[i])
+    for label in label_count.most_common():
+        if label[1] < 10:
+            continue
+        most_common_label = label[0]
 
-    # our most frequent pattern
-    stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
+        # create list of all graphs in the largest cluster
+        most_frequent_structure_patterns = []
+        for i, label in enumerate(labels):
+            if label == most_common_label:
+                most_frequent_structure_patterns.append(patterns_list[i])
 
-    # maps nodes to dict that maps attributes to dicts of possible values and their counts
-    # dict (node, dict ( attr, ( dict (value, count ) ) )
-    node_to_attribute_counts = {}
-    edge_to_attribute_counts = {}
+        # our most frequent pattern
+        stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
 
-    # our most frequent pattern, stripped of all node and edge attributes
-    for node_id, attr_dict in list(stripped_graph.nodes(data=True)):
-        node_to_attribute_counts[node_id] = {}
-        stripped_graph.nodes[node_id].clear()
-    for node1_id, node2_id, attr_dict in list(stripped_graph.edges(data=True)):
-        edge_to_attribute_counts[(node1_id, node2_id)] = {}
-        stripped_graph.edges[(node1_id, node2_id)].clear()
+        # maps nodes to dict that maps attributes to dicts of possible values and their counts
+        # dict (node, dict ( attr, ( dict (value, count ) ) )
+        node_to_attribute_counts = {}
+        edge_to_attribute_counts = {}
 
-    # count the frequency of each value of each attribute for each node and edge for each pattern
-    for pattern in most_frequent_structure_patterns:
-        cur_graph = pattern.pattern_graph
+        # our most frequent pattern, stripped of all node and edge attributes
+        for node_id, attr_dict in list(stripped_graph.nodes(data=True)):
+            node_to_attribute_counts[node_id] = {}
+            node_type = stripped_graph.nodes[node_id][NodeAttrs.node_type]
+            stripped_graph.nodes[node_id].clear()
+            stripped_graph.nodes[node_id][NodeAttrs.node_type] = node_type
+        for node1_id, node2_id, attr_dict in list(stripped_graph.edges(data=True)):
+            edge_to_attribute_counts[(node1_id, node2_id)] = {}
+            edge_type = stripped_graph.edges[(node1_id, node2_id)][EdgeAttrs.edge_type]
+            stripped_graph.edges[(node1_id, node2_id)].clear()
+            stripped_graph.edges[(node1_id, node2_id)][EdgeAttrs.edge_type] = edge_type
 
-        # create a mapping between each pattern and the abstract structure, to align attr recording
-        GM = isomorphism.DiGraphMatcher(cur_graph, stripped_graph)
-        assert(GM.is_isomorphic())
-        mapping = GM.mapping
-        add_counts_to_dict(mapping, list(cur_graph.nodes(data=True)), node_to_attribute_counts)
+        # count the frequency of each value of each attribute for each node and edge for each pattern
+        for pattern in most_frequent_structure_patterns:
+            cur_graph = pattern.pattern_graph
 
-        edge_mapping = {}
-        for edge in cur_graph.edges:
-            mapped_edge = (mapping[edge[0]], mapping[edge[1]])
-            edge_mapping[edge] = mapped_edge
-        edge_to_attr_list = []
-        for node1_id, node2_id, attr_dict in list(cur_graph.edges(data=True)):
-            edge_to_attr_list.append(((node1_id, node2_id), attr_dict))
+            # create a mapping between each pattern and the abstract structure, to align attr recording
+            GM = isomorphism.DiGraphMatcher(cur_graph, stripped_graph, node_match=pattern.node_match, edge_match=pattern.edge_match)
+            assert(GM.is_isomorphic())
 
-        add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
+            mapping = GM.mapping
+            add_counts_to_dict(mapping, list(cur_graph.nodes(data=True)), node_to_attribute_counts)
 
-    # set each atrribute of each node and edge to the most frequent value
-    all_node_attrs = set()
-    attr_tuple_to_count = []
+            edge_mapping = {}
+            for edge in cur_graph.edges:
+                mapped_edge = (mapping[edge[0]], mapping[edge[1]])
+                edge_mapping[edge] = mapped_edge
+            edge_to_attr_list = []
+            for node1_id, node2_id, attr_dict in list(cur_graph.edges(data=True)):
+                edge_to_attr_list.append(((node1_id, node2_id), attr_dict))
 
-    for node_id, attr_dict in node_to_attribute_counts.items():
-        for attr, value_dict in attr_dict.items():
-            all_node_attrs.add(attr)
-            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            count = value_dict[most_frequent_value_for_attr]
+            add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
 
-            attr_tuple_to_count.append( (count, "node", node_id, attr, most_frequent_value_for_attr) )
+        # set each atrribute of each node and edge to the most frequent value
+        all_node_attrs = set()
+        attr_tuple_to_count = []
 
-    all_edge_attrs = set()
-    for edge_id, attr_dict in edge_to_attribute_counts.items():
-        for attr, value_dict in attr_dict.items():
-            all_edge_attrs.add(attr)
-            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            count = value_dict[most_frequent_value_for_attr]
-            attr_tuple_to_count.append((count, "edge", edge_id, attr, most_frequent_value_for_attr))
+        for node_id, attr_dict in node_to_attribute_counts.items():
+            for attr, value_dict in attr_dict.items():
+                if attr != NodeAttrs.annotated:
+                    all_node_attrs.add(attr)
+                most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+                count = value_dict[most_frequent_value_for_attr]
 
-    # only add the most common attribute, value pairs
-    attr_tuple_to_count.sort(key=operator.itemgetter(0), reverse=True)
-    for count, type, id, attr, value in attr_tuple_to_count:
-        if count < len(most_frequent_structure_patterns) * 0.66:
-            break
+                attr_tuple_to_count.append( (count, "node", node_id, attr, most_frequent_value_for_attr) )
 
-        if type == "node":
-            stripped_graph.nodes[id][attr] = value
-        elif type == "edge":
-            stripped_graph.edges[id][attr] = value
+        all_edge_attrs = set()
+        for edge_id, attr_dict in edge_to_attribute_counts.items():
+            for attr, value_dict in attr_dict.items():
+                all_edge_attrs.add(attr)
+                most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+                count = value_dict[most_frequent_value_for_attr]
+                attr_tuple_to_count.append((count, "edge", edge_id, attr, most_frequent_value_for_attr))
 
-    return [[Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs))]]
+        # only add the most common attribute, value pairs
+        attr_tuple_to_count.sort(key=operator.itemgetter(0), reverse=True)
+        for count, type, id, attr, value in attr_tuple_to_count:
+            if count < len(most_frequent_structure_patterns) * 0.66:
+                break
+
+            if type == "node":
+                stripped_graph.nodes[id][attr] = value
+            elif type == "edge":
+                stripped_graph.edges[id][attr] = value
+
+        grid_search = patterns_list[0].grid_search
+        category = patterns_list[0].category
+        gen_pattern = Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs), grid_search=grid_search, category=category)
+        generalized_patterns.append(gen_pattern)
+
+    return [generalized_patterns]
 
 
 def majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir):

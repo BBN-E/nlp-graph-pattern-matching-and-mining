@@ -62,20 +62,20 @@ dojobs();
 my @patterns_by_config = glob ("$config_splits/*");
 
 my @find_matches_jobs = ();
-foreach my $pattern_file (@patterns_by_config) {
-    (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
-
-    for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
-        my $find_matches_job = runjobs([$create_output_dirs], "$JOB_NAME/find_matches/$pattern_config/$i",
-                                        {
-                                            SGE_VIRTUAL_FREE => ["4G"]
-                                        },
-                               ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/decode.py -i $p->{INPUT_CORPUS} " .
-                               "-p $p->{PATTERNS_PATH} -m --stripe $i --num_batches $p->{NUM_BATCHES} -o $matches_dir/${pattern_config}_$i.pkl " .
-                               "--config $pattern_config"]);
-       push(@find_matches_jobs, $find_matches_job);
-    }
-}
+#foreach my $pattern_file (@patterns_by_config) {
+#    (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
+#
+#    for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
+#        my $find_matches_job = runjobs([$split_by_config_job], "$JOB_NAME/find_matches/$pattern_config/$i",
+#                                        {
+#                                            SGE_VIRTUAL_FREE => ["4G"]
+#                                        },
+#                               ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/decode.py -i $p->{INPUT_CORPUS} " .
+#                               "-p $p->{PATTERNS_PATH} -m --stripe $i --num_batches $p->{NUM_BATCHES} -o $matches_dir/${pattern_config}_$i.pkl " .
+#                               "--config $pattern_config"]);
+#       push(@find_matches_jobs, $find_matches_job);
+#    }
+#}
 
 my $evaluate_matches_job = runjobs(\@find_matches_jobs, "$JOB_NAME/evaluate_matches", { SGE_VIRTUAL_FREE => ["8G"] },
                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/evaluate.py -i $p->{INPUT_CORPUS} -m $matches_dir -e $p->{EVALUATION_CORPUS}"]);
