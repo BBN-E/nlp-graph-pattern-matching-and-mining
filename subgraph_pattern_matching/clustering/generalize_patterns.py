@@ -6,16 +6,23 @@ import operator
 import enum
 
 from view_utils.graph_viewer import GraphViewer
+from graph_builder import GraphBuilder
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
 from patterns.pattern import Pattern
 from collections import Counter
 from networkx.algorithms import isomorphism
+from gspan_mining.gspan import gSpan
 
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.types.node_types import NodeTypes
 
 class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()
     MajorityWins = enum.auto()
+    GSpan = enum.auto()
 
 
 def get_biggest_graph_per_cluster(labels, digraph_list):
@@ -256,6 +263,47 @@ def majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir)
             html_file = os.path.join(visualizations_dir, "majority_graph_{}.html".format(i))
             graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
 
+def gspan_strategy(args, pattern_list):
+    min_support=40
+    min_num_vertices=7
+    max_num_vertices=float('inf')
+
+    grid_search = pattern_list[0].grid_search
+    category = pattern_list[0].category
+
+    gb = GraphBuilder()
+    gv = GraphViewer()
+
+    gs = gSpan(min_support=min_support, 
+               min_num_vertices=min_num_vertices, 
+               max_num_vertices=max_num_vertices,
+               is_undirected=False, where=False)
+    gs._read_graphs_from_patterns(pattern_list)
+    gs.run()
+
+    visualizations_dir = os.path.join(args.output, "visualizations", "gspan_patterns")
+    os.makedirs(visualizations_dir, exist_ok=True)
+
+    gspan_pattern_list = []
+    for i, fs in enumerate(gs.frequent_subgraphs):
+        G = gb.gspan_graph_to_networkx(fs.graph, 
+                                       node_labels=fs.node_labels,
+                                       edge_labels=fs.edge_labels)
+        P = Pattern(f"gSpan_{i}", G, 
+                    [NodeAttrs.node_type], 
+                    [EdgeAttrs.label],
+                    grid_search=grid_search,
+                    category=category)
+        gspan_pattern_list.append(P)
+        html_file = os.path.join(visualizations_dir, f"pattern_{fs.gid}.html")
+        text = f"There are {len(fs.support)} supporting instances for this pattern"
+        gv.prepare_networkx_for_visualization(G)
+        gv.visualize_networkx_graph(G, html_file, sentence_text=text) 
+
+    json_dump = serialize_patterns(gspan_pattern_list)
+    with open(os.path.join(args.output, "patterns_cluster_0.json"), 'w') as f:
+        f.write(json_dump)
+
 
 def ungeneralized_strategy(args, pattern_list):
     json_dump = serialize_patterns(pattern_list)
@@ -278,6 +326,8 @@ def main(args):
         majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir)
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.Ungeneralized:
         ungeneralized_strategy(args, pattern_list)
+    elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.GSpan:
+        gspan_strategy(args, pattern_list)
     else:
         raise NotImplementedError("Generalization strategy {} not implemented".format(args.strategy))
 

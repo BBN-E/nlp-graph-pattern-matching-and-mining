@@ -2,10 +2,11 @@
 use strict;
 use warnings;
 
-my $SUBGRAPH_PATTERN_MATCHING_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching";
+my $SUBGRAPH_PATTERN_MATCHING_RELEASE = "/nfs/raid91/u10/developers/dzajic-ad/projects/rozonoyer/subgraph-pattern-matching/subgraph_pattern_matching";
+my $GSPAN = "/home/dzajic/dev/projects/graph/gSpan";
 
-my $PYTHON3= "env PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python:$SUBGRAPH_PATTERN_MATCHING_RELEASE " .
-             "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
+my $PYTHON3= "env PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python:$SUBGRAPH_PATTERN_MATCHING_RELEASE:$GSPAN " .
+    "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
 
 my $ANNOTATION_CORPUS = "CONLL_ENGLISH";
 my $ANNOTATION_CATEGORIES = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-29-2022-test-categories/annotation_categories.list";
@@ -19,8 +20,8 @@ my @PARSE_TYPE_COMBINATIONS = ("AMR DP");
 
 # DBSCAN, IdenticalStructures
 my $CLUSTER_ALGORITHM;
-# Ungeneralized, MajorityWins
-my $GENERALIZATION_STRATEGY = "Ungeneralized";
+# Ungeneralized, MajorityWins, GSpan
+my $GENERALIZATION_STRATEGY = "GSpan";
 my $NUM_BATCHES = 50;
 
 
