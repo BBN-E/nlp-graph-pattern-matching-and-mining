@@ -165,12 +165,13 @@ class MentionAnnotation(SimpleAnnotation):
 
 class EventTriggerAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, event_type):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, serif_event_mention, event_type):
         super().__init__(networkx_graph=networkx_graph,
                          token_node_ids=token_node_ids,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
                          annotation_type=SimpleAnnotationTypes.EVENT_TRIGGER)
+        self._serif_event_mention = serif_event_mention
         self._event_type = event_type
 
     @property
@@ -181,14 +182,20 @@ class EventTriggerAnnotation(SimpleAnnotation):
     def category(self):
         return self._event_type
 
+    @property
+    def serif_event_mention(self):
+        return self._serif_event_mention
+
+
 class EventArgumentAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, role):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, serif_event_argument, role):
         super().__init__(networkx_graph=networkx_graph,
                          token_node_ids=token_node_ids,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
                          annotation_type=SimpleAnnotationTypes.EVENT_ARGUMENT)
+        self._serif_event_argument = serif_event_argument
         self._role = role
 
     @property
@@ -198,6 +205,10 @@ class EventArgumentAnnotation(SimpleAnnotation):
     @property
     def category(self):
         return self._role
+
+    @property
+    def serif_event_argument(self):
+        return self._serif_event_argument
 
 # ##############################################################
 # #####           FRAME ANNOTATION CLASSES
