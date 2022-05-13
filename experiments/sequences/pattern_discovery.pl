@@ -105,7 +105,7 @@ foreach my $category (@annotations) {
                                                       ["mkdir -p $grid_config_dir"],
                                                       ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
                                                        "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_local_patterns_path " .
-                                                       "--annotation_category $category"]);
+                                                       "--annotation_category $category $p->{ALL_ATTRS}"]);
 
                 # Only do clustering if cluster algorithm is set
                 if ($p->{CLUSTER_ALGORITHM}) {
