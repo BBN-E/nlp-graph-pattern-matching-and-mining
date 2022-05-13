@@ -9,4 +9,3 @@ class NodeAttrs():
     named_entity = 'namedEntity'
     event_trigger = 'eventTrigger'
     event_argument = 'eventArgument'
-    event_frame_id = 'eventFrameID'  # attr meant to co-index event trigger and event argument nodes from same frame

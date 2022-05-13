@@ -9,7 +9,7 @@ from constants.common.attrs.node.node_attrs import NodeAttrs
 
 class Pattern():
 
-    def __init__(self, pattern_id=None, pattern_graph=None, node_attrs=None, edge_attrs=None, grid_search=None, category=None, event_frame_id=None):
+    def __init__(self, pattern_id=None, pattern_graph=None, node_attrs=None, edge_attrs=None, grid_search=None, category=None):
 
         self._pattern_id = pattern_id
         self._pattern_graph = pattern_graph
@@ -23,7 +23,6 @@ class Pattern():
             self.make_edge_match()
         self.grid_search = grid_search
         self.category = category
-        self.event_frame_id = event_frame_id  # in case pattern contains nodes from multiple event frames, specify which event frame this pattern is intended to extract
 
     @property
     def pattern_id(self):
@@ -80,8 +79,7 @@ class Pattern():
                      'node_attrs': self._node_attrs,
                      'edge_attrs': self._edge_attrs,
                      'grid_search': self.grid_search,
-                     'category': self.category,
-                     'event_frame_id': self.event_frame_id}
+                     'category': self.category}
         return json_dict
 
     # TODO should this be a @cls method?
@@ -92,7 +90,6 @@ class Pattern():
         self._edge_attrs = json_dict['edge_attrs']
         self.grid_search = json_dict.get('grid_search', None)
         self.category = json_dict.get('category', None)
-        self.event_frame_id = json_dict.get('event_frame_id', None)
         if self._node_attrs:
             self.make_node_match()
         if self._edge_attrs:
