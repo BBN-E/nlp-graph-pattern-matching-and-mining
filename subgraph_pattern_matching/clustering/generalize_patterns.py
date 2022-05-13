@@ -161,7 +161,7 @@ def majority_wins_graph(patterns_list, labels, output_dir):
     label_count = Counter(labels)
     generalized_patterns = []
 
-    for label in label_count.most_common():
+    for pattern_number, label in enumerate(label_count.most_common()):
         if label[1] < 10:
             continue
         most_common_label = label[0]
@@ -174,6 +174,10 @@ def majority_wins_graph(patterns_list, labels, output_dir):
 
         # our most frequent pattern
         stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
+
+        # TODO: come up with way to discard super common graphs
+        if len(stripped_graph.nodes) < 5:
+            continue
 
         # maps nodes to dict that maps attributes to dicts of possible values and their counts
         # dict (node, dict ( attr, ( dict (value, count ) ) )
@@ -247,7 +251,7 @@ def majority_wins_graph(patterns_list, labels, output_dir):
 
         grid_search = patterns_list[0].grid_search
         category = patterns_list[0].category
-        gen_pattern = Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs), grid_search=grid_search, category=category)
+        gen_pattern = Pattern('majority_wins_' + grid_search + "_" + str(pattern_number), stripped_graph, list(all_node_attrs), list(all_edge_attrs), grid_search=grid_search, category=category)
         generalized_patterns.append(gen_pattern)
 
     return [generalized_patterns]
