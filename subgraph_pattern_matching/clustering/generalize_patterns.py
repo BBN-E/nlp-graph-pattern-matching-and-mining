@@ -264,9 +264,6 @@ def majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir)
             graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
 
 def gspan_strategy(args, pattern_list):
-    min_support=40
-    min_num_vertices=7
-    max_num_vertices=float('inf')
 
     grid_search = pattern_list[0].grid_search
     category = pattern_list[0].category
@@ -274,9 +271,9 @@ def gspan_strategy(args, pattern_list):
     gb = GraphBuilder()
     gv = GraphViewer()
 
-    gs = gSpan(min_support=min_support, 
-               min_num_vertices=min_num_vertices, 
-               max_num_vertices=max_num_vertices,
+    gs = gSpan(min_support=args.min_support,
+               min_num_vertices=args.min_num_vertices,
+               max_num_vertices=args.max_num_vertices,
                is_undirected=False, where=False)
     gs._read_graphs_from_patterns(pattern_list)
     gs.run()
@@ -291,7 +288,7 @@ def gspan_strategy(args, pattern_list):
                                        edge_labels=fs.edge_labels)
         P = Pattern(f"gSpan_{i}", G, 
                     [NodeAttrs.node_type], 
-                    [EdgeAttrs.label],
+                    [EdgeAttrs.edge_type, EdgeAttrs.label],
                     grid_search=grid_search,
                     category=category)
         gspan_pattern_list.append(P)
@@ -353,6 +350,10 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--strategy', type=str, required=True)
     parser.add_argument('-d', '--distance_matrix', type=str, default=None)
     parser.add_argument('-l', '--labels', type=str, default=None)
+    parser.add_argument('--min_support', type=int, default=40, help="Minimum number of supporting graphs for gspan")
+    parser.add_argument('--min_num_vertices', type=int, default=7, help="Minimum number of vertices in gspan pattern")
+    parser.add_argument('--max_num_vertices', type=float, default=float('inf'), help="Maximum number of vertices in gspan pattern")
+
     args = parser.parse_args()
 
     main(args)
