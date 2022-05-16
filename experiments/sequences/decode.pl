@@ -66,7 +66,7 @@ foreach my $pattern_file (@patterns_by_config) {
     (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
 
     for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
-        my $find_matches_job = runjobs([$create_output_dirs], "$JOB_NAME/find_matches/$pattern_config/$i",
+        my $find_matches_job = runjobs([$split_by_config_job], "$JOB_NAME/find_matches/$pattern_config/$i",
                                         {
                                             SGE_VIRTUAL_FREE => ["4G"]
                                         },
