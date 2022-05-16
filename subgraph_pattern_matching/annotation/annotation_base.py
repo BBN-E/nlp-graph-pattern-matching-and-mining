@@ -154,11 +154,11 @@ class FrameAnnotation(Annotation):
     def token_node_ids_to_node_attr_label(self):
         token_node_id_to_annotation_type = {}
         for c in self.components:
-            for t, attr_label in c.token_node_ids_to_node_attr_label[0].items():
+            for t, attr_label_list in c.token_node_ids_to_node_attr_label.items():
                 if t not in token_node_id_to_annotation_type:
-                    token_node_id_to_annotation_type[t] = [attr_label]
+                    token_node_id_to_annotation_type[t] = [attr_label_list[0]]
                 else:
-                    token_node_id_to_annotation_type[t].append(attr_label)
+                    token_node_id_to_annotation_type[t].append(attr_label_list[0])
         return token_node_id_to_annotation_type
 
 

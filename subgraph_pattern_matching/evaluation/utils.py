@@ -168,7 +168,11 @@ def serif_sentence_to_event_argument_bio_list(serif_sentence, annotation_scheme=
 
                     event_argument_token_indices = [t.index() for t in event_argument.value.tokens]
                     for i, j in enumerate(event_argument_token_indices):
-                        bio_list[j] = event_argument_bio[i]
+                        if bio_list[j] == 'O':
+                            bio_list[j] = {}
+                        bio_list[j][event_mention.event_type] = event_argument_bio[i]
+
+
 
     return bio_list
 
@@ -266,14 +270,28 @@ def serif_sentence_to_bio_list_based_on_predictions(
 
                     if len(serif_tokens_for_match) > 0:
 
-                        contiguous_token_ke_type_chunks = chunk_up_list_of_tokens_ke_types_into_lists_of_contiguous_tokens_ke_types(
-                            serif_tokens_ke_types=zip(serif_tokens_for_match, ke_type_per_token))
-                        for chunk in contiguous_token_ke_type_chunks:
-                            for i, (token, ke_type) in enumerate(chunk):
-                                # if i == 0:
-                                #     bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
-                                # else:
-                                bio_list[token.index()] = f"I-{ke_type}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
+                        serif_tokens_ke_types = zip(serif_tokens_for_match, ke_type_per_token)
+                        serif_tokens_ke_types = sorted(serif_tokens_ke_types, key=lambda tup: tup[0].index())
+
+                        for i, (token, ke_type) in enumerate(serif_tokens_ke_types):
+                            if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                                if ke == KnowledgeElement.EVENT_ARGUMENT:
+                                    if bio_list[token.index()] == "O":
+                                        bio_list[token.index()] = {}
+                                    bio_list[token.index()][match.pattern.category] = f"I-{ke_type}"
+                                else:
+                                    bio_list[token.index()] = f"I-{ke_type}"
+                            else:
+                                bio_list[token.index()] = "I"
+
+                        # contiguous_token_ke_type_chunks = chunk_up_list_of_tokens_ke_types_into_lists_of_contiguous_tokens_ke_types(
+                        #     serif_tokens_ke_types=zip(serif_tokens_for_match, ke_type_per_token))
+                        # for chunk in contiguous_token_ke_type_chunks:
+                        #     for i, (token, ke_type) in enumerate(chunk):
+                        #         if i == 0:
+                        #             bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
+                        #         else:
+                        #             bio_list[token.index()] = f"I-{ke_type}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
 
     return bio_list
 
