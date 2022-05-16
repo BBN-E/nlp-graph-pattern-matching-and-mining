@@ -168,7 +168,46 @@ def serif_sentence_to_event_argument_bio_list(serif_sentence, annotation_scheme=
 
                     event_argument_token_indices = [t.index() for t in event_argument.value.tokens]
                     for i, j in enumerate(event_argument_token_indices):
-                        bio_list[j] = event_argument_bio[i]
+                        if bio_list[j] == 'O':
+                            bio_list[j] = {}
+                        bio_list[j][event_mention.event_type] = event_argument_bio[i]
+
+
+
+    return bio_list
+
+
+def serif_event_mention_to_event_argument_bio_list(event_mention, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+    '''
+
+    :param event_mention: serif.theory.event_mention.EventMention
+    :param annotation_scheme: TODO: identification, identification-classification, BIO, IO
+    :return: list[str]
+    '''
+
+    serif_sentence = event_mention.sentence
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+    if event_mention.arguments:
+        for event_argument in event_mention.arguments:
+            event_argument_bio = []
+            if event_argument.value.tokens:
+
+                for i in range(len(event_argument.value.tokens)):
+                    # if i == 0:
+                    #     if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                    #         event_argument_bio.append(f'B-{event_argument.role}')
+                    #     else:  # 'identification'
+                    #         event_argument_bio.append('B')
+                    # else:
+                    if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                        event_argument_bio.append(f'I-{event_argument.role}')
+                    else:  # identification
+                        event_argument_bio.append('I')
+
+            event_argument_token_indices = [t.index() for t in event_argument.value.tokens]
+            for i, j in enumerate(event_argument_token_indices):
+                bio_list[j] = event_argument_bio[i]
 
     return bio_list
 
@@ -231,14 +270,94 @@ def serif_sentence_to_bio_list_based_on_predictions(
 
                     if len(serif_tokens_for_match) > 0:
 
-                        contiguous_token_ke_type_chunks = chunk_up_list_of_tokens_ke_types_into_lists_of_contiguous_tokens_ke_types(
-                            serif_tokens_ke_types=zip(serif_tokens_for_match, ke_type_per_token))
-                        for chunk in contiguous_token_ke_type_chunks:
-                            for i, (token, ke_type) in enumerate(chunk):
-                                # if i == 0:
-                                #     bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
-                                # else:
-                                bio_list[token.index()] = f"I-{ke_type}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
+                        serif_tokens_ke_types = zip(serif_tokens_for_match, ke_type_per_token)
+                        serif_tokens_ke_types = sorted(serif_tokens_ke_types, key=lambda tup: tup[0].index())
+
+                        for i, (token, ke_type) in enumerate(serif_tokens_ke_types):
+                            if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                                if ke == KnowledgeElement.EVENT_ARGUMENT:
+                                    if bio_list[token.index()] == "O":
+                                        bio_list[token.index()] = {}
+                                    bio_list[token.index()][match.pattern.category] = f"I-{ke_type}"
+                                else:
+                                    bio_list[token.index()] = f"I-{ke_type}"
+                            else:
+                                bio_list[token.index()] = "I"
+
+                        # contiguous_token_ke_type_chunks = chunk_up_list_of_tokens_ke_types_into_lists_of_contiguous_tokens_ke_types(
+                        #     serif_tokens_ke_types=zip(serif_tokens_for_match, ke_type_per_token))
+                        # for chunk in contiguous_token_ke_type_chunks:
+                        #     for i, (token, ke_type) in enumerate(chunk):
+                        #         if i == 0:
+                        #             bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
+                        #         else:
+                        #             bio_list[token.index()] = f"I-{ke_type}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
+
+    return bio_list
+
+
+def serif_event_mention_to_event_argument_bio_list_based_on_predictions(
+        serif_event_mention,
+        matches_for_sentence,
+        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION
+):
+
+    serif_sentence = serif_event_mention.sentence
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+    matches_for_event_mention = [m for m in matches_for_sentence if m.pattern.event_frame_id == serif_event_mention.id]
+    if not matches_for_event_mention:
+        return bio_list
+
+    for match in matches_for_event_mention:
+
+        # keep only event arg nodes associated with frame id for current event mention
+        event_argument_node_ids = {node_id for node_id in match.pattern.get_event_argument_node_ids() \
+                                   if any([(x == serif_event_mention.id) \
+                                           for x in match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_frame_id] \
+                                          ])
+                                   }
+        event_argument_node_id_to_role = dict()
+        for node_id in event_argument_node_ids:
+            # look at all possible event frames this arg node participates in
+            for i, event_frame_id in enumerate(match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_frame_id]):
+                # only keep event arg node/role info if node corresponds to correct event frame
+                if event_frame_id == serif_event_mention.id:
+                    event_argument_node_ids.add(node_id)
+                    event_argument_node_id_to_role[node_id] = match.pattern.pattern_graph.nodes[node_id][NodeAttrs.event_argument][i]
+
+        if match.serif_sentence is not None:
+
+            if event_argument_node_ids:
+
+                # collect all tokens from match
+                serif_tokens_for_match = []
+                event_argument_role_per_token = []
+                for match_node_id, pattern_node_id in match.match_node_id_to_pattern_node_id.items():
+
+                    # only look at pattern nodes for desired ke
+                    if pattern_node_id not in event_argument_node_ids:
+                        continue
+
+                    serif_theory = match.match_to_serif_theory(match_id=match_node_id, serif_doc=match.serif_doc)
+                    if serif_theory is not None:
+
+                        # match is serif Token
+                        if type(serif_theory) == Token:
+                            serif_tokens_for_match.append(serif_theory)
+                            event_argument_role_per_token.append(event_argument_node_id_to_role[pattern_node_id])
+
+
+                if len(serif_tokens_for_match) > 0:
+
+                    contiguous_token_ke_type_chunks = chunk_up_list_of_tokens_ke_types_into_lists_of_contiguous_tokens_ke_types(
+                        serif_tokens_ke_types=zip(serif_tokens_for_match, event_argument_role_per_token))
+                    for chunk in contiguous_token_ke_type_chunks:
+                        for i, (token, event_arg_role) in enumerate(chunk):
+                            # if i == 0:
+                            #     bio_list[token.index()] = f"B-{match.category}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "B"
+                            # else:
+                            bio_list[token.index()] = f"I-{event_arg_role}" if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION else "I"
 
     return bio_list
 
