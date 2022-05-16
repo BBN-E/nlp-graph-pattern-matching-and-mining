@@ -87,7 +87,9 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
 
     for index, node_set in enumerate(nx.weakly_connected_components(central_graph)):
         subgraph_pattern = central_graph.subgraph(node_set)
-        # TODO: handle edge and node attributes
+
+        if len(subgraph_pattern.nodes) < 5:
+            continue
 
         num_matches = 0
         for pattern in pattern_list:
@@ -96,21 +98,27 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
             if matcher.subgraph_is_isomorphic():
                 num_matches += 1
 
+        if num_matches <= 5:
+            continue
+
         new_pattern = Pattern("selected_pattern_{}_{}".format(index, num_matches), subgraph_pattern,
-                              central_pattern._node_attrs, central_pattern._edge_attrs)
+                              central_pattern._node_attrs, central_pattern._edge_attrs,
+                              grid_search=central_pattern.grid_search, category=central_pattern.category)
         selected_patterns.append(new_pattern)
 
     return selected_patterns
 
 
-def central_graph_strategy(patterns_list, distance_matrix, labels):
+def central_graph_strategy(patterns_list, distance_matrix_path, labels_path):
 
-    assert(distance_matrix)
-    assert(labels)
+    with open(distance_matrix_path, 'rb') as f:
+        distance_matrix = np.load(f)
+
+    with open(labels_path, 'r') as f:
+        labels = json.load(f)
 
     # Find a representative graph for each cluster of digraphs
     cluster_to_central_graph_indexes = get_central_graph_per_cluster(labels, distance_matrix)
-
     cluster_num_to_cluster_patterns = [None] * (max(labels) + 1)
 
     for cluster_num, graph_index_list in cluster_to_central_graph_indexes.items():
@@ -271,7 +279,8 @@ def main(args):
         raise NotImplementedError("Generalization strategy {} not implemented".format(args.strategy))
 
     for cluster_num, generalized_patterns_list in enumerate(generalized_patterns_lists):
-        json_dump = serialize_patterns(pattern_list)
+
+        json_dump = serialize_patterns(generalized_patterns_list)
         with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
             f.write(json_dump)
 
