@@ -102,9 +102,6 @@ class Pattern():
             if attr in self.pattern_graph.nodes[node]:
                 node_with_attr_ids.add(node)
 
-        if len(node_with_attr_ids) <= 0:
-            return None
-
         return node_with_attr_ids
 
     def get_annotated_node_ids(self):
