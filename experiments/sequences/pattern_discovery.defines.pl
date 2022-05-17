@@ -13,18 +13,18 @@ my $ANNOTATION_CATEGORIES = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pat
 my $SPLIT_BY_CATEGORY = 1;
 
 # grid search parameters
-my @K_VALUES = (2, 3, 4, 5);
-my @SEARCH_DIRECTIONS = ("BOTH", "UP");
-my @PARSE_TYPE_COMBINATIONS = ("AMR", "AMR DP", "DP");
+my @K_VALUES = (6);
+my @SEARCH_DIRECTIONS = ("BOTH");
+my @PARSE_TYPE_COMBINATIONS = ("AMR DP");
 
 # DBSCAN, IdenticalStructures
-my $CLUSTER_ALGORITHM = "IdenticalStructures";
-# Ungeneralized, MajorityWins
-my $GENERALIZATION_STRATEGY = "MajorityWins";
+my $CLUSTER_ALGORITHM;
+# Ungeneralized, MajorityWins, CentralGraph
+my $GENERALIZATION_STRATEGY = "Ungeneralized";
 my $NUM_BATCHES = 50;
 
 # set this to "--all_attrs" if using Ungeneralized strategy
-my $ALL_ATTRS = "";
+my $ALL_ATTRS = "--all_attrs";
 
 
 return {
