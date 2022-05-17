@@ -62,6 +62,7 @@ dojobs();
 my @patterns_by_config = glob ("$config_splits/*");
 
 my @find_matches_jobs = ();
+
 foreach my $pattern_file (@patterns_by_config) {
     (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
 

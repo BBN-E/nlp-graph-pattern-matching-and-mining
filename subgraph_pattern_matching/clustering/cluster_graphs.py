@@ -48,7 +48,11 @@ def dbscan_cluster(distance_matrix):
     # kneedle.plot_knee()
     # plt.show()
 
-    clustering = DBSCAN(eps=kneedle.knee_y, min_samples=5, metric="precomputed")
+    epsilon = kneedle.knee_y
+    if epsilon <= 0:
+        epsilon = 5
+
+    clustering = DBSCAN(eps=epsilon, min_samples=5, metric="precomputed")
     clustering.fit(distance_matrix)
 
     core_samples_mask = np.zeros_like(clustering.labels_, dtype=bool)

@@ -267,6 +267,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--parse_types', nargs="*", type=str, default=PARSE_TYPE_COMBINATIONS)
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
     parser.add_argument('-c', '--annotation_category', type=str, default="all_categories")
-    parser.add_argument('-all_attrs', action='store_true')
+    parser.add_argument('--all_attrs', action='store_true')
     args = parser.parse_args()
     main(args)
