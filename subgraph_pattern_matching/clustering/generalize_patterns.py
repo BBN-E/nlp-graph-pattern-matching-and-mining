@@ -4,6 +4,8 @@ import json
 import os
 import operator
 import enum
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
 from view_utils.graph_viewer import GraphViewer
 from graph_builder import GraphBuilder
@@ -23,10 +25,11 @@ class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()
     MajorityWins = enum.auto()
     GSpan = enum.auto()
+    CentralGraph = enum.auto()
 
 
+# Returns the index of the largest graph in each cluster
 def get_biggest_graph_per_cluster(labels, digraph_list):
-    # Returns the index of the largest graph in each cluster
     cluster_lists = {}
 
     for i, label in enumerate(labels):
@@ -50,8 +53,8 @@ def get_biggest_graph_per_cluster(labels, digraph_list):
     return cluster_num_to_largest_graph_index
 
 
+# Returns the index of the most central graph in each cluster
 def get_central_graph_per_cluster(labels, distance_matrix):
-    # Returns the index of the most central graph in each cluster
 
     cluster_lists = {}
 
@@ -63,9 +66,6 @@ def get_central_graph_per_cluster(labels, distance_matrix):
     cluster_num_to_central_indexes = {}
 
     for cluster_num, cluster_list in cluster_lists.items():
-
-        min_distance = float('inf')
-        central_graph_index = cluster_list[0]
 
         graph_total_distance_tuple_list = []
 
@@ -94,7 +94,9 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
 
     for index, node_set in enumerate(nx.weakly_connected_components(central_graph)):
         subgraph_pattern = central_graph.subgraph(node_set)
-        # TODO: handle edge and node attributes
+
+        if len(subgraph_pattern.nodes) < 5:
+            continue
 
         num_matches = 0
         for pattern in pattern_list:
@@ -103,25 +105,28 @@ def find_pattern_for_cluster(central_pattern, pattern_list):
             if matcher.subgraph_is_isomorphic():
                 num_matches += 1
 
+        if num_matches <= 5:
+            continue
+
         new_pattern = Pattern("selected_pattern_{}_{}".format(index, num_matches), subgraph_pattern,
-                              central_pattern._node_attrs, central_pattern._edge_attrs)
+                              central_pattern._node_attrs, central_pattern._edge_attrs,
+                              grid_search=central_pattern.grid_search, category=central_pattern.category)
         selected_patterns.append(new_pattern)
 
     return selected_patterns
 
 
-def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir):
-    # Find a representative pattern for each cluster of digraphs
+def central_graph_strategy(patterns_list, distance_matrix_path, labels_path):
 
+    with open(distance_matrix_path, 'rb') as f:
+        distance_matrix = np.load(f)
+
+    with open(labels_path, 'r') as f:
+        labels = json.load(f)
+
+    # Find a representative graph for each cluster of digraphs
     cluster_to_central_graph_indexes = get_central_graph_per_cluster(labels, distance_matrix)
-
-    graph_viewer = GraphViewer()
-
     cluster_num_to_cluster_patterns = [None] * (max(labels) + 1)
-
-    visualizations_dir = os.path.join(output_dir, "visualizations")
-    if not os.path.exists(visualizations_dir):
-        os.makedirs(visualizations_dir)
 
     for cluster_num, graph_index_list in cluster_to_central_graph_indexes.items():
 
@@ -136,17 +141,10 @@ def get_pattern_from_clusters(patterns_list, distance_matrix, labels, output_dir
         cluster_patterns = find_pattern_for_cluster(patterns_list[graph_index_list[0][0]], cluster_pattern_list)
         cluster_num_to_cluster_patterns[cluster_num] = cluster_patterns
 
-        for graph_index, __ in graph_index_list:
-
-            cur_pattern = patterns_list[graph_index].pattern_graph
-            graph_viewer.prepare_mdp_networkx_for_visualization(cur_pattern)
-            graph_viewer.prepare_amr_networkx_for_visualization(cur_pattern)
-            html_file = os.path.join(visualizations_dir, "central_graph_cluster_{}_graph_{}.html".format(cluster_num, graph_index))
-            graph_viewer.visualize_networkx_graph(cur_pattern, html_file=html_file)
-
     return cluster_num_to_cluster_patterns
 
 
+# helper function for majority wins graph
 def add_counts_to_dict(mapping, node_or_edge_list, id_to_attribute_counts):
 
     for id, attr_dict in node_or_edge_list:
@@ -161,107 +159,111 @@ def add_counts_to_dict(mapping, node_or_edge_list, id_to_attribute_counts):
             id_to_attribute_counts[mapping[id]][attr][value] += 1
 
 
-def majority_wins_graph(patterns_list, labels, output_dir):
+# main logic of majority wins strategy
+def majority_wins_strategy(patterns_list, labels_path):
 
-    # create list of all graphs in the largest cluster
-    most_frequent_structure_patterns = []
-    label_count = Counter(labels)
-    most_common_label = label_count.most_common(1)[0][0]
-
-    for i, label in enumerate(labels):
-        if label == most_common_label:
-            most_frequent_structure_patterns.append(patterns_list[i])
-
-    # our most frequent pattern
-    stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
-
-    # maps nodes to dict that maps attributes to dicts of possible values and their counts
-    # dict (node, dict ( attr, ( dict (value, count ) ) )
-    node_to_attribute_counts = {}
-    edge_to_attribute_counts = {}
-
-    # our most frequent pattern, stripped of all node and edge attributes
-    for node_id, attr_dict in list(stripped_graph.nodes(data=True)):
-        node_to_attribute_counts[node_id] = {}
-        stripped_graph.nodes[node_id].clear()
-    for node1_id, node2_id, attr_dict in list(stripped_graph.edges(data=True)):
-        edge_to_attribute_counts[(node1_id, node2_id)] = {}
-        stripped_graph.edges[(node1_id, node2_id)].clear()
-
-    # count the frequency of each value of each attribute for each node and edge for each pattern
-    for pattern in most_frequent_structure_patterns:
-        cur_graph = pattern.pattern_graph
-
-        # create a mapping between each pattern and the abstract structure, to align attr recording
-        GM = isomorphism.DiGraphMatcher(cur_graph, stripped_graph)
-        assert(GM.is_isomorphic())
-        mapping = GM.mapping
-        add_counts_to_dict(mapping, list(cur_graph.nodes(data=True)), node_to_attribute_counts)
-
-        edge_mapping = {}
-        for edge in cur_graph.edges:
-            mapped_edge = (mapping[edge[0]], mapping[edge[1]])
-            edge_mapping[edge] = mapped_edge
-        edge_to_attr_list = []
-        for node1_id, node2_id, attr_dict in list(cur_graph.edges(data=True)):
-            edge_to_attr_list.append(((node1_id, node2_id), attr_dict))
-
-        add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
-
-    # set each atrribute of each node and edge to the most frequent value
-    all_node_attrs = set()
-    attr_tuple_to_count = []
-
-    for node_id, attr_dict in node_to_attribute_counts.items():
-        for attr, value_dict in attr_dict.items():
-            all_node_attrs.add(attr)
-            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            count = value_dict[most_frequent_value_for_attr]
-
-            attr_tuple_to_count.append( (count, "node", node_id, attr, most_frequent_value_for_attr) )
-
-    all_edge_attrs = set()
-    for edge_id, attr_dict in edge_to_attribute_counts.items():
-        for attr, value_dict in attr_dict.items():
-            all_edge_attrs.add(attr)
-            most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
-            count = value_dict[most_frequent_value_for_attr]
-            attr_tuple_to_count.append((count, "edge", edge_id, attr, most_frequent_value_for_attr))
-
-    # only add the most common attribute, value pairs
-    attr_tuple_to_count.sort(key=operator.itemgetter(0), reverse=True)
-    for count, type, id, attr, value in attr_tuple_to_count:
-        if count < len(most_frequent_structure_patterns) * 0.66:
-            break
-
-        if type == "node":
-            stripped_graph.nodes[id][attr] = value
-        elif type == "edge":
-            stripped_graph.edges[id][attr] = value
-
-    return [[Pattern('majority_wins', stripped_graph, list(all_node_attrs), list(all_edge_attrs))]]
-
-
-def majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir):
-
-    assert(args.labels)
-
-    with open(args.labels, 'r') as f:
+    with open(labels_path, 'r') as f:
         labels = json.load(f)
 
-    cluster_num_to_cluster_patterns = majority_wins_graph(pattern_list, labels, args.output)
+    label_count = Counter(labels)
+    generalized_patterns = []
 
-    for cluster_num, cluster_patterns in enumerate(cluster_num_to_cluster_patterns):
-        json_dump = serialize_patterns(cluster_patterns)
+    for pattern_number, label in enumerate(label_count.most_common()):
+        if label[1] < 10:
+            continue
+        most_common_label = label[0]
 
-        with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
-            f.write(json_dump)
+        # create list of all graphs in the largest cluster
+        most_frequent_structure_patterns = []
+        for i, label in enumerate(labels):
+            if label == most_common_label:
+                most_frequent_structure_patterns.append(patterns_list[i])
 
-        for i, cluster_pattern in enumerate(cluster_patterns):
-            graph_viewer.prepare_mdp_networkx_for_visualization(cluster_pattern.pattern_graph)
-            graph_viewer.prepare_amr_networkx_for_visualization(cluster_pattern.pattern_graph)
-            html_file = os.path.join(visualizations_dir, "majority_graph_{}.html".format(i))
-            graph_viewer.visualize_networkx_graph(cluster_pattern.pattern_graph, html_file=html_file)
+        # our most frequent pattern
+        stripped_graph = nx.convert_node_labels_to_integers(most_frequent_structure_patterns[0].pattern_graph)
+
+        # TODO: come up with way to discard super common graphs
+        if len(stripped_graph.nodes) < 5:
+            continue
+
+        # maps nodes to dict that maps attributes to dicts of possible values and their counts
+        # dict (node, dict ( attr, ( dict (value, count ) ) )
+        node_to_attribute_counts = {}
+        edge_to_attribute_counts = {}
+
+        # our most frequent pattern, stripped of all node and edge attributes
+        for node_id, attr_dict in list(stripped_graph.nodes(data=True)):
+            node_to_attribute_counts[node_id] = {}
+            node_type = stripped_graph.nodes[node_id][NodeAttrs.node_type]
+            stripped_graph.nodes[node_id].clear()
+            stripped_graph.nodes[node_id][NodeAttrs.node_type] = node_type
+        for node1_id, node2_id, attr_dict in list(stripped_graph.edges(data=True)):
+            edge_to_attribute_counts[(node1_id, node2_id)] = {}
+            edge_type = stripped_graph.edges[(node1_id, node2_id)][EdgeAttrs.edge_type]
+            stripped_graph.edges[(node1_id, node2_id)].clear()
+            stripped_graph.edges[(node1_id, node2_id)][EdgeAttrs.edge_type] = edge_type
+
+        # count the frequency of each value of each attribute for each node and edge for each pattern
+        for pattern in most_frequent_structure_patterns:
+            cur_graph = pattern.pattern_graph
+
+            # create a mapping between each pattern and the abstract structure, to align attr recording
+            GM = isomorphism.DiGraphMatcher(cur_graph, stripped_graph, node_match=pattern.node_match, edge_match=pattern.edge_match)
+            assert(GM.is_isomorphic())
+
+            mapping = GM.mapping
+            add_counts_to_dict(mapping, list(cur_graph.nodes(data=True)), node_to_attribute_counts)
+
+            edge_mapping = {}
+            for edge in cur_graph.edges:
+                mapped_edge = (mapping[edge[0]], mapping[edge[1]])
+                edge_mapping[edge] = mapped_edge
+            edge_to_attr_list = []
+            for node1_id, node2_id, attr_dict in list(cur_graph.edges(data=True)):
+                edge_to_attr_list.append(((node1_id, node2_id), attr_dict))
+
+            add_counts_to_dict(edge_mapping, edge_to_attr_list, edge_to_attribute_counts)
+
+        # set each atrribute of each node and edge to the most frequent value
+        all_node_attrs = set()
+        attr_tuple_to_count = []
+
+        for node_id, attr_dict in node_to_attribute_counts.items():
+            for attr, value_dict in attr_dict.items():
+                if attr != NodeAttrs.annotated:
+                    all_node_attrs.add(attr)
+                most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+                count = value_dict[most_frequent_value_for_attr]
+
+                attr_tuple_to_count.append( (count, "node", node_id, attr, most_frequent_value_for_attr) )
+
+        all_edge_attrs = set()
+        for edge_id, attr_dict in edge_to_attribute_counts.items():
+            for attr, value_dict in attr_dict.items():
+                all_edge_attrs.add(attr)
+                most_frequent_value_for_attr = max(value_dict, key=value_dict.get)
+                count = value_dict[most_frequent_value_for_attr]
+                attr_tuple_to_count.append((count, "edge", edge_id, attr, most_frequent_value_for_attr))
+
+        # only add the most common attribute, value pairs
+        attr_tuple_to_count.sort(key=operator.itemgetter(0), reverse=True)
+        for count, type, id, attr, value in attr_tuple_to_count:
+            if count < len(most_frequent_structure_patterns) * 0.66:
+                break
+
+            if type == "node":
+                stripped_graph.nodes[id][attr] = value
+            elif type == "edge":
+                stripped_graph.edges[id][attr] = value
+
+        grid_search = patterns_list[0].grid_search
+        category = patterns_list[0].category
+        gen_pattern = Pattern('majority_wins_' + grid_search + "_" + str(pattern_number), stripped_graph,
+                              list(all_node_attrs), list(all_edge_attrs), grid_search=grid_search, category=category)
+        generalized_patterns.append(gen_pattern)
+
+    return [generalized_patterns]
+
 
 def gspan_strategy(args, pattern_list):
 
@@ -283,11 +285,11 @@ def gspan_strategy(args, pattern_list):
 
     gspan_pattern_list = []
     for i, fs in enumerate(gs.frequent_subgraphs):
-        G = gb.gspan_graph_to_networkx(fs.graph, 
+        G = gb.gspan_graph_to_networkx(fs.graph,
                                        node_labels=fs.node_labels,
                                        edge_labels=fs.edge_labels)
-        P = Pattern(f"gSpan_{i}", G, 
-                    [NodeAttrs.node_type], 
+        P = Pattern(f"gSpan_{i}", G,
+                    [NodeAttrs.node_type],
                     [EdgeAttrs.edge_type, EdgeAttrs.label],
                     grid_search=grid_search,
                     category=category)
@@ -295,18 +297,9 @@ def gspan_strategy(args, pattern_list):
         html_file = os.path.join(visualizations_dir, f"pattern_{fs.gid}.html")
         text = f"There are {len(fs.support)} supporting instances for this pattern"
         gv.prepare_networkx_for_visualization(G)
-        gv.visualize_networkx_graph(G, html_file, sentence_text=text) 
+        gv.visualize_networkx_graph(G, html_file, sentence_text=text)
 
-    json_dump = serialize_patterns(gspan_pattern_list)
-    with open(os.path.join(args.output, "patterns_cluster_0.json"), 'w') as f:
-        f.write(json_dump)
-
-
-def ungeneralized_strategy(args, pattern_list):
-    json_dump = serialize_patterns(pattern_list)
-    with open(os.path.join(args.output, "patterns_cluster_0.json"), 'w') as f:
-        f.write(json_dump)
-
+    return gspan_pattern_list
 
 def main(args):
     graph_viewer = GraphViewer()
@@ -320,13 +313,28 @@ def main(args):
         os.makedirs(args.output)
 
     if GeneralizationStrategy[args.strategy] == GeneralizationStrategy.MajorityWins:
-        majority_wins_strategy(args, pattern_list, graph_viewer, visualizations_dir)
+        generalized_patterns_lists = majority_wins_strategy(pattern_list, args.labels)
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.Ungeneralized:
-        ungeneralized_strategy(args, pattern_list)
+        generalized_patterns_lists = [pattern_list]
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.GSpan:
-        gspan_strategy(args, pattern_list)
+        generalized_patterns_lists = gspan_strategy(args, pattern_list)
+    elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.CentralGraph:
+        generalized_patterns_lists = central_graph_strategy(pattern_list, args.distance_matrix, args.labels)
     else:
         raise NotImplementedError("Generalization strategy {} not implemented".format(args.strategy))
+
+    for cluster_num, generalized_patterns_list in enumerate(generalized_patterns_lists):
+
+        json_dump = serialize_patterns(generalized_patterns_list)
+        with open(os.path.join(args.output, "patterns_cluster_{}.json".format(cluster_num)), 'w') as f:
+            f.write(json_dump)
+
+        if GeneralizationStrategy[args.strategy] == GeneralizationStrategy.MajorityWins:
+            for i, pattern in enumerate(generalized_patterns_list):
+                graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
+                graph_viewer.prepare_amr_networkx_for_visualization(pattern.pattern_graph)
+                html_file = os.path.join(visualizations_dir, "pattern_graph_{}_{}.html".format(cluster_num, i))
+                graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file=html_file)
 
     examples_dir = os.path.join(visualizations_dir, "examples")
     if not os.path.exists(examples_dir):

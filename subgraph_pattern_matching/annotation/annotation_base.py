@@ -1,5 +1,6 @@
 from enum import Enum
 from abc import ABC, abstractmethod
+from constants.common.attrs.node.node_attrs import NodeAttrs
 
 from constants.special_symbols import ID_DELIMITER
 
@@ -68,10 +69,15 @@ class Annotation(ABC):
         '''annotation category, e.g. "PER", "Attack.Bombing", "org-founder"'''
         pass
 
+    @property
+    @abstractmethod
+    def token_node_ids_to_node_attr_label(self):
+        pass
+
 
 class SimpleAnnotation(Annotation):
 
-    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, annotation_type):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, annotation_type, node_attr, label):
         '''
 
         :param networkx_graph: networkx.classes.digraph.DiGraph
@@ -86,6 +92,8 @@ class SimpleAnnotation(Annotation):
                          serif_sentence=serif_sentence,
                          annotation_type=annotation_type)
         self._token_node_ids = token_node_ids
+        self._label = label
+        self._node_attr = node_attr
 
     @property
     def token_node_ids(self):
@@ -101,6 +109,17 @@ class SimpleAnnotation(Annotation):
             return _serif_tokens
 
         return None
+
+    @property
+    def token_node_ids_to_node_attr_label(self):
+        token_node_ids_to_node_attr_label = {}
+        for t in self._token_node_ids:
+            token_node_ids_to_node_attr_label[t] = [(self._node_attr, self._label)]
+        return token_node_ids_to_node_attr_label
+
+    @property
+    def category(self):
+        return self._label
 
 
 class FrameAnnotation(Annotation):
@@ -132,6 +151,18 @@ class FrameAnnotation(Annotation):
         return self.all_tokens_as_flat_list
 
     @property
+    def token_node_ids_to_node_attr_label(self):
+        token_node_id_to_annotation_type = {}
+        for c in self.components:
+            for t, attr_label_list in c.token_node_ids_to_node_attr_label.items():
+                if t not in token_node_id_to_annotation_type:
+                    token_node_id_to_annotation_type[t] = [attr_label_list[0]]
+                else:
+                    token_node_id_to_annotation_type[t].append(attr_label_list[0])
+        return token_node_id_to_annotation_type
+
+
+    @property
     def all_tokens_as_nested_list(self):
         return [c.token_node_ids for c in self.components]
 
@@ -152,52 +183,54 @@ class MentionAnnotation(SimpleAnnotation):
                          token_node_ids=token_node_ids,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
-                         annotation_type=SimpleAnnotationTypes.MENTION)
-        self._entity_type = entity_type
+                         annotation_type=SimpleAnnotationTypes.MENTION,
+                         node_attr=NodeAttrs.named_entity,
+                         label=entity_type)
 
     @property
     def entity_type(self):
-        return self._entity_type
-
-    @property
-    def category(self):
-        return self._entity_type
+        return self._label
 
 class EventTriggerAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, event_type):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, serif_event_mention, event_type):
         super().__init__(networkx_graph=networkx_graph,
                          token_node_ids=token_node_ids,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
-                         annotation_type=SimpleAnnotationTypes.EVENT_TRIGGER)
-        self._event_type = event_type
+                         annotation_type=SimpleAnnotationTypes.EVENT_TRIGGER,
+                         node_attr=NodeAttrs.event_trigger,
+                         label=event_type)
+        self._serif_event_mention = serif_event_mention
 
     @property
     def event_type(self):
-        return self._event_type
+        return self._label
 
     @property
-    def category(self):
-        return self._event_type
+    def serif_event_mention(self):
+        return self._serif_event_mention
+
 
 class EventArgumentAnnotation(SimpleAnnotation):
 
-    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, role):
+    def __init__(self, networkx_graph, token_node_ids, serif_doc, serif_sentence, serif_event_argument, role):
         super().__init__(networkx_graph=networkx_graph,
                          token_node_ids=token_node_ids,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
-                         annotation_type=SimpleAnnotationTypes.EVENT_ARGUMENT)
-        self._role = role
+                         annotation_type=SimpleAnnotationTypes.EVENT_ARGUMENT,
+                         node_attr=NodeAttrs.event_argument,
+                         label=role)
+        self._serif_event_argument = serif_event_argument
 
     @property
     def role(self):
-        return self._role
+        return self._label
 
     @property
-    def category(self):
-        return self._role
+    def serif_event_argument(self):
+        return self._serif_event_argument
 
 # ##############################################################
 # #####           FRAME ANNOTATION CLASSES

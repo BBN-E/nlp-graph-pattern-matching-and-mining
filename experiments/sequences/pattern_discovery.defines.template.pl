@@ -21,7 +21,8 @@ my @PARSE_TYPE_COMBINATIONS = ("AMR DP", "AMR", "DP");
 
 # DBSCAN, IdenticalStructures, Centroid Graph
 my $CLUSTER_ALGORITHM;
-# Ungeneralized, MajorityWins, GSpan
+
+# Ungeneralized, MajorityWins, CentralGraph, GSpan
 my $GENERALIZATION_STRATEGY = "MajorityWins";
 my $NUM_BATCHES = 50;
 
@@ -29,6 +30,10 @@ my $NUM_BATCHES = 50;
 my $MIN_SUPPORT_VECTORS = "--min_support 40";
 my $MIN_NUM_VERTICES = "--min_num_vertices 7";
 my $MAX_NUM_VERTICES; # = "--max_num_vertices";
+
+# set this to "--all_attrs" if using Ungeneralized strategy
+my $ALL_ATTRS = "--all_attrs";
+
 
 return {
     PYTHON3 => $PYTHON3,
@@ -45,4 +50,5 @@ return {
     MIN_SUPPORT_VECTORS => $MIN_SUPPORT_VECTORS,
     MIN_NUM_VERTICES => $MIN_NUM_VERTICES,
     MAX_NUM_VERTICES => $MAX_NUM_VERTICES
+    ALL_ATTRS => $ALL_ATTRS
 };

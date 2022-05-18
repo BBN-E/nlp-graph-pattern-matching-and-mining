@@ -3,6 +3,7 @@ import networkx as nx
 from tqdm import tqdm
 import argparse
 import re
+from annotation.annotation_base import FrameAnnotationTypes
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
@@ -62,6 +63,7 @@ class LocalPatternFinder():
     def return_k_hop_neighborhood_of_node(self, G, node_id, k=1, parse_types=[ParseTypes.DP], search_direction=DAGSearchDirection.BOTH):
         '''
 
+
         :param G: networkx.classes.digraph.DiGraph
         :param node_id: str, source node id in G
         :param k: int, size of neighborhood
@@ -74,6 +76,7 @@ class LocalPatternFinder():
         # nx.single_source_shortest_path returns dictionary from target node id to list of node ids corresponding to the
         #  shortest path from source to target; we only need to know which nodes are in the k-hop neighborhood of source
         #  node so we'll take the keys of that dictionary.
+
 
         if search_direction == DAGSearchDirection.BOTH:
             down_nodes = set(nx.single_source_shortest_path(G, node_id, cutoff=k).keys())
@@ -117,7 +120,7 @@ class LocalPatternFinder():
         return edge_induced_subgraph
 
 
-    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None):
+    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None, all_attrs=False):
 
         annotation_patterns_for_configuration = []
 
@@ -145,21 +148,31 @@ class LocalPatternFinder():
             if len(ann_k_hop_neighborhood) == 0:
                 continue
 
+            neighborhood_copy = ann_k_hop_neighborhood.copy()
+            for token_node_id in ann.token_node_ids:
+                neighborhood_copy.nodes[token_node_id][NodeAttrs.annotated] = True
+                for node_attr, label in ann.token_node_ids_to_node_attr_label[token_node_id]:
+                    neighborhood_copy.nodes[token_node_id][node_attr] = label
+
             parse_type_string = "-".join([str(p.value) for p in parse_types])
 
             all_node_attrs = set()
             all_edge_attrs = set()
-            for __, attr_dict in list(ann_k_hop_neighborhood.nodes(data=True)):
-                for attr, __ in attr_dict.items():
-                    if attr is NodeAttrs.annotated:
-                        continue
-                    all_node_attrs.add(attr)
-            for __, __, attr_dict in list(ann_k_hop_neighborhood.edges(data=True)):
-                for attr, __ in attr_dict.items():
-                    all_edge_attrs.add(attr)
+            if all_attrs:
+                for __, attr_dict in list(neighborhood_copy.nodes(data=True)):
+                    for attr, __ in attr_dict.items():
+                        if attr is NodeAttrs.annotated:
+                            continue
+                        all_node_attrs.add(attr)
+                for __, __, attr_dict in list(neighborhood_copy.edges(data=True)):
+                    for attr, __ in attr_dict.items():
+                        all_edge_attrs.add(attr)
+            else:
+                all_node_attrs.add(NodeAttrs.node_type)
+                all_edge_attrs.add(EdgeAttrs.edge_type)
 
             grid_search_config = "{}_{}_{}".format(k, search_direction.value, parse_type_string)
-            annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), ann_k_hop_neighborhood,
+            annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), neighborhood_copy,
                                          list(all_node_attrs), list(all_edge_attrs),
                                          grid_search=grid_search_config,
                                          category=annotation_category)
@@ -237,7 +250,8 @@ def main(args):
                                                         k=args.k_hop_neighborhoods,
                                                         parse_types=parse_types,
                                                         search_direction=DAGSearchDirection[args.search_direction],
-                                                        annotation_category=args.annotation_category)
+                                                        annotation_category=args.annotation_category,
+                                                        all_attrs=args.all_attrs)
     json_dump = serialize_patterns(annotation_patterns)
 
     with open(args.output, 'w') as f:
@@ -253,5 +267,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--parse_types', nargs="*", type=str, default=PARSE_TYPE_COMBINATIONS)
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
     parser.add_argument('-c', '--annotation_category', type=str, default="all_categories")
+    parser.add_argument('--all_attrs', action='store_true')
     args = parser.parse_args()
     main(args)
