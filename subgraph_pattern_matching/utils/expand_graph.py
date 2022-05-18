@@ -84,11 +84,11 @@ if __name__ == '__main__':
     pattern_list = deserialize_patterns(patterns_json, is_file_path=True)
     graph_viewer = GraphViewer()
 
-    expanded_graph = expand_graph(pattern_list[0].pattern_graph, attributes_to_ignore=[])
+    expanded_graph = expand_graph(pattern_list[0].pattern_graph, {})
 
-    compressed_graph = compress_graph(expanded_graph, )
-    print(pattern_list[0].pattern_graph.edges(data=True))
-    print(compressed_graph.edges(data=True))
+    compressed_graph = compress_graph(expanded_graph)
+    print(pattern_list[0].pattern_graph.nodes(data=True))
+    print(compressed_graph.nodes(data=True))
 
     graph_viewer.prepare_amr_networkx_for_visualization(pattern_list[0].pattern_graph)
     html_file = os.path.join(examples_dir, "graph_{}.html".format("original"))

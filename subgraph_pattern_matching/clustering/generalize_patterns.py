@@ -283,8 +283,6 @@ def gspan_strategy(args, pattern_list):
 
     expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
 
-    print(expanded_graphs[0])
-
     gs._read_graphs_from_networkx(expanded_graphs)
     gs.run()
 
@@ -296,7 +294,6 @@ def gspan_strategy(args, pattern_list):
         G = gb.gspan_graph_to_networkx(fs.graph,
                                        node_labels=fs.node_labels,
                                        edge_labels=fs.edge_labels)
-        print(G)
         print(compress_graph(G))
         P = Pattern(f"gSpan_{i}", compress_graph(G),
                     [NodeAttrs.node_type],
