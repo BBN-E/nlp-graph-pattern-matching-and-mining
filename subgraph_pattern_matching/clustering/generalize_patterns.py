@@ -9,6 +9,7 @@ from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
 from view_utils.graph_viewer import GraphViewer
 from graph_builder import GraphBuilder
+from utils.expand_graph import expand_graph, compress_graph
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
 from patterns.pattern import Pattern
@@ -267,6 +268,8 @@ def majority_wins_strategy(patterns_list, labels_path):
 
 def gspan_strategy(args, pattern_list):
 
+    print(len(pattern_list))
+
     grid_search = pattern_list[0].grid_search
     category = pattern_list[0].category
 
@@ -277,7 +280,12 @@ def gspan_strategy(args, pattern_list):
                min_num_vertices=args.min_num_vertices,
                max_num_vertices=args.max_num_vertices,
                is_undirected=False, where=False)
-    gs._read_graphs_from_patterns(pattern_list)
+
+    expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
+
+    print(expanded_graphs[0])
+
+    gs._read_graphs_from_networkx(expanded_graphs)
     gs.run()
 
     visualizations_dir = os.path.join(args.output, "visualizations", "gspan_patterns")
@@ -288,7 +296,9 @@ def gspan_strategy(args, pattern_list):
         G = gb.gspan_graph_to_networkx(fs.graph,
                                        node_labels=fs.node_labels,
                                        edge_labels=fs.edge_labels)
-        P = Pattern(f"gSpan_{i}", G,
+        print(G)
+        print(compress_graph(G))
+        P = Pattern(f"gSpan_{i}", compress_graph(G),
                     [NodeAttrs.node_type],
                     [EdgeAttrs.edge_type, EdgeAttrs.label],
                     grid_search=grid_search,
@@ -299,7 +309,7 @@ def gspan_strategy(args, pattern_list):
         gv.prepare_networkx_for_visualization(G)
         gv.visualize_networkx_graph(G, html_file, sentence_text=text)
 
-    return gspan_pattern_list
+    return [gspan_pattern_list]
 
 def main(args):
     graph_viewer = GraphViewer()
