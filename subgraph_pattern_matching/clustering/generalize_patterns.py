@@ -268,8 +268,6 @@ def majority_wins_strategy(patterns_list, labels_path):
 
 def gspan_strategy(args, pattern_list):
 
-    print(len(pattern_list))
-
     grid_search = pattern_list[0].grid_search
     category = pattern_list[0].category
 
@@ -278,7 +276,7 @@ def gspan_strategy(args, pattern_list):
 
     gs = gSpan(min_support=args.min_support,
                min_num_vertices=args.min_num_vertices,
-               max_num_vertices=args.max_num_vertices,
+               max_num_vertices=100,
                is_undirected=False, where=False)
 
     expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
@@ -290,18 +288,29 @@ def gspan_strategy(args, pattern_list):
     os.makedirs(visualizations_dir, exist_ok=True)
 
     gspan_pattern_list = []
-    for i, fs in enumerate(gs.frequent_subgraphs):
+    for j, fs in enumerate(gs.frequent_subgraphs):
         G = gb.gspan_graph_to_networkx(fs.graph,
                                        node_labels=fs.node_labels,
                                        edge_labels=fs.edge_labels)
-        print(compress_graph(G))
+
+        os.makedirs(visualizations_dir + "/" + str(j), exist_ok=True)
+
+        for support_id in fs.support:
+            support_G = gs.graphs[support_id]
+            support_g_networkx = gb.gspan_graph_to_networkx(support_G,
+                                        node_labels=gs.node_labels,
+                                        edge_labels=gs.edge_labels)
+            html_file = os.path.join(visualizations_dir, str(j), f"pattern_{support_G.gid}.html")
+            gv.prepare_networkx_for_visualization(support_g_networkx)
+            gv.visualize_networkx_graph(support_g_networkx, html_file, sentence_text=str(support_G.gid))
+
         P = Pattern(f"gSpan_{i}", compress_graph(G),
                     [NodeAttrs.node_type],
-                    [EdgeAttrs.edge_type, EdgeAttrs.label],
+                    [EdgeAttrs.edge_type],
                     grid_search=grid_search,
                     category=category)
         gspan_pattern_list.append(P)
-        html_file = os.path.join(visualizations_dir, f"pattern_{fs.gid}.html")
+        html_file = os.path.join(visualizations_dir, str(j), f"generalized_pattern_{fs.gid}.html")
         text = f"There are {len(fs.support)} supporting instances for this pattern"
         gv.prepare_networkx_for_visualization(G)
         gv.visualize_networkx_graph(G, html_file, sentence_text=text)
