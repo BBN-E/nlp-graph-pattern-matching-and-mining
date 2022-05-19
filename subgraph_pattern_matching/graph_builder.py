@@ -511,3 +511,84 @@ class GraphBuilder():
         }
 
         return feats
+
+    @staticmethod
+    def numerize_attribute_values(graphs):
+
+        from collections import defaultdict
+
+        NODE_ATTR_VAL_TO_NUM = defaultdict(lambda: defaultdict(int))
+        EDGE_ATTR_VAL_TO_NUM = defaultdict(lambda: defaultdict(int))
+
+        for g in graphs:
+            nodes = list(g.nodes(data=True))
+            edges = nx.to_edgelist(g)
+
+            for (node_id, node_attrs) in nodes:
+                for attr_name, attr_val in node_attrs.items():  # e.g. k="pos", v="NOUN"
+                    if attr_val not in NODE_ATTR_VAL_TO_NUM[attr_name]:
+
+                        id = len(NODE_ATTR_VAL_TO_NUM[attr_name].keys())
+
+                        NODE_ATTR_VAL_TO_NUM[attr_name][attr_val] = id
+
+            for (u_id, v_id, edge_attrs) in edges:
+                for attr_name, attr_val in edge_attrs.items():  # e.g. k="deprel", v="nsubj"
+                    if attr_val not in EDGE_ATTR_VAL_TO_NUM[attr_name]:
+
+                        id = len(EDGE_ATTR_VAL_TO_NUM[attr_name].keys())
+
+                        EDGE_ATTR_VAL_TO_NUM[attr_name][attr_val] = id
+
+        EDGE_ATTR_NUM_TO_VAL = defaultdict(lambda: defaultdict(int))
+        NODE_ATTR_NUM_TO_VAL = defaultdict(lambda: defaultdict(int))
+        
+        for attr_name in NODE_ATTR_VAL_TO_NUM:
+            for k,v in NODE_ATTR_VAL_TO_NUM[attr_name].items():
+                NODE_ATTR_NUM_TO_VAL[attr_name][v] = k
+
+        for attr_name in EDGE_ATTR_VAL_TO_NUM:
+            for k,v in EDGE_ATTR_VAL_TO_NUM[attr_name].items():
+                EDGE_ATTR_NUM_TO_VAL[attr_name][v] = k
+
+        return NODE_ATTR_VAL_TO_NUM, NODE_ATTR_NUM_TO_VAL, \
+               EDGE_ATTR_VAL_TO_NUM, EDGE_ATTR_NUM_TO_VAL
+
+    @staticmethod
+    def numerize_graphs(graphs, node_v2n, edge_v2n):
+
+        for g in graphs:
+
+            for (node_id, node_attrs) in g.nodes(data=True):
+                for attr_name, attr_value in node_attrs.items():
+                    g.nodes[node_id][attr_name] = node_v2n[attr_name][attr_value]
+
+            for (u_id, v_id, edge_attrs) in g.edges(data=True):
+                for attr_name, attr_value in edge_attrs.items():
+                    g.edges[(u_id, v_id)][attr_name] = edge_v2n[attr_name][attr_value]
+
+        return graphs
+
+    @staticmethod
+    def denumerize_graphs(graphs, node_n2v, edge_n2v):
+
+        for g in graphs:
+
+            for (node_id, node_attrs) in g.nodes(data=True):
+                for attr_name, attr_num in node_attrs.items():
+                    g.nodes[node_id][attr_name] = node_n2v[attr_name][attr_num]
+
+            for (u_id, v_id, edge_attrs) in g.edges(data=True):
+                for attr_name, attr_num in edge_attrs.items():
+                    g.edges[(u_id, v_id)][attr_name] = edge_n2v[attr_name][attr_num]
+
+        return graphs
+
+
+if __name__ == '__main__':
+    import serifxml3
+    d = serifxml3.Document("/nfs/raid83/u13/caml/users/mselvagg_ad/data/ACE_parsed/dev/AFP_ENG_20030305.0918.xml")
+    GB = GraphBuilder()
+    graphs = GB.serif_doc_to_networkx_per_sentence(d)
+    n_v2n, n_n2v, e_v2n, e_n2v = GB.numerize_attribute_values(graphs)
+    graphs_prime = GB.denumerize_graphs(GB.numerize_graphs(graphs=graphs, node_v2n=n_v2n, edge_v2n=e_v2n), n_n2v, e_n2v)
