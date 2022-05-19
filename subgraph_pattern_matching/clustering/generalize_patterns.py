@@ -8,16 +8,24 @@ from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
 from view_utils.graph_viewer import GraphViewer
+from graph_builder import GraphBuilder
+from utils.expand_graph import expand_graph, compress_graph
 from io_utils.io_utils import deserialize_patterns, serialize_patterns
 import numpy as np
 from patterns.pattern import Pattern
 from collections import Counter
 from networkx.algorithms import isomorphism
+from gspan_mining.gspan import gSpan
 
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.types.edge_types import EdgeTypes
+from constants.common.types.node_types import NodeTypes
 
 class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()
     MajorityWins = enum.auto()
+    GSpan = enum.auto()
     CentralGraph = enum.auto()
 
 
@@ -258,6 +266,57 @@ def majority_wins_strategy(patterns_list, labels_path):
     return [generalized_patterns]
 
 
+def gspan_strategy(args, pattern_list):
+
+    grid_search = pattern_list[0].grid_search
+    category = pattern_list[0].category
+
+    gb = GraphBuilder()
+    gv = GraphViewer()
+
+    gs = gSpan(min_support=args.min_support,
+               min_num_vertices=args.min_num_vertices,
+               max_num_vertices=args.max_num_vertices,
+               is_undirected=False, where=False)
+
+    expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
+
+    gs._read_graphs_from_networkx(expanded_graphs)
+    gs.run()
+
+    visualizations_dir = os.path.join(args.output, "visualizations", "gspan_patterns")
+    os.makedirs(visualizations_dir, exist_ok=True)
+
+    gspan_pattern_list = []
+    for j, fs in enumerate(gs.frequent_subgraphs):
+        G = gb.gspan_graph_to_networkx(fs.graph,
+                                       node_labels=fs.node_labels,
+                                       edge_labels=fs.edge_labels)
+
+        os.makedirs(visualizations_dir + "/" + str(j), exist_ok=True)
+
+        for support_id in fs.support:
+            support_G = gs.graphs[support_id]
+            support_g_networkx = gb.gspan_graph_to_networkx(support_G,
+                                        node_labels=gs.node_labels,
+                                        edge_labels=gs.edge_labels)
+            html_file = os.path.join(visualizations_dir, str(j), f"pattern_{support_G.gid}.html")
+            gv.prepare_networkx_for_visualization(support_g_networkx)
+            gv.visualize_networkx_graph(support_g_networkx, html_file, sentence_text=str(support_G.gid))
+
+        P = Pattern(f"gSpan_{i}", compress_graph(G),
+                    [NodeAttrs.node_type],
+                    [EdgeAttrs.edge_type],
+                    grid_search=grid_search,
+                    category=category)
+        gspan_pattern_list.append(P)
+        html_file = os.path.join(visualizations_dir, str(j), f"generalized_pattern_{fs.gid}.html")
+        text = f"There are {len(fs.support)} supporting instances for this pattern"
+        gv.prepare_networkx_for_visualization(G)
+        gv.visualize_networkx_graph(G, html_file, sentence_text=text)
+
+    return [gspan_pattern_list]
+
 def main(args):
     graph_viewer = GraphViewer()
     visualizations_dir = os.path.join(args.output, "visualizations")
@@ -273,6 +332,8 @@ def main(args):
         generalized_patterns_lists = majority_wins_strategy(pattern_list, args.labels)
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.Ungeneralized:
         generalized_patterns_lists = [pattern_list]
+    elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.GSpan:
+        generalized_patterns_lists = gspan_strategy(args, pattern_list)
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.CentralGraph:
         generalized_patterns_lists = central_graph_strategy(pattern_list, args.distance_matrix, args.labels)
     else:
@@ -313,6 +374,10 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--strategy', type=str, required=True)
     parser.add_argument('-d', '--distance_matrix', type=str, default=None)
     parser.add_argument('-l', '--labels', type=str, default=None)
+    parser.add_argument('--min_support', type=int, default=40, help="Minimum number of supporting graphs for gspan")
+    parser.add_argument('--min_num_vertices', type=int, default=7, help="Minimum number of vertices in gspan pattern")
+    parser.add_argument('--max_num_vertices', type=float, default=float('inf'), help="Maximum number of vertices in gspan pattern")
+
     args = parser.parse_args()
 
     main(args)
