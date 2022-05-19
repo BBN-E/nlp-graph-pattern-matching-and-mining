@@ -259,13 +259,31 @@ def main(args):
                                                        search_direction=DAGSearchDirection[args.search_direction],
                                                        annotation_category=args.annotation_category,
                                                        all_attrs=args.all_attrs,
-                                                       return_graphs_only=args.create_dataset_for_spminer)
+                                                       return_graphs_only=args.create_graphs_for_spminer)
 
     if args.create_graphs_for_spminer:
 
-        json_dump = serialize_pattern_graphs(annotation_patterns)
+        from graph_builder import GraphBuilder
+
+        graphs = annotation_patterns
+
+        if args.numerize:
+            node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=graphs)
+            graphs = GraphBuilder.numerize_graphs(graphs=graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
+
+        json_dump = serialize_pattern_graphs(graphs)
         with open(args.output, 'w') as f:
             f.write(json_dump)
+
+        if args.numerize:
+            import json
+            with open(args.output_attr_value_id_mapping, 'w') as f:
+                json.dump({
+                    'node_v2n': dict(node_v2n),
+                    'node_n2v': dict(node_n2v),
+                    'edge_v2n': dict(edge_v2n),
+                    'edge_n2v': dict(edge_n2v),
+                }, f, sort_keys=True, indent=4)
 
     else:
 
@@ -284,6 +302,11 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
     parser.add_argument('-c', '--annotation_category', type=str, default="all_categories")
     parser.add_argument('--all_attrs', action='store_true')
+
+    # if outputting graphs for SPMiner
     parser.add_argument('--create_graphs_for_spminer', action='store_true')
+    parser.add_argument('--numerize', action='store_true')
+    parser.add_argument('--output_attr_value_id_mapping', type=str)
+
     args = parser.parse_args()
     main(args)
