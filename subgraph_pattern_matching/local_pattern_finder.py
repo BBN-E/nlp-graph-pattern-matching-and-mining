@@ -7,7 +7,7 @@ from annotation.annotation_base import FrameAnnotationTypes
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
-from io_utils.io_utils import serialize_patterns
+from io_utils.io_utils import serialize_patterns, serialize_pattern_graphs
 from patterns.pattern import Pattern
 
 class ParseTypes(Enum):
@@ -120,7 +120,8 @@ class LocalPatternFinder():
         return edge_induced_subgraph
 
 
-    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None, all_attrs=False):
+    def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None, all_attrs=False,
+                                 return_graphs_only=False):
 
         annotation_patterns_for_configuration = []
 
@@ -154,29 +155,35 @@ class LocalPatternFinder():
                 for node_attr, label in ann.token_node_ids_to_node_attr_label[token_node_id]:
                     neighborhood_copy.nodes[token_node_id][node_attr] = label
 
-            parse_type_string = "-".join([str(p.value) for p in parse_types])
+            if return_graphs_only:
 
-            all_node_attrs = set()
-            all_edge_attrs = set()
-            if all_attrs:
-                for __, attr_dict in list(neighborhood_copy.nodes(data=True)):
-                    for attr, __ in attr_dict.items():
-                        if attr is NodeAttrs.annotated:
-                            continue
-                        all_node_attrs.add(attr)
-                for __, __, attr_dict in list(neighborhood_copy.edges(data=True)):
-                    for attr, __ in attr_dict.items():
-                        all_edge_attrs.add(attr)
+                annotation_patterns_for_configuration.append(neighborhood_copy)
+
             else:
-                all_node_attrs.add(NodeAttrs.node_type)
-                all_edge_attrs.add(EdgeAttrs.edge_type)
 
-            grid_search_config = "{}_{}_{}".format(k, search_direction.value, parse_type_string)
-            annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), neighborhood_copy,
-                                         list(all_node_attrs), list(all_edge_attrs),
-                                         grid_search=grid_search_config,
-                                         category=annotation_category)
-            annotation_patterns_for_configuration.append(annotation_pattern)
+                parse_type_string = "-".join([str(p.value) for p in parse_types])
+
+                all_node_attrs = set()
+                all_edge_attrs = set()
+                if all_attrs:
+                    for __, attr_dict in list(neighborhood_copy.nodes(data=True)):
+                        for attr, __ in attr_dict.items():
+                            if attr is NodeAttrs.annotated:
+                                continue
+                            all_node_attrs.add(attr)
+                    for __, __, attr_dict in list(neighborhood_copy.edges(data=True)):
+                        for attr, __ in attr_dict.items():
+                            all_edge_attrs.add(attr)
+                else:
+                    all_node_attrs.add(NodeAttrs.node_type)
+                    all_edge_attrs.add(EdgeAttrs.edge_type)
+
+                grid_search_config = "{}_{}_{}".format(k, search_direction.value, parse_type_string)
+                annotation_pattern = Pattern("id_{}_{}".format(i, grid_search_config), neighborhood_copy,
+                                             list(all_node_attrs), list(all_edge_attrs),
+                                             grid_search=grid_search_config,
+                                             category=annotation_category)
+                annotation_patterns_for_configuration.append(annotation_pattern)
 
         return annotation_patterns_for_configuration
 
@@ -247,15 +254,24 @@ def main(args):
     LPF = LocalPatternFinder()
 
     annotation_patterns = LPF.get_annotation_subgraphs(annotations=corpus.train_annotations,
-                                                        k=args.k_hop_neighborhoods,
-                                                        parse_types=parse_types,
-                                                        search_direction=DAGSearchDirection[args.search_direction],
-                                                        annotation_category=args.annotation_category,
-                                                        all_attrs=args.all_attrs)
-    json_dump = serialize_patterns(annotation_patterns)
+                                                       k=args.k_hop_neighborhoods,
+                                                       parse_types=parse_types,
+                                                       search_direction=DAGSearchDirection[args.search_direction],
+                                                       annotation_category=args.annotation_category,
+                                                       all_attrs=args.all_attrs,
+                                                       return_graphs_only=args.create_dataset_for_spminer)
 
-    with open(args.output, 'w') as f:
-        f.write(json_dump)
+    if args.create_graphs_for_spminer:
+
+        json_dump = serialize_pattern_graphs(annotation_patterns)
+        with open(args.output, 'w') as f:
+            f.write(json_dump)
+
+    else:
+
+        json_dump = serialize_patterns(annotation_patterns)
+        with open(args.output, 'w') as f:
+            f.write(json_dump)
 
 
 if __name__ == '__main__':
@@ -268,5 +284,6 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--search_direction', type=str, default=DAGSearchDirection.BOTH)
     parser.add_argument('-c', '--annotation_category', type=str, default="all_categories")
     parser.add_argument('--all_attrs', action='store_true')
+    parser.add_argument('--create_graphs_for_spminer', action='store_true')
     args = parser.parse_args()
     main(args)
