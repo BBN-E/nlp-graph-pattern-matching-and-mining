@@ -276,7 +276,7 @@ def gspan_strategy(args, pattern_list):
 
     gs = gSpan(min_support=args.min_support,
                min_num_vertices=args.min_num_vertices,
-               max_num_vertices=100,
+               max_num_vertices=args.max_num_vertices,
                is_undirected=False, where=False)
 
     expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
