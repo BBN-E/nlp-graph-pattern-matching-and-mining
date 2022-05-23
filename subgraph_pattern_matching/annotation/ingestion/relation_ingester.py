@@ -3,11 +3,11 @@ from annotation.ingestion.ingester import SentenceIngester
 
 
 TACRED = {
-    'TRAIN': '/nfs/raid90/u10/users/brozonoy-ad/data/tacred/serifxml/train.xml',
-    'DEV': '/nfs/raid90/u10/users/brozonoy-ad/data/tacred/serifxml/dev.xml',
-    'TEST': '/nfs/raid90/u10/users/brozonoy-ad/data/tacred/serifxml/test.xml'
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/tacred/train.xml',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/tacred/dev.xml',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/data/tacred/test.xml'
 }
-
+# /nfs/raid83/u13/caml/users/mselvagg_ad/data/tacred/sample.xml
 
 class RelationIngester(SentenceIngester):
 
@@ -21,7 +21,6 @@ class RelationIngester(SentenceIngester):
 
         annotations_for_split = []
         for i, serif_sentence in enumerate(split_serif_doc.sentences):
-
             nx_graph = split_nx_graphs[i]
 
             if serif_sentence.mention_set:
@@ -36,13 +35,15 @@ class RelationIngester(SentenceIngester):
                                                                     token_node_ids=left_token_node_ids,
                                                                     serif_doc=split_serif_doc,
                                                                     serif_sentence=serif_sentence,
-                                                                    entity_type=rel_mention.left_mention.entity_type)
+                                                                    entity_type="left_" + rel_mention.left_mention.entity_type)
 
                         right_mention_annotation = MentionAnnotation(networkx_graph=nx_graph,
                                                                      token_node_ids=right_token_node_ids,
                                                                      serif_doc=split_serif_doc,
                                                                      serif_sentence=serif_sentence,
-                                                                     entity_type=rel_mention.left_mention.entity_type)
+                                                                     entity_type="right_" + rel_mention.right_mention.entity_type)
 
-                        relation_annotation = EntityEntityRelationAnnotation(nx_graph, left_mention_annotation, right_mention_annotation, rel_mention.type)
+                        relation_annotation = EntityEntityRelationAnnotation(nx_graph, split_serif_doc, serif_sentence, left_mention_annotation, right_mention_annotation, rel_mention.type)
                         annotations_for_split.append(relation_annotation)
+
+        return annotations_for_split
