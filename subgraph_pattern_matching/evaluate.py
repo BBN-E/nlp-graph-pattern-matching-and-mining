@@ -24,9 +24,16 @@ def evaluate(evaluation_corpus, matches_by_serif_id):
         from evaluation.datasets.ace import score_ace
         from evaluation.utils import AnnotationScheme
         score_ace(matches_by_serif_id=matches_by_serif_id,
-                  SPLIT='TRAIN',
+                  SPLIT='TEST',
                   annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
 
+    elif evaluation_corpus == "TACRED":
+
+        from evaluation.datasets.tacred import score_tacred
+        from evaluation.utils import AnnotationScheme
+        score_tacred(matches_by_serif_id=matches_by_serif_id,
+                  SPLIT='TEST',
+                  annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
 
     else:
         raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))

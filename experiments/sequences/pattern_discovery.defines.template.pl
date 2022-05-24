@@ -8,7 +8,7 @@ my $GSPAN = "/home/dzajic/dev/projects/graph/gSpan";
 my $PYTHON3= "env PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python:$SUBGRAPH_PATTERN_MATCHING_RELEASE:$GSPAN " .
     "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
 
-# CONLL_ENGLISH, ACE_ENGLISH
+# CONLL_ENGLISH, ACE_ENGLISH, TACRED
 my $ANNOTATION_CORPUS = "CONLL_ENGLISH";
 my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/annotation/ontologies/ace.txt";
 # my $ANNOTATION_CATEGORIES = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-2-22-specific-ACE-types/annotation_categories.list";

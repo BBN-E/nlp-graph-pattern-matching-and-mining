@@ -95,6 +95,42 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=AnnotationS
 
     return bio_list
 
+def serif_sentence_to_relation_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+    '''
+
+    :param serif_sentence: serif.theory.sentence.Sentence
+    :param annotation_scheme: TODO: identification, identification-classification, BIO, IO
+    :return: list[str]
+    '''
+
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+    if serif_sentence.rel_mention_set:
+        for relation in serif_sentence.rel_mention_set:
+
+            relation_mentions = [("left", relation.left_mention), ("right", relation.right_mention)]
+
+            for left_or_right, mention in relation_mentions:
+
+                mention_bio = []
+                if mention.tokens:
+                    for i in range(len(mention.tokens)):
+                        # if i == 0:
+                        #     if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                        #         mention_bio.append(f'B-{mention.entity_type}')
+                        #     else:  # 'identification'
+                        #         mention_bio.append('B')
+                        # else:
+                        if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
+                            mention_bio.append(f'I-{left_or_right}_{mention.entity_type}-{relation.type}')
+                        else:  # identification
+                            mention_bio.append('I')
+
+                mention_token_indices = [t.index() for t in mention.tokens]
+                for i, j in enumerate(mention_token_indices):
+                    bio_list[j] = mention_bio[i]
+
+    return bio_list
 
 def serif_sentence_to_event_trigger_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     '''
@@ -211,12 +247,12 @@ def serif_event_mention_to_event_argument_bio_list(event_mention, annotation_sch
 
     return bio_list
 
-
 def serif_sentence_to_bio_list_based_on_predictions(
         serif_sentence,
         matches_for_sentence,
         ke=KnowledgeElement.NAMED_ENTITY,
-        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION
+        annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION,
+        append_match_category=False
 ):
     '''
 
@@ -279,6 +315,8 @@ def serif_sentence_to_bio_list_based_on_predictions(
                                     if bio_list[token.index()] == "O":
                                         bio_list[token.index()] = {}
                                     bio_list[token.index()][match.pattern.category] = f"I-{ke_type}"
+                                elif append_match_category:
+                                    bio_list[token.index()] = f"I-{ke_type}-{match.pattern.category}"
                                 else:
                                     bio_list[token.index()] = f"I-{ke_type}"
                             else:
