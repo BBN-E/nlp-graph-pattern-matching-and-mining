@@ -144,7 +144,7 @@ foreach my $category (@annotations) {
                     my $generalize_patterns_job = runjobs([$find_local_patterns_job], "$JOB_NAME/$category_formatted/$config/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
                                      ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
                                      "--local_patterns_json $serialized_local_patterns_path --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY} " .
-                                     "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES}"]);
+                                     "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES} $p->{SPMINER_CONFIG_JSON}"]);
                     push(@generalized_patterns_jobs, $generalize_patterns_job);
                 }
             }

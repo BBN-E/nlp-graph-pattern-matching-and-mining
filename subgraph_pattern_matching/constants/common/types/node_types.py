@@ -5,3 +5,4 @@ class NodeTypes():
     modal = 'modal'
     temporal = 'temporal'
     amr = 'amr'
+    edge = 'edge'

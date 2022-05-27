@@ -4,26 +4,27 @@ use warnings;
 
 my $SUBGRAPH_PATTERN_MATCHING_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching";
 my $GSPAN = "/home/dzajic/dev/projects/graph/gSpan";
+my $NEURAL_SUBGRAPH_LEARNING_GNN = "/home/dzajic/dev/projects/graph/neural-subgraph-learning-GNN";
+my $TEXT_OPEN_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python";
 
-my $PYTHON3= "env PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python:$SUBGRAPH_PATTERN_MATCHING_RELEASE:$GSPAN " .
+my $PYTHON3= "env PYTHONPATH=$TEXT_OPEN_RELEASE:$SUBGRAPH_PATTERN_MATCHING_RELEASE:$GSPAN:$NEURAL_SUBGRAPH_LEARNING_GNN " .
     "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
 
 # CONLL_ENGLISH, ACE_ENGLISH, TACRED
-my $ANNOTATION_CORPUS = "CONLL_ENGLISH";
+my $ANNOTATION_CORPUS = "ACE_ENGLISH";
 my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/annotation/ontologies/ace.txt";
-# my $ANNOTATION_CATEGORIES = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-2-22-specific-ACE-types/annotation_categories.list";
 my $SPLIT_BY_CATEGORY = 1;
 
 # grid search parameters
-my @K_VALUES = (5);
+my @K_VALUES = (3);
 my @SEARCH_DIRECTIONS = ("BOTH");
 my @PARSE_TYPE_COMBINATIONS = ("AMR");
 
-# DBSCAN, IdenticalStructures, Centroid Graph
+# DBSCAN, IdenticalStructures
 my $CLUSTER_ALGORITHM;
 
-# Ungeneralized, MajorityWins, CentralGraph, GSpan
-my $GENERALIZATION_STRATEGY = "GSpan";
+# Ungeneralized, MajorityWins, CentralGraph, GSpan, SPMiner
+my $GENERALIZATION_STRATEGY = "SPMiner";
 my $NUM_BATCHES = 50;
 
 # GSpan parameters. Irrelevant if not using GSpan strategy
@@ -31,8 +32,10 @@ my $MIN_SUPPORT_VECTORS = "--min_support 10";
 my $MIN_NUM_VERTICES = "--min_num_vertices 10";
 my $MAX_NUM_VERTICES; # = "--max_num_vertices";
 
-# set this to "--all_attrs" if using Ungeneralized strategy
-my $ALL_ATTRS = "";
+# set this to "--all_attrs" if using Ungeneralized, GSpan or SPMiner strategy
+my $ALL_ATTRS = "--all_attrs";
+
+my $SPMINER_CONFIG_JSON = "--spminer_config $SUBGRAPH_PATTERN_MATCHING_RELEASE/templates/spminer_config.json";
 
 
 return {
@@ -50,5 +53,6 @@ return {
     MIN_SUPPORT_VECTORS => $MIN_SUPPORT_VECTORS,
     MIN_NUM_VERTICES => $MIN_NUM_VERTICES,
     MAX_NUM_VERTICES => $MAX_NUM_VERTICES,
-    ALL_ATTRS => $ALL_ATTRS
+    ALL_ATTRS => $ALL_ATTRS,
+    SPMINER_CONFIG_JSON => $SPMINER_CONFIG_JSON
 };

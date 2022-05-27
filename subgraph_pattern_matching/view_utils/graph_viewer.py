@@ -11,15 +11,14 @@ from serif.theory.event_mention import EventMention
 from serif.theory.mention import Mention
 from serif.theory.value_mention import ValueMention
 
-from constants.common.types.node_types import NodeTypes
-from constants.common.attrs.node.node_attrs import NodeAttrs
-from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
-from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
-from constants.common.types.edge_types import EdgeTypes
-from constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
-from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
-
+from subgraph_pattern_matching.constants.common.types.node_types import NodeTypes
+from subgraph_pattern_matching.constants.common.attrs.node.node_attrs import NodeAttrs
+from subgraph_pattern_matching.constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from subgraph_pattern_matching.constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
+from subgraph_pattern_matching.constants.common.types.edge_types import EdgeTypes
+from subgraph_pattern_matching.constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from subgraph_pattern_matching.constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
+from subgraph_pattern_matching.constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 
 class GraphViewer:
