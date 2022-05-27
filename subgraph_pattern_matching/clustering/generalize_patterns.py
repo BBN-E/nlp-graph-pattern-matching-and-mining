@@ -9,13 +9,13 @@ import numpy as np
 from collections import Counter
 from networkx.algorithms import isomorphism
 
-from subgraph_pattern_matching.io_utils.io_utils import deserialize_patterns, serialize_patterns
-from subgraph_pattern_matching.constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from subgraph_pattern_matching.constants.common.attrs.node.node_attrs import NodeAttrs
-from subgraph_pattern_matching.patterns.pattern import Pattern
-from subgraph_pattern_matching.view_utils.graph_viewer import GraphViewer
-from subgraph_pattern_matching.graph_builder import GraphBuilder
-from subgraph_pattern_matching.utils.expand_graph import expand_graph, compress_graph
+from io_utils.io_utils import deserialize_patterns, serialize_patterns
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from patterns.pattern import Pattern
+from view_utils.graph_viewer import GraphViewer
+from graph_builder import GraphBuilder
+from utils.expand_graph import expand_graph, compress_graph
 
 class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()

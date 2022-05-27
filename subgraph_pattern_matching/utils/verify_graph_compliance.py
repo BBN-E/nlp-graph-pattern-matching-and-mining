@@ -1,4 +1,4 @@
-from subgraph_pattern_matching.constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.node_attrs import NodeAttrs
 
 def verify_graph_compliance(G):
     '''ensure graph has desired attributes'''

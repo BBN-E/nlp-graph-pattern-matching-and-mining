@@ -1,10 +1,10 @@
 import networkx as nx
-from subgraph_pattern_matching.patterns.pattern import Pattern
-from subgraph_pattern_matching.constants.common.attrs.node.node_attrs import NodeAttrs
-from subgraph_pattern_matching.constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
-from subgraph_pattern_matching.constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
-from subgraph_pattern_matching.constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from subgraph_pattern_matching.constants.common.types.node_types import NodeTypes
+from patterns.pattern import Pattern
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
+from constants.common.attrs.node.amr_node_attrs import AMRNodeAttrs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.types.node_types import NodeTypes
 
 def expand_graph(graph, attributes_to_ignore=None):
 
