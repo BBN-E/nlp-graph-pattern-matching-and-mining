@@ -4,15 +4,15 @@ use warnings;
 
 my $SUBGRAPH_PATTERN_MATCHING_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching";
 my $GSPAN = "/home/dzajic/dev/projects/graph/gSpan";
-my $NEURAL_SUBGRAPH_LEARNING_GNN = "/home/dzajic/dev/projects/graph/neural-subgraph-learning-GNN";
+my $NEURAL_SUBGRAPH_LEARNING_GNN = "/nfs/raid83/u13/caml/users/mselvagg_ad/spminer";
 my $TEXT_OPEN_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python";
 
 my $PYTHON3= "env PYTHONPATH=$TEXT_OPEN_RELEASE:$SUBGRAPH_PATTERN_MATCHING_RELEASE:$GSPAN:$NEURAL_SUBGRAPH_LEARNING_GNN " .
-    "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/scratch/bin/python";
+    "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/gnn-2/bin/python";
 
 # CONLL_ENGLISH, ACE_ENGLISH, TACRED
 my $ANNOTATION_CORPUS = "ACE_ENGLISH";
-my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/annotation/ontologies/ace.txt";
+my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching/annotation/ontologies/ace.txt";
 my $SPLIT_BY_CATEGORY = 1;
 
 # grid search parameters
@@ -35,12 +35,12 @@ my $MAX_NUM_VERTICES; # = "--max_num_vertices";
 # set this to "--all_attrs" if using Ungeneralized, GSpan or SPMiner strategy
 my $ALL_ATTRS = "--all_attrs";
 
-my $SPMINER_CONFIG_JSON = "--spminer_config $SUBGRAPH_PATTERN_MATCHING_RELEASE/templates/spminer_config.json";
+my $SPMINER_CONFIG_JSON = "--spminer_config $SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_config.json";
 
 
 return {
     PYTHON3 => $PYTHON3,
-    SUBGRAPH_PATTERN_MATCHING_RELEASE => $SUBGRAPH_PATTERN_MATCHING_RELEASE,
+    SUBGRAPH_PATTERN_MATCHING_RELEASE => "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching",
     ANNOTATION_CORPUS => $ANNOTATION_CORPUS,
     K_VALUES => \@K_VALUES,
     SEARCH_DIRECTIONS => \@SEARCH_DIRECTIONS,
