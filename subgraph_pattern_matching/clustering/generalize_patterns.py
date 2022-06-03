@@ -9,7 +9,7 @@ import numpy as np
 from collections import Counter
 from networkx.algorithms import isomorphism
 
-from io_utils.io_utils import deserialize_patterns, serialize_patterns
+from io_utils.io_utils import deserialize_patterns, serialize_patterns, create_debug_graphs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from patterns.pattern import Pattern
@@ -275,6 +275,7 @@ def gspan_strategy(args, pattern_list):
                min_num_vertices=args.min_num_vertices,
                max_num_vertices=args.max_num_vertices,
                is_undirected=False, where=False)
+    gs.expanded = True
 
     expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
 
@@ -301,7 +302,7 @@ def gspan_strategy(args, pattern_list):
             gv.prepare_networkx_for_visualization(support_g_networkx)
             gv.visualize_networkx_graph(support_g_networkx, html_file, sentence_text=str(support_G.gid))
 
-        P = Pattern(f"gSpan_{i}", compress_graph(G),
+        P = Pattern(f"gSpan_{j}", compress_graph(G),
                     [NodeAttrs.node_type],
                     [EdgeAttrs.edge_type],
                     grid_search=grid_search,
@@ -322,19 +323,19 @@ def spminer_strategy(args, pattern_list):
     pattern_kwargs = {'node_attrs': pattern_list[0]._node_attrs, 'edge_attrs': pattern_list[0]._edge_attrs,
                       'grid_search': pattern_list[0].grid_search, 'category': pattern_list[0].category}
 
-    graphs = [pattern.pattern_graph for pattern in pattern_list]
-    undirected_graphs = GraphBuilder.convert_directed_to_undirected(graphs)
-    node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=undirected_graphs)
-    dataset = GraphBuilder.numerize_graphs(graphs=undirected_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
+    expanded_graphs = [expand_graph(pattern.pattern_graph, digraph=False) for pattern in pattern_list]
+    node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=expanded_graphs)
 
-    import json
-    with open(os.path.join(args.output, "output_attr_value_id_mapping.json"), 'w') as f:
-        json.dump({
-            'node_v2n': dict(node_v2n),
-            'node_n2v': dict(node_n2v),
-            'edge_v2n': dict(edge_v2n),
-            'edge_n2v': dict(edge_n2v),
-        }, f, sort_keys=True, indent=4)
+    dataset = GraphBuilder.numerize_graphs(graphs=expanded_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
+
+    # import json
+    # with open(os.path.join(args.output, "output_attr_value_id_mapping.json"), 'w') as f:
+    #     json.dump({
+    #         'node_v2n': dict(node_v2n),
+    #         'node_n2v': dict(node_n2v),
+    #         'edge_v2n': dict(edge_v2n),
+    #         'edge_n2v': dict(edge_n2v),
+    #     }, f, sort_keys=True, indent=4)
 
     parser = argparse.ArgumentParser()
     parse_encoder(parser)
@@ -356,10 +357,9 @@ def spminer_strategy(args, pattern_list):
     out_graphs = pattern_growth(dataset, 'graph', spminer_args)
 
     denumerized_graphs = GraphBuilder.denumerize_graphs(out_graphs, node_n2v=node_n2v, edge_n2v=edge_n2v)
-    directed_pattern_graphs = GraphBuilder.convert_undirected_to_directed(denumerized_graphs)
     generalized_patterns = []
-    for i, pattern_graph in enumerate(directed_pattern_graphs):
-        pattern = Pattern(pattern_id=i, pattern_graph=pattern_graph, **pattern_kwargs)
+    for i, pattern_graph in enumerate(denumerized_graphs):
+        pattern = Pattern(pattern_id=i, pattern_graph=compress_graph(pattern_graph), **pattern_kwargs)
         generalized_patterns.append(pattern)
 
     return [generalized_patterns]
