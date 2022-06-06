@@ -10,14 +10,14 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
-def evaluate(evaluation_corpus, matches_by_serif_id):
+def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme):
     if evaluation_corpus == 'CONLL_ENGLISH':
 
         from evaluation.datasets.conll import score_conll
         from evaluation.utils import AnnotationScheme
         score_conll(matches_by_serif_id=matches_by_serif_id,
                     SPLIT='TEST',
-                    annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
+                    annotation_scheme=AnnotationScheme[annotation_scheme])
 
     elif evaluation_corpus == 'ACE_ENGLISH':
 
@@ -25,7 +25,7 @@ def evaluate(evaluation_corpus, matches_by_serif_id):
         from evaluation.utils import AnnotationScheme
         score_ace(matches_by_serif_id=matches_by_serif_id,
                   SPLIT='TEST',
-                  annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
+                  annotation_scheme=AnnotationScheme[annotation_scheme])
 
     elif evaluation_corpus == "TACRED":
 
@@ -33,7 +33,7 @@ def evaluate(evaluation_corpus, matches_by_serif_id):
         from evaluation.utils import AnnotationScheme
         score_tacred(matches_by_serif_id=matches_by_serif_id,
                   SPLIT='TEST',
-                  annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION)
+                  annotation_scheme=AnnotationScheme[annotation_scheme])
 
     else:
         raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
@@ -72,7 +72,7 @@ def main(args):
 
     match_corpus = MatchCorpus(all_matches)
     matches_by_serif_id = match_corpus.organize_matches_by_serif_doc_and_serif_sentence(per_sentence=args.per_sentence)
-    evaluate(args.evaluation_corpus, matches_by_serif_id)
+    evaluate(args.evaluation_corpus, matches_by_serif_id, args.annotation_scheme)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -84,6 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--matches', type=str, required=True)
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
                         help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default='CONLL_ENGLISH')
+    parser.add_argument('-a', '--annotation_scheme', choices=["IDENTIFICATION", "IDENTIFICATION_CLASSIFICATION"], default="IDENTIFICATION_CLASSIFICATION")
 
     args = parser.parse_args()
 
