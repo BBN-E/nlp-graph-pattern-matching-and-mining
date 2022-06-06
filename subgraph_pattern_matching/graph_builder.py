@@ -512,7 +512,7 @@ class GraphBuilder():
 
         return feats
 
-    def gspan_graph_to_networkx(self, gspan_graph, 
+    def gspan_graph_to_networkx(self, gspan_graph,
                                 node_labels=None, edge_labels=None):
         G = nx.DiGraph()
         for vid in gspan_graph.vertices:
@@ -538,3 +538,150 @@ class GraphBuilder():
                     vlb2 = gspan_graph.vertices[vid2].vlb
                 G.add_edge(vid1, vid2, **{'label' : elb})
         return G
+
+    @staticmethod
+    def numerize_attribute_values(graphs):
+
+        from collections import defaultdict
+
+        NODE_ATTR_VAL_TO_NUM = defaultdict(lambda: defaultdict(int))
+        EDGE_ATTR_VAL_TO_NUM = defaultdict(lambda: defaultdict(int))
+
+        for g in graphs:
+            nodes = list(g.nodes(data=True))
+            edges = nx.to_edgelist(g)
+
+            for (node_id, node_attrs) in nodes:
+                for attr_name, attr_val in node_attrs.items():  # e.g. k="pos", v="NOUN"
+                    if attr_val not in NODE_ATTR_VAL_TO_NUM[attr_name]:
+
+                        id = len(NODE_ATTR_VAL_TO_NUM[attr_name].keys())
+
+                        NODE_ATTR_VAL_TO_NUM[attr_name][attr_val] = id
+
+            for (u_id, v_id, edge_attrs) in edges:
+                for attr_name, attr_val in edge_attrs.items():  # e.g. k="deprel", v="nsubj"
+                    if attr_val not in EDGE_ATTR_VAL_TO_NUM[attr_name]:
+
+                        id = len(EDGE_ATTR_VAL_TO_NUM[attr_name].keys())
+
+                        EDGE_ATTR_VAL_TO_NUM[attr_name][attr_val] = id
+
+        EDGE_ATTR_NUM_TO_VAL = defaultdict(lambda: defaultdict(int))
+        NODE_ATTR_NUM_TO_VAL = defaultdict(lambda: defaultdict(int))
+        
+        for attr_name in NODE_ATTR_VAL_TO_NUM:
+            for k,v in NODE_ATTR_VAL_TO_NUM[attr_name].items():
+                NODE_ATTR_NUM_TO_VAL[attr_name][v] = k
+
+        for attr_name in EDGE_ATTR_VAL_TO_NUM:
+            for k,v in EDGE_ATTR_VAL_TO_NUM[attr_name].items():
+                EDGE_ATTR_NUM_TO_VAL[attr_name][v] = k
+
+        return NODE_ATTR_VAL_TO_NUM, NODE_ATTR_NUM_TO_VAL, \
+               EDGE_ATTR_VAL_TO_NUM, EDGE_ATTR_NUM_TO_VAL
+
+    @staticmethod
+    def numerize_graphs(graphs, node_v2n, edge_v2n):
+
+        for g in graphs:
+
+            for (node_id, node_attrs) in g.nodes(data=True):
+                for attr_name, attr_value in node_attrs.items():
+                    g.nodes[node_id][attr_name] = node_v2n[attr_name][attr_value]
+
+            for (u_id, v_id, edge_attrs) in g.edges(data=True):
+                for attr_name, attr_value in edge_attrs.items():
+                    g.edges[(u_id, v_id)][attr_name] = edge_v2n[attr_name][attr_value]
+
+        return graphs
+
+    @staticmethod
+    def denumerize_graphs(graphs, node_n2v, edge_n2v):
+
+        for g in graphs:
+
+            for (node_id, node_attrs) in g.nodes(data=True):
+                for attr_name, attr_num in node_attrs.items():
+                    g.nodes[node_id][attr_name] = node_n2v[attr_name][attr_num]
+
+            for (u_id, v_id, edge_attrs) in g.edges(data=True):
+                for attr_name, attr_num in edge_attrs.items():
+                    g.edges[(u_id, v_id)][attr_name] = edge_n2v[attr_name][attr_num]
+
+        return graphs
+
+    @staticmethod
+    def convert_directed_to_undirected(graphs):
+
+        undirected_graphs = []
+        for g in graphs:
+            undirected_g = nx.Graph()
+            undirected_g.add_nodes_from(g.nodes(data=True))
+            for (u_id, v_id, edge_attrs) in g.edges(data=True):
+                edge_node = "{}-{}-edge".format(u_id, v_id)
+                new_edge_attrs = edge_attrs.copy()
+                new_edge_attrs[NodeAttrs.node_type] = NodeTypes.edge
+                undirected_g.add_node(edge_node, **new_edge_attrs)
+                undirected_g.add_edge(u_id, edge_node, label="n2e")
+                undirected_g.add_edge(edge_node, v_id, label="e2n")
+            undirected_graphs.append(undirected_g)
+
+        return undirected_graphs
+
+    @staticmethod
+    def convert_undirected_to_directed(graphs):
+
+        directed_graphs = []
+        for g in graphs:
+            directed_g = nx.DiGraph()
+            edge_nodes = []
+            for node, attr_dict in g.nodes(data=True):
+                if attr_dict[NodeAttrs.node_type] == NodeTypes.edge:
+                    edge_nodes.append((node, attr_dict))
+                else:
+                    directed_g.add_node(node, **attr_dict)
+
+            for edge_node, edge_node_attrs in edge_nodes:
+                edges = g.edges(edge_node, data=True)
+                if len(edges) < 2:
+                    continue
+                assert len(edges) == 2
+                src = None
+                dst = None
+                for node1, node2, edge_attrs in edges:
+                    if edge_attrs['label'] == 'n2e':
+                        if node1 != edge_node:
+                            src = node1
+                        else:
+                            src = node2
+                    elif edge_attrs['label'] == 'e2n':
+                        if node1 != edge_node:
+                            dst = node1
+                        else:
+                            dst = node2
+
+                assert src is not None and dst is not None
+
+                del edge_node_attrs[NodeAttrs.node_type]
+                directed_g.add_edge(src, dst, **edge_node_attrs)
+
+            directed_graphs.append(directed_g)
+
+        return directed_graphs
+
+
+if __name__ == '__main__':
+    import serifxml3
+    d = serifxml3.Document("/nfs/raid83/u13/caml/users/mselvagg_ad/data/ACE_parsed/dev/AFP_ENG_20030305.0918.xml")
+    GB = GraphBuilder()
+    graphs = GB.serif_doc_to_networkx_per_sentence(d)
+
+    undirected_graphs = GB.convert_directed_to_undirected(graphs)
+    directed_graphs = GB.convert_undirected_to_directed(undirected_graphs)
+    assert (graphs[0].nodes(data=True) == directed_graphs[0].nodes(data=True))
+    for a, b in zip(graphs[0].edges(data=True), directed_graphs[0].edges(data=True)):
+        assert(a==b)
+
+    # n_v2n, n_n2v, e_v2n, e_n2v = GB.numerize_attribute_values(graphs)
+    # graphs_prime = GB.denumerize_graphs(GB.numerize_graphs(graphs=graphs, node_v2n=n_v2n, edge_v2n=e_v2n), n_n2v, e_n2v)

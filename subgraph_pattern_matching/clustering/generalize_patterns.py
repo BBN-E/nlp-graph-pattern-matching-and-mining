@@ -4,29 +4,25 @@ import json
 import os
 import operator
 import enum
-from constants.common.attrs.node.node_attrs import NodeAttrs
-from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 
+import numpy as np
+from collections import Counter
+from networkx.algorithms import isomorphism
+
+from io_utils.io_utils import deserialize_patterns, serialize_patterns, create_debug_graphs
+from constants.common.attrs.edge.edge_attrs import EdgeAttrs
+from constants.common.attrs.node.node_attrs import NodeAttrs
+from patterns.pattern import Pattern
 from view_utils.graph_viewer import GraphViewer
 from graph_builder import GraphBuilder
 from utils.expand_graph import expand_graph, compress_graph
-from io_utils.io_utils import deserialize_patterns, serialize_patterns
-import numpy as np
-from patterns.pattern import Pattern
-from collections import Counter
-from networkx.algorithms import isomorphism
-from gspan_mining.gspan import gSpan
-
-from constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from constants.common.attrs.node.node_attrs import NodeAttrs
-from constants.common.types.edge_types import EdgeTypes
-from constants.common.types.node_types import NodeTypes
 
 class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()
     MajorityWins = enum.auto()
     GSpan = enum.auto()
     CentralGraph = enum.auto()
+    SPMiner = enum.auto()
 
 
 # Returns the index of the largest graph in each cluster
@@ -267,6 +263,7 @@ def majority_wins_strategy(patterns_list, labels_path):
 
 
 def gspan_strategy(args, pattern_list):
+    from gspan_mining.gspan import gSpan
 
     grid_search = pattern_list[0].grid_search
     category = pattern_list[0].category
@@ -278,6 +275,7 @@ def gspan_strategy(args, pattern_list):
                min_num_vertices=args.min_num_vertices,
                max_num_vertices=args.max_num_vertices,
                is_undirected=False, where=False)
+    gs.expanded = True
 
     expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
 
@@ -304,7 +302,7 @@ def gspan_strategy(args, pattern_list):
             gv.prepare_networkx_for_visualization(support_g_networkx)
             gv.visualize_networkx_graph(support_g_networkx, html_file, sentence_text=str(support_G.gid))
 
-        P = Pattern(f"gSpan_{i}", compress_graph(G),
+        P = Pattern(f"gSpan_{j}", compress_graph(G),
                     [NodeAttrs.node_type],
                     [EdgeAttrs.edge_type],
                     grid_search=grid_search,
@@ -316,6 +314,56 @@ def gspan_strategy(args, pattern_list):
         gv.visualize_networkx_graph(G, html_file, sentence_text=text)
 
     return [gspan_pattern_list]
+
+def spminer_strategy(args, pattern_list):
+    from subgraph_mining.decoder import pattern_growth
+    from subgraph_mining.config import parse_decoder
+    from subgraph_matching.config import parse_encoder
+
+    pattern_kwargs = {'node_attrs': pattern_list[0]._node_attrs, 'edge_attrs': pattern_list[0]._edge_attrs,
+                      'grid_search': pattern_list[0].grid_search, 'category': pattern_list[0].category}
+
+    expanded_graphs = [expand_graph(pattern.pattern_graph, digraph=False) for pattern in pattern_list]
+    node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=expanded_graphs)
+
+    dataset = GraphBuilder.numerize_graphs(graphs=expanded_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
+
+    # import json
+    # with open(os.path.join(args.output, "output_attr_value_id_mapping.json"), 'w') as f:
+    #     json.dump({
+    #         'node_v2n': dict(node_v2n),
+    #         'node_n2v': dict(node_n2v),
+    #         'edge_v2n': dict(edge_v2n),
+    #         'edge_n2v': dict(edge_n2v),
+    #     }, f, sort_keys=True, indent=4)
+
+    parser = argparse.ArgumentParser()
+    parse_encoder(parser)
+    parse_decoder(parser)
+    spminer_args = parser.parse_args("")
+
+    plots_dir = os.path.join(args.output, "plots/cluster")
+    if not os.path.exists(plots_dir):
+        os.makedirs(plots_dir)
+
+    with open(args.spminer_config, 'r') as f:
+        spminer_config = json.load(f)
+
+    argparse_dict = vars(spminer_args)
+    argparse_dict.update(spminer_config)
+    argparse_dict['plots_dir'] = plots_dir
+    argparse_dict['out_path'] = os.path.join(args.output, "results.pkl")
+
+    out_graphs = pattern_growth(dataset, 'graph', spminer_args)
+
+    denumerized_graphs = GraphBuilder.denumerize_graphs(out_graphs, node_n2v=node_n2v, edge_n2v=edge_n2v)
+    generalized_patterns = []
+    for i, pattern_graph in enumerate(denumerized_graphs):
+        pattern = Pattern(pattern_id=i, pattern_graph=compress_graph(pattern_graph), **pattern_kwargs)
+        generalized_patterns.append(pattern)
+
+    return [generalized_patterns]
+
 
 def main(args):
     graph_viewer = GraphViewer()
@@ -336,6 +384,8 @@ def main(args):
         generalized_patterns_lists = gspan_strategy(args, pattern_list)
     elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.CentralGraph:
         generalized_patterns_lists = central_graph_strategy(pattern_list, args.distance_matrix, args.labels)
+    elif GeneralizationStrategy[args.strategy] == GeneralizationStrategy.SPMiner:
+        generalized_patterns_lists = spminer_strategy(args, pattern_list)
     else:
         raise NotImplementedError("Generalization strategy {} not implemented".format(args.strategy))
 
@@ -377,6 +427,7 @@ if __name__ == '__main__':
     parser.add_argument('--min_support', type=int, default=40, help="Minimum number of supporting graphs for gspan")
     parser.add_argument('--min_num_vertices', type=int, default=7, help="Minimum number of vertices in gspan pattern")
     parser.add_argument('--max_num_vertices', type=float, default=float('inf'), help="Maximum number of vertices in gspan pattern")
+    parser.add_argument('--spminer_config', type=str, default=None, help="Path to config json for SPMiner")
 
     args = parser.parse_args()
 

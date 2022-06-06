@@ -1,11 +1,10 @@
 import networkx as nx
+from networkx.readwrite import json_graph
+
 from match_utils.node_match_functions import node_multiple_attrs_match, node_attr_match, node_type_match
 from match_utils.edge_match_functions import edge_multiple_attrs_match, edge_attr_match, edge_type_match
-from networkx.readwrite import json_graph
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.attrs.node.node_attrs import NodeAttrs
-
-
 
 class Pattern():
 
