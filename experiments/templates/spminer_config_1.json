@@ -30,7 +30,7 @@
   "min_pattern_size": 10,
   "max_pattern_size": 30,
   "min_neighborhood_size": 2,
-  "max_neighborhood_size": 30,
+  "max_neighborhood_size": 60,
   "search_strategy": "greedy",
   "out_batch_size": 10
 }
