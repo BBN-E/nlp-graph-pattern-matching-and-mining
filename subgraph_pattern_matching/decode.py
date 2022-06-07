@@ -104,6 +104,9 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         pattern_id = pattern.pattern_id
         # logging.info(pattern_id)
 
+        if len(pattern.pattern_graph.edges) <= 1:
+            continue
+
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(nx_graph, pattern.pattern_graph,
                                                                    node_match=pattern.node_match,
                                                                    edge_match=pattern.edge_match)

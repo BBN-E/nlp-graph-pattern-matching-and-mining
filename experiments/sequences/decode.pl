@@ -79,7 +79,7 @@ foreach my $pattern_file (@patterns_by_config) {
                                             SGE_VIRTUAL_FREE => ["4G"]
                                         },
                                ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/decode.py -i $p->{INPUT_CORPUS} " .
-                               "-p $p->{PATTERNS_PATH} -m --stripe $i --num_batches $p->{NUM_BATCHES} -o $grid_dir/$i.pkl " .
+                               "-p $pattern_file -m --stripe $i --num_batches $p->{NUM_BATCHES} -o $grid_dir/$i.pkl " .
                                "--config $pattern_config"]);
        push(@find_matches_jobs, $find_matches_job);
     }
