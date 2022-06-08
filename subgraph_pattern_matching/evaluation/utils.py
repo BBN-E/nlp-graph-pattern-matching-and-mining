@@ -78,12 +78,6 @@ def serif_sentence_to_ner_bio_list(serif_sentence, annotation_scheme=AnnotationS
             mention_bio = []
             if mention.tokens:
                 for i in range(len(mention.tokens)):
-                    # if i == 0:
-                    #     if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
-                    #         mention_bio.append(f'B-{mention.entity_type}')
-                    #     else:  # 'identification'
-                    #         mention_bio.append('B')
-                    # else:
                     if annotation_scheme == AnnotationScheme.IDENTIFICATION_CLASSIFICATION:
                         mention_bio.append(f'I-{mention.entity_type}')
                     else:  # identification

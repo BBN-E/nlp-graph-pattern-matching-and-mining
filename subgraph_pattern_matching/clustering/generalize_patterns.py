@@ -9,7 +9,7 @@ import numpy as np
 from collections import Counter
 from networkx.algorithms import isomorphism
 
-from io_utils.io_utils import deserialize_patterns, serialize_patterns, create_debug_graphs
+from io_utils.io_utils import deserialize_patterns, serialize_patterns
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from patterns.pattern import Pattern
@@ -252,6 +252,9 @@ def majority_wins_strategy(patterns_list, labels_path):
                 stripped_graph.nodes[id][attr] = value
             elif type == "edge":
                 stripped_graph.edges[id][attr] = value
+
+        if len(stripped_graph.edges) <= 1:
+            continue
 
         grid_search = patterns_list[0].grid_search
         category = patterns_list[0].category
