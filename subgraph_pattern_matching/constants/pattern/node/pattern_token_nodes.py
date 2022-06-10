@@ -5,7 +5,7 @@ from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
 from constants.common.types.node_types import NodeTypes
 
-from constants.special_symbol import DISJUNCTION
+from constants.special_symbols import DISJUNCTION
 
 
 class PatternTokenNodes(PatternNodes):
