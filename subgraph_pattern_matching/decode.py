@@ -277,7 +277,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--per_sentence', action='store_true', help='whether to create nx graphs per individual sentence '
                                                                     'or for entire document (depends on whether the serifxmls'
                                                                     'have document-level parses such as MDP/TDP or not)')
-    parser.add_argument('--isomorphm', action='store_true', help='whether to apply subgraph isomorphism instead of'
+    parser.add_argument('--isomorphism', action='store_true', help='whether to apply subgraph isomorphism instead of'
                                                             'default subgraph monomorphism during decoding')
     parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
                         default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')

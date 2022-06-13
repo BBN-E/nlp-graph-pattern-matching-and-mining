@@ -61,32 +61,43 @@ dojobs();
 
 my @patterns_by_config = glob ("$config_splits/*");
 
+my @morphism_modes = @{$p->{ISOMORPHISM_CONFIG}};
 
 foreach my $pattern_file (@patterns_by_config) {
-    my @find_matches_jobs = ();
+    foreach my $morphism_mode (@morphism_modes) {
+        if ($morphism_mode eq "isomorphism") {
+            my $isomorphism_command = "--isomorphism";
+        } else {
+            my $isomorphism_command = " ";
+        }
 
-    (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
+        my @find_matches_jobs = ();
 
-    my $grid_dir = "$matches_dir/${pattern_config}";
+        (my $pattern_config = basename($pattern_file)) =~ s/\.[^.]+$//;
 
-    my $create_grid_output_dirs = runjobs(
-        [], "$JOB_NAME/$pattern_config/create_grid_output_dirs", { SCRIPT => 1 },
-        "mkdir -p $grid_dir");
+        my $grid_dir = "$matches_dir/$morphism_mode/${pattern_config}";
 
-    for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
-        my $find_matches_job = runjobs([$split_by_config_job], "$JOB_NAME/$pattern_config/$i/find_matches",
-                                        {
-                                            SGE_VIRTUAL_FREE => ["4G"]
-                                        },
-                               ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/decode.py -i $p->{INPUT_CORPUS} " .
-                               "-p $pattern_file $p->{ISOMORPHISM} -m --stripe $i --num_batches $p->{NUM_BATCHES} " .
-                               "-o $grid_dir/$i.pkl --config $pattern_config"]);
-       push(@find_matches_jobs, $find_matches_job);
+        my $create_grid_output_dirs = runjobs(
+            [], "$JOB_NAME/$pattern_config/$morphism_mode/create_grid_output_dirs", { SCRIPT => 1 },
+            "mkdir -p $grid_dir");
+
+        for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
+            my $find_matches_job = runjobs([$split_by_config_job], "$JOB_NAME/$pattern_config/$morphism_mode/$i/find_matches",
+                                            {
+                                                SGE_VIRTUAL_FREE => ["4G"]
+                                            },
+                                   ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/decode.py -i $p->{INPUT_CORPUS} " .
+                                   "-p $pattern_file $isomorphism_command -m --stripe $i --num_batches $p->{NUM_BATCHES} " .
+                                   "-o $grid_dir/$i.pkl --config $pattern_config"]);
+           push(@find_matches_jobs, $find_matches_job);
+        }
+
+        my $evaluate_matches_job = runjobs(\@find_matches_jobs, "$JOB_NAME/$pattern_config/$morphism_mode/evaluate_matches", { SGE_VIRTUAL_FREE => ["8G"] },
+                                       ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/evaluate.py -i $p->{INPUT_CORPUS} " .
+                                        "-m $grid_dir -e $p->{EVALUATION_CORPUS} -a $p->{ANNOTATION_SCHEME}"]);
+
     }
 
-    my $evaluate_matches_job = runjobs(\@find_matches_jobs, "$JOB_NAME/$pattern_config/evaluate_matches", { SGE_VIRTUAL_FREE => ["8G"] },
-                                   ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/evaluate.py -i $p->{INPUT_CORPUS} " .
-                                    "-m $grid_dir -e $p->{EVALUATION_CORPUS} -a $p->{ANNOTATION_SCHEME}"]);
 
 }
 
