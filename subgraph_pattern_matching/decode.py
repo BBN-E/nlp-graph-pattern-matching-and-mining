@@ -88,7 +88,7 @@ def serif_doc_to_nx_graphs(serif_doc, graph_builder, per_sentence=False):
 
 
 # @timer
-def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, vis_path=None):
+def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence, isomorphism=False, vis_path=None):
     '''
 
     :param nx_graph:
@@ -110,7 +110,10 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         pattern_matcher = nx.algorithms.isomorphism.DiGraphMatcher(nx_graph, pattern.pattern_graph,
                                                                    node_match=pattern.node_match,
                                                                    edge_match=pattern.edge_match)
-        pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
+        if isomorphism:
+            pattern_match_dicts = [g for g in pattern_matcher.subgraph_isomorphisms_iter()]
+        else:  # monomorphism
+            pattern_match_dicts = [g for g in pattern_matcher.subgraph_monomorphisms_iter()]
 
         # TODO create on-match-filter API that is not ad-hoc
         ###########################################################################################################
@@ -274,6 +277,8 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--per_sentence', action='store_true', help='whether to create nx graphs per individual sentence '
                                                                     'or for entire document (depends on whether the serifxmls'
                                                                     'have document-level parses such as MDP/TDP or not)')
+    parser.add_argument('--isomorphism', action='store_true', help='whether to apply subgraph isomorphism instead of'
+                                                            'default subgraph monomorphism during decoding')
     parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
                         default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
