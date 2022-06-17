@@ -1,11 +1,8 @@
-import json
 import numpy as np
 import argparse
 
-from networkx.readwrite import json_graph
-
-from distance_metrics import normalized_graph_edit_distance, create_distance_matrix, approximate_graph_edit_distance
-from io_utils.io_utils import deserialize_patterns
+from distance_metrics import create_distance_matrix, approximate_graph_edit_distance
+from utils.io_utils import deserialize_patterns
 
 def main(args):
     local_patterns = deserialize_patterns(args.input_graphs, is_file_path=True)

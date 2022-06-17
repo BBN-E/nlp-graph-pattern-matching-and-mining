@@ -1,5 +1,5 @@
 import argparse
-from io_utils.io_utils import combine_pattern_lists
+from utils.io_utils import combine_pattern_lists
 
 
 def main(args):

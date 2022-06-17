@@ -2,21 +2,6 @@ import numpy as np
 import argparse
 import os
 
-
-def main(args):
-
-    distance_matrices = []
-    for index in range(args.num_batches):
-        with open(os.path.join(args.input_dir_path, "dist_matrix_split_{}".format(index)), 'rb') as f:
-            dist_matrix = np.load(f)
-            distance_matrices.append(dist_matrix)
-
-    combined_distance_matrix = combine_distance_matrices(distance_matrices, args.num_batches)
-
-    with open(args.output_file_path, 'wb') as f:
-        np.save(f, combined_distance_matrix)
-
-
 def combine_distance_matrices(distance_matrices, num_batches):
     row_len = distance_matrices[0].shape[0]
 
@@ -30,6 +15,18 @@ def combine_distance_matrices(distance_matrices, num_batches):
 
     return combined_distance_matrix
 
+def main(args):
+
+    distance_matrices = []
+    for index in range(args.num_batches):
+        with open(os.path.join(args.input_dir_path, "dist_matrix_split_{}".format(index)), 'rb') as f:
+            dist_matrix = np.load(f)
+            distance_matrices.append(dist_matrix)
+
+    combined_distance_matrix = combine_distance_matrices(distance_matrices, args.num_batches)
+
+    with open(args.output_file_path, 'wb') as f:
+        np.save(f, combined_distance_matrix)
 
 if __name__ == '__main__':
 

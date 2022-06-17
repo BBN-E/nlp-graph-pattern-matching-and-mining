@@ -8,15 +8,6 @@ import penman
 from penman import surface
 from penman.surface import Alignment
 
-from constants.common.types.node_types import NodeTypes
-from constants.common.attrs.node.node_attrs import NodeAttrs
-from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
-from constants.common.attrs.node.modal_node_attrs import ModalNodeAttrs
-from constants.common.types.edge_types import EdgeTypes
-from constants.common.attrs.edge.edge_attrs import EdgeAttrs
-from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
-from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
-
 from graph_builder import GraphBuilder
 from graph_viewer import GraphViewer, token_sequence_to_networkx
 
@@ -25,22 +16,22 @@ def graph_view(serif_doc, workspace):
     GV = GraphViewer()
 
     mdp_graph = GB.modal_dependency_parse_to_networkx(serif_doc)
-    GV.prepare_mdp_networkx_for_visualization(mdp_graph)
+    GV.prepare_networkx_for_visualization(mdp_graph)
     GV.visualize_networkx_graph(mdp_graph, os.path.join(workspace,"mdp_graph.html"))
 
     for i, sentence in enumerate(serif_doc.sentences):
         sdp_graph = GB.syntactic_dependency_parse_to_networkx(sentence)
-        GV.prepare_sdp_networkx_for_visualization(sdp_graph, root_level=0)
+        GV.prepare_networkx_for_visualization(sdp_graph, root_level=0)
         GV.visualize_networkx_graph(sdp_graph, os.path.join(workspace,"sdp_{:02d}_graph.html".format(i)),
                                     sentence_text=sentence.text)
 
         amr_graph = GB.amr_parse_to_networkx(sentence)
-        GV.prepare_amr_networkx_for_visualization(amr_graph, root_level=0)
+        GV.prepare_networkx_for_visualization(amr_graph, root_level=0)
         GV.visualize_networkx_graph(amr_graph, os.path.join(workspace,"amr_{:02d}_graph.html".format(i)),
                                     sentence_text=sentence.text)
 
         tok_graph = token_sequence_to_networkx(sentence)
-        GV.prepare_tok_networkx_for_visualization(tok_graph, root_level=0)
+        GV.prepare_networkx_for_visualization(tok_graph, root_level=0)
         GV.visualize_networkx_graph(tok_graph, os.path.join(workspace,"tok_{:02d}_graph.html".format(i)))
 
         mdp_filter = GV.filter_mdp_networkx_by_sentence(mdp_graph, tok_graph)

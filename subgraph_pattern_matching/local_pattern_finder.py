@@ -3,11 +3,10 @@ import networkx as nx
 from tqdm import tqdm
 import argparse
 import re
-from annotation.annotation_base import FrameAnnotationTypes
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.types.edge_types import EdgeTypes
-from io_utils.io_utils import serialize_patterns, serialize_pattern_graphs
+from utils.io_utils import serialize_patterns, serialize_graphs
 from patterns.pattern import Pattern
 
 class ParseTypes(Enum):
@@ -60,9 +59,8 @@ class LocalPatternFinder():
         pass
 
 
-    def return_k_hop_neighborhood_of_node(self, G, node_id, k=1, parse_types=[ParseTypes.DP], search_direction=DAGSearchDirection.BOTH):
+    def return_k_hop_neighborhood_of_node(self, G, node_id, k=1, parse_types_to_prune=None, search_direction=DAGSearchDirection.BOTH):
         '''
-
 
         :param G: networkx.classes.digraph.DiGraph
         :param node_id: str, source node id in G
@@ -76,7 +74,6 @@ class LocalPatternFinder():
         # nx.single_source_shortest_path returns dictionary from target node id to list of node ids corresponding to the
         #  shortest path from source to target; we only need to know which nodes are in the k-hop neighborhood of source
         #  node so we'll take the keys of that dictionary.
-
 
         if search_direction == DAGSearchDirection.BOTH:
             down_nodes = set(nx.single_source_shortest_path(G, node_id, cutoff=k).keys())
@@ -92,15 +89,16 @@ class LocalPatternFinder():
         # get subgraph induced by nodes in k-hop neighborhood of source node
         neighborhood_subgraph = G.subgraph(neighborhood_nodes)
 
-        # # prune neighborhood subgraph by specified parse types (remove all other edges)
-        # pruned_neighborhood_subgraph = self.get_edge_induced_subgraph_for_parse_types(neighborhood_subgraph,
-        #                                                                               parse_types=parse_types)
+        # prune neighborhood subgraph by specified parse types (remove all other edges)
+        if parse_types_to_prune != None:
+            pruned_neighborhood_subgraph = self.get_edge_induced_subgraph_for_parse_types(neighborhood_subgraph, parse_types=parse_types)
+        else:
+            pruned_neighborhood_subgraph = neighborhood_subgraph
 
-        # return pruned_neighborhood_subgraph
-        return neighborhood_subgraph
+        return pruned_neighborhood_subgraph
 
 
-    def get_edge_induced_subgraph_for_parse_types(self, G, parse_types=[ParseTypes.DP]):
+    def get_edge_induced_subgraph_for_parse_types(self, G, parse_types):
         '''
 
         :param G:
@@ -121,7 +119,9 @@ class LocalPatternFinder():
 
 
     def get_annotation_subgraphs(self, annotations, k, parse_types, search_direction, annotation_category=None, all_attrs=False,
-                                 return_graphs_only=False):
+                                 return_graphs_only=False, prune_subgraphs=False):
+
+        parse_types_to_prune = parse_types if prune_subgraphs else None
 
         annotation_patterns_for_configuration = []
 
@@ -141,7 +141,7 @@ class LocalPatternFinder():
                     self.return_k_hop_neighborhood_of_node(G=ann.networkx_graph,
                                                            node_id=token_node_id,
                                                            k=k,
-                                                           parse_types=parse_types,
+                                                           parse_types_to_prune=parse_types_to_prune,
                                                            search_direction=search_direction))
 
             ann_k_hop_neighborhood = nx.algorithms.operators.compose_all(token_k_hop_neighborhoods)
@@ -211,7 +211,8 @@ class LocalPatternFinder():
                 for search_direction in tqdm(search_directions, desc='search combinations', position=2, leave=False):
 
                     config = (k, tuple(parse_types), search_direction)
-                    annotation_subgraphs_for_configuration = self.get_annotation_subgraphs(annotations, k, parse_types, search_direction)
+                    annotation_subgraphs_for_configuration = self.get_annotation_subgraphs(annotations, k, parse_types, search_direction,
+                                                                                           prune_subgraphs=True)
 
                     config_to_annotation_subgraphs[config] = annotation_subgraphs_for_configuration
 
@@ -271,7 +272,7 @@ def main(args):
             node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=graphs)
             graphs = GraphBuilder.numerize_graphs(graphs=graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
 
-        json_dump = serialize_pattern_graphs(graphs)
+        json_dump = serialize_graphs(graphs)
         with open(args.output, 'w') as f:
             f.write(json_dump)
 
