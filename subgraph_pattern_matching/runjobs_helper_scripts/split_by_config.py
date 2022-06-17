@@ -1,5 +1,5 @@
 
-from io_utils.io_utils import split_by_config
+from utils.io_utils import split_by_config
 import argparse
 
 def main(args):

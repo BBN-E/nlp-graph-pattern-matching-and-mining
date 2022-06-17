@@ -2,19 +2,21 @@ import argparse
 import logging
 import pickle
 import os
+
+import serifxml3
+
 from match_wrapper import MatchWrapper, MatchCorpus
 from patterns.pattern import Pattern
-import serifxml3
+from evaluation.utils import AnnotationScheme
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's default logging (logging.WARNING)
 
 
-def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme):
+def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
     if evaluation_corpus == 'CONLL_ENGLISH':
 
         from evaluation.datasets.conll import score_conll
-        from evaluation.utils import AnnotationScheme
         score_conll(matches_by_serif_id=matches_by_serif_id,
                     SPLIT='TEST',
                     annotation_scheme=AnnotationScheme[annotation_scheme])
@@ -22,7 +24,6 @@ def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme):
     elif evaluation_corpus == 'ACE_ENGLISH':
 
         from evaluation.datasets.ace import score_ace
-        from evaluation.utils import AnnotationScheme
         score_ace(matches_by_serif_id=matches_by_serif_id,
                   SPLIT='TEST',
                   annotation_scheme=AnnotationScheme[annotation_scheme])
@@ -30,7 +31,6 @@ def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme):
     elif evaluation_corpus == "TACRED":
 
         from evaluation.datasets.tacred import score_tacred
-        from evaluation.utils import AnnotationScheme
         score_tacred(matches_by_serif_id=matches_by_serif_id,
                   SPLIT='TEST',
                   annotation_scheme=AnnotationScheme[annotation_scheme])

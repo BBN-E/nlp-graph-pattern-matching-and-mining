@@ -55,7 +55,7 @@ my $create_output_dirs = runjobs(
 
 my $split_by_config_job = runjobs(
     [$create_output_dirs], "$JOB_NAME/split_by_config", { SGE_VIRTUAL_FREE => ["4G"]},
-    "$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/evaluation/split_by_config.py -i $p->{PATTERNS_PATH} -o $config_splits");
+    "$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/split_by_config.py -i $p->{PATTERNS_PATH} -o $config_splits");
 
 dojobs();
 

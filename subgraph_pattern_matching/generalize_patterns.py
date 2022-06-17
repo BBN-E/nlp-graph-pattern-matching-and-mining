@@ -9,111 +9,22 @@ import numpy as np
 from collections import Counter
 from networkx.algorithms import isomorphism
 
-from io_utils.io_utils import deserialize_patterns, serialize_patterns
+from utils.io_utils import deserialize_patterns, serialize_patterns
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from patterns.pattern import Pattern
 from view_utils.graph_viewer import GraphViewer
 from graph_builder import GraphBuilder
-from utils.expand_graph import expand_graph, compress_graph
 
 class GeneralizationStrategy(enum.Enum):
     Ungeneralized = enum.auto()
+    CentralGraph = enum.auto()
     MajorityWins = enum.auto()
     GSpan = enum.auto()
-    CentralGraph = enum.auto()
     SPMiner = enum.auto()
 
-
-# Returns the index of the largest graph in each cluster
-def get_biggest_graph_per_cluster(labels, digraph_list):
-    cluster_lists = {}
-
-    for i, label in enumerate(labels):
-        if label not in cluster_lists:
-            cluster_lists[label] = []
-        cluster_lists[label].append(i)
-
-    cluster_num_to_largest_graph_index = {}
-
-    for cluster_num, cluster_list in cluster_lists.items():
-
-        largest_graph_index = 0
-        largest_graph_size = -1
-        for graph_index in cluster_list:
-            if len(digraph_list[graph_index]) > largest_graph_size:
-                largest_graph_index = graph_index
-                largest_graph_size = len(digraph_list[graph_index])
-
-        cluster_num_to_largest_graph_index[cluster_num] = largest_graph_index
-
-    return cluster_num_to_largest_graph_index
-
-
-# Returns the index of the most central graph in each cluster
-def get_central_graph_per_cluster(labels, distance_matrix):
-
-    cluster_lists = {}
-
-    for i, label in enumerate(labels):
-        if label not in cluster_lists:
-            cluster_lists[label] = []
-        cluster_lists[label].append(i)
-
-    cluster_num_to_central_indexes = {}
-
-    for cluster_num, cluster_list in cluster_lists.items():
-
-        graph_total_distance_tuple_list = []
-
-        for graph_index in cluster_list:
-
-            row = distance_matrix[graph_index]
-            total_distance = 0
-            for g_index in cluster_list:
-                total_distance += row[g_index]
-
-            graph_total_distance_tuple_list.append((graph_index, total_distance))
-
-        graph_total_distance_tuple_list.sort(key=operator.itemgetter(1))
-
-        cluster_num_to_central_indexes[cluster_num] = graph_total_distance_tuple_list[:10]
-
-    return cluster_num_to_central_indexes
-
-
-def find_pattern_for_cluster(central_pattern, pattern_list):
-    # Finds the number of graphs in graph_list isomorphic to each possible subgraph of central_graph
-    # Used to generalize a pattern that applies to most nodes in a cluster
-
-    selected_patterns = []
-    central_graph = central_pattern.pattern_graph
-
-    for index, node_set in enumerate(nx.weakly_connected_components(central_graph)):
-        subgraph_pattern = central_graph.subgraph(node_set)
-
-        if len(subgraph_pattern.nodes) < 5:
-            continue
-
-        num_matches = 0
-        for pattern in pattern_list:
-            matcher = nx.algorithms.isomorphism.DiGraphMatcher(pattern.pattern_graph, subgraph_pattern,
-                                                               pattern.node_match, pattern.edge_match)
-            if matcher.subgraph_is_isomorphic():
-                num_matches += 1
-
-        if num_matches <= 5:
-            continue
-
-        new_pattern = Pattern("selected_pattern_{}_{}".format(index, num_matches), subgraph_pattern,
-                              central_pattern._node_attrs, central_pattern._edge_attrs,
-                              grid_search=central_pattern.grid_search, category=central_pattern.category)
-        selected_patterns.append(new_pattern)
-
-    return selected_patterns
-
-
 def central_graph_strategy(patterns_list, distance_matrix_path, labels_path):
+    from clustering.central_graph_utils import get_central_graph_per_cluster, find_pattern_for_cluster
 
     with open(distance_matrix_path, 'rb') as f:
         distance_matrix = np.load(f)
@@ -280,7 +191,7 @@ def gspan_strategy(args, pattern_list):
                is_undirected=False, where=False)
     gs.expanded = True
 
-    expanded_graphs = [expand_graph(pattern.pattern_graph) for pattern in pattern_list]
+    expanded_graphs = [GraphBuilder.expand_graph(pattern.pattern_graph) for pattern in pattern_list]
 
     gs._read_graphs_from_networkx(expanded_graphs)
     gs.run()
@@ -305,7 +216,7 @@ def gspan_strategy(args, pattern_list):
             gv.prepare_networkx_for_visualization(support_g_networkx)
             gv.visualize_networkx_graph(support_g_networkx, html_file, sentence_text=str(support_G.gid))
 
-        P = Pattern(f"gSpan_{j}", compress_graph(G),
+        P = Pattern(f"gSpan_{j}", GraphBuilder.compress_graph(G),
                     [NodeAttrs.node_type],
                     [EdgeAttrs.edge_type],
                     grid_search=grid_search,
@@ -326,19 +237,10 @@ def spminer_strategy(args, pattern_list):
     pattern_kwargs = {'node_attrs': pattern_list[0]._node_attrs, 'edge_attrs': pattern_list[0]._edge_attrs,
                       'grid_search': pattern_list[0].grid_search, 'category': pattern_list[0].category}
 
-    expanded_graphs = [expand_graph(pattern.pattern_graph, digraph=False) for pattern in pattern_list]
+    expanded_graphs = [GraphBuilder.expand_graph(pattern.pattern_graph, digraph=False) for pattern in pattern_list]
     node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=expanded_graphs)
 
     dataset = GraphBuilder.numerize_graphs(graphs=expanded_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
-
-    # import json
-    # with open(os.path.join(args.output, "output_attr_value_id_mapping.json"), 'w') as f:
-    #     json.dump({
-    #         'node_v2n': dict(node_v2n),
-    #         'node_n2v': dict(node_n2v),
-    #         'edge_v2n': dict(edge_v2n),
-    #         'edge_n2v': dict(edge_n2v),
-    #     }, f, sort_keys=True, indent=4)
 
     parser = argparse.ArgumentParser()
     parse_encoder(parser)
@@ -362,7 +264,7 @@ def spminer_strategy(args, pattern_list):
     denumerized_graphs = GraphBuilder.denumerize_graphs(out_graphs, node_n2v=node_n2v, edge_n2v=edge_n2v)
     generalized_patterns = []
     for i, pattern_graph in enumerate(denumerized_graphs):
-        pattern = Pattern(pattern_id=i, pattern_graph=compress_graph(pattern_graph), **pattern_kwargs)
+        pattern = Pattern(pattern_id=i, pattern_graph=GraphBuilder.compress_graph(pattern_graph), **pattern_kwargs)
         generalized_patterns.append(pattern)
 
     return [generalized_patterns]
@@ -400,10 +302,10 @@ def main(args):
 
         if GeneralizationStrategy[args.strategy] == GeneralizationStrategy.MajorityWins:
             for i, pattern in enumerate(generalized_patterns_list):
-                graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
-                graph_viewer.prepare_amr_networkx_for_visualization(pattern.pattern_graph)
                 html_file = os.path.join(visualizations_dir, "pattern_graph_{}_{}.html".format(cluster_num, i))
+                graph_viewer.prepare_networkx_for_visualization(pattern.pattern_graph)
                 graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file=html_file)
+
 
     examples_dir = os.path.join(visualizations_dir, "examples")
     if not os.path.exists(examples_dir):
@@ -411,9 +313,8 @@ def main(args):
 
     # Get 100 sample graphs to use as visualizations
     for i, pattern in enumerate(pattern_list[0::10]):
-        graph_viewer.prepare_amr_networkx_for_visualization(pattern.pattern_graph)
-        graph_viewer.prepare_mdp_networkx_for_visualization(pattern.pattern_graph)
         html_file = os.path.join(examples_dir, "graph_{}.html".format(pattern.pattern_id))
+        graph_viewer.prepare_networkx_for_visualization(pattern.pattern_graph)
         graph_viewer.visualize_networkx_graph(pattern.pattern_graph, html_file=html_file)
         if i > 100:
             break
