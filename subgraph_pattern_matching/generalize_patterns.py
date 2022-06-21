@@ -240,12 +240,16 @@ def spminer_strategy(args, pattern_list):
 
     dataset = GraphBuilder.numerize_graphs(graphs=expanded_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
     anchor_attr_num_id = node_v2n['label'][True]  # TODO change attr value from True to 'annotated'?
+    event_trigger_num_id = edge_v2n['label']['eventTrigger']
+    event_argument_num_id = edge_v2n['label']['eventArgument']
 
     spminer_args = argparse.Namespace()
     with open(args.spminer_config, 'r') as f:
         spminer_args.__dict__.update(json.load(f))
     spminer_args.__dict__['out_path'] = os.path.join(args.output, "results.pkl")
     spminer_args.__dict__['anchor_attr_num_id'] = anchor_attr_num_id
+    spminer_args.__dict__['event_trigger_attr_num_id'] = event_trigger_num_id
+    spminer_args.__dict__['event_argument_attr_num_id'] = event_argument_num_id
 
     out_graphs = pattern_growth(dataset, spminer_args)
 

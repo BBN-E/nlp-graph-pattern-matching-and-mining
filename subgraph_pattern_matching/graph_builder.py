@@ -670,10 +670,9 @@ class GraphBuilder():
     def expand_graph(graph, attributes_to_ignore=None, digraph=True):
 
         if attributes_to_ignore is None:
-            attributes_to_ignore = [EdgeAttrs.label, NodeAttrs.id,
-                                    TokenNodeAttrs.text, TokenNodeAttrs.upos,
+            attributes_to_ignore = [EdgeAttrs.label, NodeAttrs.id, NodeAttrs.annotated,
                                     TokenNodeAttrs.xpos, TokenNodeAttrs.index_in_doc,
-                                    TokenNodeAttrs.incoming_dep_rel]
+                                    TokenNodeAttrs.incoming_dep_rel, AMRNodeAttrs.varname],
         if digraph:
             expanded_graph = nx.DiGraph()
         else:
