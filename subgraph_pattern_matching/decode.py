@@ -185,7 +185,7 @@ def main(args):
     if args.config:
         GB = GraphBuilder(get_parse_type_kwargs(args.config))
     else:
-        GB = GraphBuilder()
+        GB = GraphBuilder(dp=True, amr=False, mdp=True, tdp=False)  # DP+MDP (for claim extraction) by default
 
     # create patterns
     if args.patterns_path:
