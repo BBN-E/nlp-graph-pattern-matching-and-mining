@@ -32,8 +32,7 @@ my $MIN_SUPPORT_VECTORS = "--min_support 10";
 my $MIN_NUM_VERTICES = "--min_num_vertices 10";
 my $MAX_NUM_VERTICES; # = "--max_num_vertices";
 
-my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_config.json",
-                              "$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_config_1.json");
+my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_nlp_config.json");
 
 
 return {
