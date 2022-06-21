@@ -230,9 +230,7 @@ def gspan_strategy(args, pattern_list):
     return [gspan_pattern_list]
 
 def spminer_strategy(args, pattern_list):
-    from subgraph_mining.decoder import pattern_growth
-    from subgraph_mining.config import parse_decoder
-    from subgraph_matching.config import parse_encoder
+    from nlp_subgraph_mining.decoder import pattern_growth
 
     pattern_kwargs = {'node_attrs': pattern_list[0]._node_attrs, 'edge_attrs': pattern_list[0]._edge_attrs,
                       'grid_search': pattern_list[0].grid_search, 'category': pattern_list[0].category}
@@ -241,25 +239,15 @@ def spminer_strategy(args, pattern_list):
     node_v2n, node_n2v, edge_v2n, edge_n2v = GraphBuilder.numerize_attribute_values(graphs=expanded_graphs)
 
     dataset = GraphBuilder.numerize_graphs(graphs=expanded_graphs, node_v2n=node_v2n, edge_v2n=edge_v2n)
+    anchor_attr_num_id = node_v2n['label'][True]  # TODO change attr value from True to 'annotated'?
 
-    parser = argparse.ArgumentParser()
-    parse_encoder(parser)
-    parse_decoder(parser)
-    spminer_args = parser.parse_args("")
-
-    plots_dir = os.path.join(args.output, "plots/cluster")
-    if not os.path.exists(plots_dir):
-        os.makedirs(plots_dir)
-
+    spminer_args = argparse.Namespace()
     with open(args.spminer_config, 'r') as f:
-        spminer_config = json.load(f)
+        spminer_args.__dict__.update(json.load(f))
+    spminer_args.__dict__['out_path'] = os.path.join(args.output, "results.pkl")
+    spminer_args.__dict__['anchor_attr_num_id'] = anchor_attr_num_id
 
-    argparse_dict = vars(spminer_args)
-    argparse_dict.update(spminer_config)
-    argparse_dict['plots_dir'] = plots_dir
-    argparse_dict['out_path'] = os.path.join(args.output, "results.pkl")
-
-    out_graphs = pattern_growth(dataset, 'graph', spminer_args)
+    out_graphs = pattern_growth(dataset, spminer_args)
 
     denumerized_graphs = GraphBuilder.denumerize_graphs(out_graphs, node_n2v=node_n2v, edge_n2v=edge_n2v)
     generalized_patterns = []
