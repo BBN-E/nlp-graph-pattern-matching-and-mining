@@ -56,7 +56,7 @@ def prepare_patterns():
 
 
 @timer
-def prepare_serialized_patterns(patterns_json_path='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json'):
+def prepare_serialized_patterns(patterns_json_path):
 
     with open(patterns_json_path, 'r') as f:
         json_patterns = json.load(f)

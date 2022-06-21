@@ -52,12 +52,13 @@ my @setup_jobs = ();
 my @annotations;
 
 if ($p->{SPLIT_BY_CATEGORY}) {
+    # retrieve categories if no category file provided
     my $annotation_categories_path = $p->{ANNOTATION_CATEGORIES};
 
     if (not($annotation_categories_path)) {
         $annotation_categories_path = "$expt_dir/annotation_categories.list";
         my $get_annotated_categories_job = runjobs([], "$JOB_NAME/get_annotated_categories", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
-                                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/annotation/get_annotation_categories.py " .
+                                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/get_annotation_categories.py " .
                                                      "--annotation_corpus $p->{ANNOTATION_CORPUS} --output $annotation_categories_path"]);
         push(@setup_jobs, $get_annotated_categories_job);
         dojobs();
@@ -73,6 +74,12 @@ if ($p->{SPLIT_BY_CATEGORY}) {
     @annotations = ("all_categories");
 }
 
+#"--all_attrs" if not using clustering
+my $all_attrs = "--all_attrs";
+if ($p->{CLUSTER_ALGORITHM}) {
+    $all_attrs = " ";
+}
+
 my @spminer_configs = @{$p->{SPMINER_CONFIGURATIONS}};
 my $config_size = scalar @spminer_configs;
 if ($config_size <= 0) {
@@ -84,7 +91,7 @@ for ($i=0; $i<$config_size; ++$i) {
     my $spm_config_path = $spminer_configs[$i];
 
     my $grid_config_dir;
-    if ($config_size > 1) {
+    if ($config_size > 1 and $p->{GENERALIZATION_STRATEGY} == "SPMiner") {
         $grid_config_dir = "$expt_dir/spminer_config_$i";
     } else {
         $grid_config_dir = "$expt_dir/grid_config";
@@ -125,7 +132,7 @@ for ($i=0; $i<$config_size; ++$i) {
                                                           ["mkdir -p $grid_config_dir"],
                                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
                                                            "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_local_patterns_path " .
-                                                           "--annotation_category $category $p->{ALL_ATTRS}"]);
+                                                           "--annotation_category $category $all_attrs"]);
 
                     # Only do clustering if cluster algorithm is set
                     if ($p->{CLUSTER_ALGORITHM}) {
@@ -153,14 +160,14 @@ for ($i=0; $i<$config_size; ++$i) {
                                                       "--output $grid_config_dir/labels.json --cluster_option $p->{CLUSTER_ALGORITHM} "]);
 
                         my $generalize_patterns_job = runjobs([$clustering_job], "$experiment_prefix/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
-                                     ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
+                                     ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/generalize_patterns.py  " .
                                      "--local_patterns_json $serialized_local_patterns_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
                                       "--labels $grid_config_dir/labels.json --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY} " .
                                       "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES}"]);
                         push(@generalized_patterns_jobs, $generalize_patterns_job);
                     } else {
                         my $generalize_patterns_job = runjobs([$find_local_patterns_job], "$experiment_prefix/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
-                                         ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/generalize_patterns.py  " .
+                                         ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/generalize_patterns.py  " .
                                          "--local_patterns_json $serialized_local_patterns_path --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY} " .
                                          "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES} --spminer_config $spm_config_path"]);
                         push(@generalized_patterns_jobs, $generalize_patterns_job);
@@ -175,7 +182,7 @@ for ($i=0; $i<$config_size; ++$i) {
 
     my $combine_pattern_lists_job = runjobs([$list_pattern_paths_job], "$JOB_NAME/$i/combine_pattern_paths",
                                            {SCRIPT => 1, SGE_VIRTUAL_FREE => ["4G"]},
-                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/combine_pattern_jsons.py " .
+                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/combine_pattern_jsons.py " .
                                             "--input_list $grid_config_dir/pattern_paths.list --output $grid_config_dir/all_patterns.json"]);
 }
 

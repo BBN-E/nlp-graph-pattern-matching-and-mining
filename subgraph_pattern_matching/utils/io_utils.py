@@ -3,17 +3,6 @@ from networkx.readwrite import json_graph
 from patterns.pattern import Pattern
 import os
 
-def combine_pattern_lists(json_dump_paths):
-    all_pattern_list = []
-    for json_dump_path in json_dump_paths:
-        pattern_list = deserialize_patterns(json_dump_path, is_file_path=True)
-        all_pattern_list.extend(pattern_list)
-
-    print(len(all_pattern_list))
-
-    json_dump = serialize_patterns(all_pattern_list)
-    return json_dump
-
 
 def serialize_patterns(pattern_list):
     json_data = []
@@ -41,16 +30,16 @@ def deserialize_patterns(json_dump, is_file_path=False):
     return pattern_list
 
 
-def serialize_pattern_graphs(pattern_graphs):
+def serialize_graphs(graphs):
     """
 
-    :param pattern_list: list[(networkx.classes.digraph.DiGraph]
+    :param graphs: list[(networkx.classes.digraph.DiGraph]
 
     :return json formatted str
     """
 
     json_data = []
-    for digraph in pattern_graphs:
+    for digraph in graphs:
         jgraph = json_graph.node_link_data(digraph)
         json_data.append(jgraph)
 
@@ -58,7 +47,14 @@ def serialize_pattern_graphs(pattern_graphs):
     return json_dump
 
 
-def deserialize_pattern_graphs(json_dump, is_file_path=False):
+def deserialize_graphs(json_dump, is_file_path=False):
+    """
+
+    :param json_dump: either a json dump in string format, or path to a json file
+    :param is_file_path: True if json_dump is a path
+
+    :return list[(networkx.classes.digraph.DiGraph]
+    """
 
     if is_file_path:
         with open(json_dump, 'r') as f:
@@ -66,15 +62,19 @@ def deserialize_pattern_graphs(json_dump, is_file_path=False):
     else:
         json_data = json.loads(json_dump)
 
-    pattern_graphs = []
+    graphs = []
     for jgraph in json_data:
         digraph = json_graph.node_link_graph(jgraph)
-        pattern_graphs.append(digraph)
+        graphs.append(digraph)
 
-    return pattern_graphs
+    return graphs
 
 
 def split_by_config(file_path, output_dir):
+    """
+    Splits a json file containing patterns into multiple json files by
+    each pattern's grid_search value.
+    """
 
     config_to_pattern_list = {}
 
@@ -90,3 +90,14 @@ def split_by_config(file_path, output_dir):
         with open(os.path.join(output_dir, config + ".json"), 'w') as f:
             f.write(serialized_patterns)
 
+
+def combine_pattern_lists(json_dump_paths):
+    all_pattern_list = []
+    for json_dump_path in json_dump_paths:
+        pattern_list = deserialize_patterns(json_dump_path, is_file_path=True)
+        all_pattern_list.extend(pattern_list)
+
+    print(len(all_pattern_list))
+
+    json_dump = serialize_patterns(all_pattern_list)
+    return json_dump

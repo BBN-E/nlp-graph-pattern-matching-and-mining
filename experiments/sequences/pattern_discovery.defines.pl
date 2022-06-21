@@ -11,8 +11,8 @@ my $PYTHON3= "env PYTHONPATH=$TEXT_OPEN_RELEASE:$SUBGRAPH_PATTERN_MATCHING_RELEA
     "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/gnn-2/bin/python";
 
 # CONLL_ENGLISH, ACE_ENGLISH, TACRED
-my $ANNOTATION_CORPUS = "ACE_ENGLISH";
-my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching/annotation/ontologies/ace.txt";
+my $ANNOTATION_CORPUS = "CONLL_ENGLISH";
+my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching/annotation/ontologies/conll_ner.txt";
 my $SPLIT_BY_CATEGORY = 1;
 
 # grid search parameters
@@ -20,6 +20,7 @@ my @K_VALUES = (5);
 my @SEARCH_DIRECTIONS = ("BOTH");
 my @PARSE_TYPE_COMBINATIONS = ("AMR", "AMR DP", "DP");
 
+# leave undefined if not using MajorityWins or CentralGraph strategy
 # DBSCAN, IdenticalStructures
 my $CLUSTER_ALGORITHM;
 
@@ -31,6 +32,7 @@ my $NUM_BATCHES = 1;
 my $MIN_SUPPORT_VECTORS = "--min_support 10";
 my $MIN_NUM_VERTICES = "--min_num_vertices 10";
 my $MAX_NUM_VERTICES; # = "--max_num_vertices";
+
 
 my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_config.json",
                               "$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_config_1.json");
@@ -51,5 +53,6 @@ return {
     MIN_SUPPORT_VECTORS => $MIN_SUPPORT_VECTORS,
     MIN_NUM_VERTICES => $MIN_NUM_VERTICES,
     MAX_NUM_VERTICES => $MAX_NUM_VERTICES,
+    ALL_ATTRS => $ALL_ATTRS,
     SPMINER_CONFIGURATIONS => \@SPMINER_CONFIGURATIONS
 };

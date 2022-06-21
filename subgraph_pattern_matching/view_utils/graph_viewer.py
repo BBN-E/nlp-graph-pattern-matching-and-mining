@@ -5,12 +5,6 @@ import networkx as nx
 # import matplotlib.pyplot as plt
 from pyvis.network import Network
 
-import serifxml3
-
-from serif.theory.event_mention import EventMention
-from serif.theory.mention import Mention
-from serif.theory.value_mention import ValueMention
-
 from constants.common.types.node_types import NodeTypes
 from constants.common.attrs.node.node_attrs import NodeAttrs
 from constants.common.attrs.node.token_node_attrs import TokenNodeAttrs
@@ -23,6 +17,13 @@ from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
 
 class GraphViewer:
 
+    def token_node_label (self, G, node):
+        if TokenNodeAttrs.text in G.nodes[node]:
+            label = G.nodes[node][TokenNodeAttrs.text]
+        else:
+            label = node
+        return label
+
     def mdp_node_label (self, G, node):
         if ModalNodeAttrs.special_name in G.nodes[node] and G.nodes[node][ModalNodeAttrs.special_name] != 'Null':
             label = G.nodes[node][ModalNodeAttrs.special_name]
@@ -32,24 +33,41 @@ class GraphViewer:
             label = node
         return label
 
-    def token_node_label (self, G, node):
-        if TokenNodeAttrs.text in G.nodes[node]:
-            label = G.nodes[node][TokenNodeAttrs.text]
-        else:
-            label = node
-        return label
+    def prepare_networkx_for_visualization(self, G, root_level=0, invert_graph=False):
 
-    def prepare_mdp_networkx_for_visualization (self, G):
-        self.prepare_networkx_for_visualization(G)
+        roots = [x for x in G if len(G.in_edges(x)) == 0]
+
+        for root in roots:
+            self.add_level_to_syntactic_dependency_parse(G, root, level=root_level)
+
         for node in G:
             node_type = G.nodes[node].get(NodeAttrs.node_type, None)
+
             if node_type == NodeTypes.modal:
-                 G.nodes[node]['color'] = "red"
                  G.nodes[node]['label'] = self.mdp_node_label(G,node)
+            else:
+                G.nodes[node]['label'] = self.token_node_label(G, node)
+
+            node_annotation_status = G.nodes[node].get(NodeAttrs.annotated, None)
+            if node_annotation_status:
+                G.nodes[node]['color'] = "pink"
+            elif node_type == NodeTypes.modal:
+                G.nodes[node]['color'] = "red"
+            elif node_type == NodeTypes.amr:
+                G.nodes[node]['color'] = "orange"
+            else: # node_type == NodeTypes.token
+                G.nodes[node]['color'] = "blue"
+
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
-            if edge_type == EdgeTypes.modal_constituent_token:
+            if edge_type == EdgeTypes.modal_constituent_token or edge_type == EdgeTypes.amr_aligned_token:
                 G.edges[edge]['color'] = "purple"
+            else:
+                G.edges[edge]['color'] = "blue"
+            G.edges[edge]["label"] = edge_type
+
+        if invert_graph:
+            self.invert_node_levels(G)
 
     def filter_mdp_networkx_by_sentence (self, G, H):
         F = nx.DiGraph()
@@ -77,30 +95,6 @@ class GraphViewer:
             self.add_node_and_ancestors (parent, Source, Target)
             Target.add_edge(parent,child,**Source.edges[edge])
 
-    def prepare_sdp_networkx_for_visualization (self, G, root_level=0):
-        self.prepare_networkx_for_visualization(G, root_level=root_level)
-        for node in G.nodes:
-            G.nodes[node]['label'] = self.token_node_label(G,node)
-
-    def prepare_tok_networkx_for_visualization (self, G, root_level=0):
-        self.prepare_networkx_for_visualization(G, root_level=root_level)
-        # self.invert_node_levels(G)
-        for node in G.nodes:
-            G.nodes[node]['label'] = self.token_node_label(G,node)
-
-    def prepare_amr_networkx_for_visualization (self, G, root_level=0):
-        self.prepare_networkx_for_visualization(G, root_level=root_level)
-        for node in G.nodes:
-            node_type = G.nodes[node].get(NodeAttrs.node_type, None)
-            if node_type == NodeTypes.amr:
-                G.nodes[node]['color'] = "orange"
-                G.nodes[node]['label'] = self.token_node_label(G,node)
-        for edge in G.edges:
-            edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
-            if edge_type == EdgeTypes.amr_aligned_token:
-                G.edges[edge]['color'] = "purple"
-        # self.invert_node_levels(G)
-
     def get_max_level(self, G):
         max_level = 0
         for node in G.nodes:
@@ -124,26 +118,7 @@ class GraphViewer:
 
     def adjust_level(self, G, n):
         for node in G.nodes:
-            l = G.nodes[node]['level']
-            G.nodes[node]['level'] = l + n
-
-    def prepare_networkx_for_visualization (self, G, root_level=0):
-        roots = [x for x in G if len(G.in_edges(x)) == 0]
-
-        for root in roots:
-            self.add_level_to_syntactic_dependency_parse (G, root, level=root_level)
-
-        for node in G:
-            node_annotation_status = G.nodes[node].get(NodeAttrs.annotated, None)
-            if node_annotation_status:
-                G.nodes[node]['color'] = "pink"
-            elif 'color' not in G.nodes[node]:
-                G.nodes[node]['color'] = "blue"
-
-        for edge in G.edges:
-            if 'color' not in G.edges[edge]:
-                G.edges[edge]['color'] = "blue"
-
+            G.nodes[node]['level'] += n
 
     def add_level_to_syntactic_dependency_parse (self, G, node, level=0):
         G.nodes[node]['level'] = level
@@ -165,7 +140,6 @@ class GraphViewer:
         # net.show_buttons(True)
         self.set_node_spacing(net, 160, show_buttons=False)
 
-        # print(html_file)
         net.write_html(html_file)
 
     def set_node_spacing(self, net, node_spacing, show_buttons=False):
