@@ -672,7 +672,7 @@ class GraphBuilder():
         if attributes_to_ignore is None:
             attributes_to_ignore = [EdgeAttrs.label, NodeAttrs.id, NodeAttrs.annotated,
                                     TokenNodeAttrs.xpos, TokenNodeAttrs.index_in_doc,
-                                    TokenNodeAttrs.incoming_dep_rel, AMRNodeAttrs.varname],
+                                    TokenNodeAttrs.incoming_dep_rel, AMRNodeAttrs.varname]
         if digraph:
             expanded_graph = nx.DiGraph()
         else:
