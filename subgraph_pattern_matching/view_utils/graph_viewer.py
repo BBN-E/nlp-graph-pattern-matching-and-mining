@@ -13,7 +13,7 @@ from constants.common.types.edge_types import EdgeTypes
 from constants.common.attrs.edge.edge_attrs import EdgeAttrs
 from constants.common.attrs.edge.syntax_edge_attrs import SyntaxEdgeAttrs
 from constants.common.attrs.edge.modal_edge_attrs import ModalEdgeAttrs
-
+from constants.common.attrs.edge.amr_edge_attrs import AMREdgeAttrs
 
 class GraphViewer:
 
@@ -45,6 +45,11 @@ class GraphViewer:
 
             if node_type == NodeTypes.modal:
                  G.nodes[node]['label'] = self.mdp_node_label(G,node)
+            elif node_type == NodeTypes.amr:
+                if 'content' in G.nodes[node]:
+                    G.nodes[node]['label'] = G.nodes[node]['content']
+                else:
+                    G.nodes[node]['label'] = "ANY_AMR_NODE"
             else:
                 G.nodes[node]['label'] = self.token_node_label(G, node)
 
@@ -64,7 +69,10 @@ class GraphViewer:
                 G.edges[edge]['color'] = "purple"
             else:
                 G.edges[edge]['color'] = "blue"
-            G.edges[edge]["label"] = edge_type
+            if AMREdgeAttrs.amr_relation in G.edges[edge]:
+                G.edges[edge]["label"] = G.edges[edge][AMREdgeAttrs.amr_relation]
+            else:
+                G.edges[edge]["label"] = edge_type
 
         if invert_graph:
             self.invert_node_levels(G)
