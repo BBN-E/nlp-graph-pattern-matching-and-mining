@@ -141,32 +141,32 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
         matches.extend(pattern_matches)
 
     if vis_path:
-        graph_viewer = GraphViewer()
-        graph_viewer.prepare_mdp_networkx_for_visualization(nx_graph)
-        graph_viewer.prepare_amr_networkx_for_visualization(nx_graph)
+        if len(matches) > 0:
 
-        html_file = os.path.join(vis_path, "nx_graph_{}.html".format(serif_sentence.id))
-        graph_viewer.visualize_networkx_graph(nx_graph, html_file=html_file)
-        sentence_path = os.path.join(vis_path, "{}".format(serif_sentence.id))
-        if not os.path.isdir(sentence_path):
-            os.mkdir(sentence_path)
-        pattern_to_graph = {}
-        for match in matches:
-            if match.pattern_id not in pattern_to_graph:
-                pattern_to_graph[match.pattern_id] = []
+            html_file = os.path.join(vis_path, "nx_graph_{}.html".format(serif_sentence.id))
+            graph_viewer.visualize_networkx_graph(nx_graph, html_file=html_file)
+            sentence_path = os.path.join(vis_path, "{}".format(serif_sentence.id))
+            if not os.path.isdir(sentence_path):
+                os.mkdir(sentence_path)
+            pattern_to_graph = {}
+            pattern_id_to_pattern = {}
+            for match in matches:
+                if match.pattern.pattern_id not in pattern_to_graph:
+                    pattern_to_graph[match.pattern.pattern_id] = []
+                    pattern_id_to_pattern[match.pattern.pattern_id] = match.pattern
 
-            matched_graph = nx_graph.copy()
-            pattern_to_graph[match.pattern_id].append(matched_graph)
-            graph_viewer.prepare_mdp_networkx_for_visualization(matched_graph)
-            graph_viewer.prepare_amr_networkx_for_visualization(matched_graph)
+                matched_graph = nx_graph.copy()
+                pattern_to_graph[match.pattern.pattern_id].append(matched_graph)
+                graph_viewer.prepare_networkx_for_visualization(matched_graph)
 
-            for node_id, __ in match.match_node_id_to_pattern_node_id.items():
-                matched_graph.nodes[node_id]['color'] = "Red"
+                for node_id, __ in match.match_node_id_to_pattern_node_id.items():
+                    matched_graph.nodes[node_id]['color'] = "Red"
 
-        for pattern_id, graphs in pattern_to_graph.items():
-            for i, graph in enumerate(graphs):
-                html_file = os.path.join(sentence_path, "{}_{}.html".format(pattern_id, i))
-                graph_viewer.visualize_networkx_graph(graph, html_file=html_file)
+            for pattern_id, graphs in pattern_to_graph.items():
+                for i, graph in enumerate(graphs):
+                    html_file = os.path.join(sentence_path, "{}_{}_{}.html".format(pattern_id, i, pattern_id_to_pattern[
+                        pattern_id].category))
+                    graph_viewer.visualize_networkx_graph(graph, html_file=html_file)
 
     return matches
 
