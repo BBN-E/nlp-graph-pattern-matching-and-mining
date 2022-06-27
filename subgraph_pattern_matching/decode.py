@@ -23,7 +23,7 @@ logging.getLogger("penman").setLevel(logging.CRITICAL)  # silence penman's defau
 
 
 @timer
-def prepare_patterns():
+def prepare_patterns(add_author_patterns=True):
 
     from patterns.dp_mdp.ccomp_pattern import ccomp_pattern
     from patterns.dp_mdp.relaxed_ccomp_pattern import relaxed_ccomp_pattern
@@ -41,11 +41,12 @@ def prepare_patterns():
                 relaxed_ccomp_pattern(),
                 relaxed_ccomp_one_hop_pattern(),
                 according_to_pattern(),
-                # author_conceiver_event_edge_pattern_0,
-                author_conceiver_event_edge_pattern_1(),
-                author_conceiver_event_edge_pattern_2(),
-                author_conceiver_event_edge_pattern_3(),
                 as_reported_by_pattern()]
+
+    if add_author_patterns:
+        patterns.extend([author_conceiver_event_edge_pattern_1(),
+                         author_conceiver_event_edge_pattern_2(),
+                         author_conceiver_event_edge_pattern_3(),])
 
     basic_patterns = [grounded_conceiver_event_edge_pattern()]
 

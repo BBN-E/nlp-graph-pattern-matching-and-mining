@@ -261,31 +261,6 @@ class EntityEntityRelationAnnotation(FrameAnnotation):
     def category(self):
         return self._relation_type
 
-# class EventEventRelationAnnotation(FrameAnnotation):
-#
-#     def __init__(self, networkx_graph, left_event, right_event, relation_type):
-#         super().__init__(networkx_graph, FrameAnnotationTypes.EVENT_EVENT_RELATION)
-#         self._frame = self.EventEventRelationFrame(left_event, right_event)
-#         self._components = [left_event, right_event]
-#         self._relation_type = relation_type
-#
-#     class EventEventRelationFrame():
-#         def __init__(self, left_event, right_event):
-#             self.left_event = left_event
-#             self.right_event = right_event
-#
-#     @property
-#     def relation_type(self):
-#         return self._relation_type
-#
-#     @property
-#     def frame(self):
-#         return self._frame
-#
-#     @property
-#     def components(self):
-#         return self._components
-
 
 class EventFrameAnnotation(FrameAnnotation):
     def __init__(self, networkx_graph, serif_doc, serif_sentence, event_annotation, arg_annotations):
@@ -306,6 +281,22 @@ class EventFrameAnnotation(FrameAnnotation):
     def category(self):
         return self._frame.event.event_type
 
-# class ClaimFrameAnnotation(FrameAnnotation):
-#
-#     _annotation_type = FrameAnnotationTypes.CLAIM_FRAME
+
+class ClaimFrameAnnotation(FrameAnnotation):
+
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, claimer, claim_trigger):
+        super().__init__(networkx_graph=networkx_graph,
+                         serif_doc=serif_doc,
+                         serif_sentence=serif_sentence,
+                         annotation_type=FrameAnnotationTypes.CLAIM_FRAME)
+        self._frame = self.ClaimFrame(claimer, claim_trigger)
+        self._components = [claimer, claim_trigger]
+
+    class ClaimFrame():
+        def __init__(self, claimer, claim_trigger):
+            self.claimer = claimer
+            self.claim_trigger = claim_trigger
+
+    @property
+    def category(self):
+        return None
