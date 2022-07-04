@@ -16,7 +16,7 @@ my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern
 my $SPLIT_BY_CATEGORY = 0;
 
 # grid search parameters
-my @K_VALUES = (3);
+my @K_VALUES = (5);
 my @SEARCH_DIRECTIONS = ("BOTH");
 my @PARSE_TYPE_COMBINATIONS = ("AMR DP", "DP", "AMR");
 
@@ -25,7 +25,7 @@ my @PARSE_TYPE_COMBINATIONS = ("AMR DP", "DP", "AMR");
 my $CLUSTER_ALGORITHM;
 
 # Ungeneralized, MajorityWins, CentralGraph, GSpan, SPMiner
-my $GENERALIZATION_STRATEGY = "Ungeneralized";
+my $GENERALIZATION_STRATEGY = "SPMiner";
 my $NUM_BATCHES = 1;
 
 # GSpan parameters. Irrelevant if not using GSpan strategy
@@ -34,7 +34,7 @@ my $MIN_NUM_VERTICES = "--min_num_vertices 10";
 my $MAX_NUM_VERTICES; # = "--max_num_vertices";
 
 
-my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_nlp_config.json");
+my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/templates/spminer_nlp_config_test.json");
 
 
 return {

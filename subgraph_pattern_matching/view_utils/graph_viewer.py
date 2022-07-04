@@ -54,7 +54,9 @@ class GraphViewer:
                 G.nodes[node]['label'] = self.token_node_label(G, node)
 
             node_annotation_status = G.nodes[node].get(NodeAttrs.annotated, None)
-            if node_annotation_status:
+            event_status = G.nodes[node].get(NodeAttrs.event_trigger, None)
+            mention_status = G.nodes[node].get(NodeAttrs.named_entity, None)
+            if node_annotation_status or event_status or mention_status:
                 G.nodes[node]['color'] = "pink"
             elif node_type == NodeTypes.modal:
                 G.nodes[node]['color'] = "red"
@@ -62,6 +64,11 @@ class GraphViewer:
                 G.nodes[node]['color'] = "orange"
             else: # node_type == NodeTypes.token
                 G.nodes[node]['color'] = "blue"
+
+            if event_status:
+                G.nodes[node]['label'] = "EventTrigger"
+            elif mention_status:
+                G.nodes[node]['label'] = mention_status
 
         for edge in G.edges:
             edge_type = G.edges[edge].get(EdgeAttrs.edge_type, None)
