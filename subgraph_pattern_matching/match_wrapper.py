@@ -144,7 +144,7 @@ class MatchCorpus():
             event_mtra = match.match_to_serif_theory(match.pattern_node_id_to_match_node_id[PatternModalNodeIDs.EVENT_NODE_ID], match.serif_doc)
 
             if include_pattern_id:
-                conceiver_event_mtras.append([conceiver_mtra, event_mtra, match.pattern_id])
+                conceiver_event_mtras.append([conceiver_mtra, event_mtra, match.pattern.pattern_id])
             else:
                 conceiver_event_mtras.append([conceiver_mtra, event_mtra])
 

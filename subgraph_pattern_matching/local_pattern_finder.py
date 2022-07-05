@@ -230,6 +230,7 @@ def read_corpus(corpus_id, parse_types=None):
     from annotation.ingestion.event_ingester import EventIngester
     from annotation.ingestion.ner_ingester import NERIngester
     from annotation.ingestion.relation_ingester import RelationIngester
+    from annotation.ingestion.claim_injester import ClaimIngester
 
     if corpus_id == "TACRED":
         corpus = RelationIngester(parse_types).ingest_tacred()
@@ -239,6 +240,8 @@ def read_corpus(corpus_id, parse_types=None):
         corpus = EventIngester(parse_types).ingest_ace()
     elif corpus_id == "AIDA_TEST":
         corpus = EventIngester(parse_types).ingest_aida()
+    elif corpus_id == "AIDA_CLAIMS":
+        corpus = ClaimIngester(parse_types).ingest_aida()
     else:
         raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 
