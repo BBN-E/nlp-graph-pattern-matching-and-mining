@@ -95,7 +95,7 @@ class ClaimIngester(DocumentIngester):
                                                           serif_doc=serif_doc,
                                                           serif_sentence=event_mtra.event_mention.sentence,
                                                           serif_event_mention=event_mtra.event_mention,
-                                                          event_type=event_mtra.event_mention.event_type)
+                                                          event_type="EventTrigger")
 
                 claim_frame_annotaton = ClaimFrameAnnotation(networkx_graph=nx_graph,
                                                              serif_doc=serif_doc,
