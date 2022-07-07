@@ -1,12 +1,12 @@
 {
   "node_anchored": true,
-  "n_neighborhoods": 1000,
-  "n_trials": 15,
+  "n_neighborhoods": 400,
+  "n_trials": 500,
   "subgraph_sample_size": 0,
   "min_pattern_size": 10,
-  "max_pattern_size": 40,
+  "max_pattern_size": 50,
   "min_neighborhood_size": 10,
-  "max_neighborhood_size": 100,
+  "max_neighborhood_size": 60,
   "search_strategy": "greedy",
   "out_batch_size": 10
 }

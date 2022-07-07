@@ -98,7 +98,7 @@ for ($i=0; $i<$config_size; ++$i) {
     }
 
     my $create_config_dir = runjobs([], "$JOB_NAME/$i/create_category_dir",
-                                    { SCRIPT => 1 },  "mkdir -p $grid_config_dir");
+                                    { SCRIPT => 1 },  "mkdir -p $grid_config_dir $grid_config_dir/visualizations");
     push(@setup_jobs, $create_config_dir);
 
     my @generalized_patterns_jobs = ();
@@ -184,6 +184,11 @@ for ($i=0; $i<$config_size; ++$i) {
                                            {SCRIPT => 1, SGE_VIRTUAL_FREE => ["4G"]},
                                            ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/combine_pattern_jsons.py " .
                                             "--input_list $grid_config_dir/pattern_paths.list --output $grid_config_dir/all_patterns.json"]);
+
+    my $visualize_all_patterns_job = runjobs([$combine_pattern_lists_job], "$JOB_NAME/$i/visualize_patterns",
+                                           {SCRIPT => 1},
+                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/view_utils/quick_visualize.py " .
+                                            "--visualization_dir $grid_config_dir/visualizations --generalized_patterns $grid_config_dir/all_patterns.json"]);
 }
 
 

@@ -35,11 +35,11 @@ class SentenceIngester(Ingester):
         test_serif_doc = serifxml3.Document(data['TEST'])
         test_nx_graphs = self.graph_builder.serif_doc_to_networkx_per_sentence(test_serif_doc)
 
-        train_annotations = self.split_to_annotations(train_serif_doc, train_nx_graphs)
-        dev_annotations = self.split_to_annotations(dev_serif_doc, dev_nx_graphs)
+        # train_annotations = self.split_to_annotations(train_serif_doc, train_nx_graphs)
+        # dev_annotations = self.split_to_annotations(dev_serif_doc, dev_nx_graphs)
         test_annotations = self.split_to_annotations(test_serif_doc, test_nx_graphs)
 
-        return AnnotationCorpus(train_annotations, dev_annotations, test_annotations)
+        return AnnotationCorpus(test_annotations, test_annotations, test_annotations)
 
     @abstractmethod
     def split_to_annotations(self, split_serif_doc, split_nx_graphs):

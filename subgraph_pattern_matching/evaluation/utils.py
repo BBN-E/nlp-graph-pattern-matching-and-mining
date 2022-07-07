@@ -241,6 +241,11 @@ def serif_event_mention_to_event_argument_bio_list(event_mention, annotation_sch
 
     return bio_list
 
+def serif_sentence_to_claim_bio_list(serif_sentence, annotation_scheme=AnnotationScheme.IDENTIFICATION_CLASSIFICATION):
+    bio_list = ['O'] * len(serif_sentence.token_sequence)
+
+
+
 def serif_sentence_to_bio_list_based_on_predictions(
         serif_sentence,
         matches_for_sentence,
