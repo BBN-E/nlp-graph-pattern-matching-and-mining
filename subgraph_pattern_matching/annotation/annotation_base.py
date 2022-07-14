@@ -284,13 +284,14 @@ class EventFrameAnnotation(FrameAnnotation):
 
 class ClaimFrameAnnotation(FrameAnnotation):
 
-    def __init__(self, networkx_graph, serif_doc, serif_sentence, claimer, claim_trigger):
+    def __init__(self, networkx_graph, serif_doc, serif_sentence, claimer, claim_trigger, claim_info=None):
         super().__init__(networkx_graph=networkx_graph,
                          serif_doc=serif_doc,
                          serif_sentence=serif_sentence,
                          annotation_type=FrameAnnotationTypes.CLAIM_FRAME)
         self._frame = self.ClaimFrame(claimer, claim_trigger)
         self._components = [claimer, claim_trigger]
+        self.claim_info = claim_info
 
     class ClaimFrame():
         def __init__(self, claimer, claim_trigger):

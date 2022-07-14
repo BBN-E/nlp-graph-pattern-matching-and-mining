@@ -6,18 +6,25 @@ from match_wrapper import MatchWrapper, MatchCorpus
 from graph_builder import GraphBuilder
 
 AIDA_CLAIMS = {
-    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.train',
-    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.dev',
-    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.test',
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list.train',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list.dev',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list.test',
 }
 
+AIDA_CLAIMS_SMALL = {
+    'TRAIN': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.train',
+    'DEV': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.dev',
+    'TEST': '/nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.test'
+}
 
 class ClaimIngester(DocumentIngester):
 
     def __init__(self, parse_types=None):
         super().__init__(parse_types=parse_types)
 
-    def ingest_aida(self):
+    def ingest_aida(self, small=False):
+        if small:
+            return self.ingest_serifxmls_from_list(AIDA_CLAIMS_SMALL)
         return self.ingest_serifxmls_from_list(AIDA_CLAIMS)
 
     @staticmethod
@@ -88,7 +95,7 @@ class ClaimIngester(DocumentIngester):
                                                           serif_doc=serif_doc,
                                                           serif_sentence=event_mtra.event_mention.sentence,
                                                           serif_event_mention=event_mtra.event_mention,
-                                                          event_type=event_mtra.event_mention.event_type)
+                                                          event_type="EventTrigger")
 
                 claim_frame_annotaton = ClaimFrameAnnotation(networkx_graph=nx_graph,
                                                              serif_doc=serif_doc,

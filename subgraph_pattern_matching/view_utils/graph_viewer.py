@@ -20,6 +20,8 @@ class GraphViewer:
     def token_node_label (self, G, node):
         if TokenNodeAttrs.text in G.nodes[node]:
             label = G.nodes[node][TokenNodeAttrs.text]
+        elif TokenNodeAttrs.upos in G.nodes[node]:
+            label = G.nodes[node][TokenNodeAttrs.upos]
         else:
             label = node
         return label
@@ -78,6 +80,8 @@ class GraphViewer:
                 G.edges[edge]['color'] = "blue"
             if AMREdgeAttrs.amr_relation in G.edges[edge]:
                 G.edges[edge]["label"] = G.edges[edge][AMREdgeAttrs.amr_relation]
+            elif SyntaxEdgeAttrs.dep_rel in G.edges[edge]:
+                G.edges[edge]["label"] = G.edges[edge][SyntaxEdgeAttrs.dep_rel]
             else:
                 G.edges[edge]["label"] = edge_type
 

@@ -16,7 +16,8 @@ class MatchWrapper():
                  pattern,
                  serif_sentence,
                  serif_doc,
-                 category=None):
+                 category=None,
+                 nx_graph=None):
         '''
         :param match_node_id_to_pattern_node_id: {'a1362': 'CONCEIVER_NODE', 'a1378': 'EVENT_NODE', 'policymakers_a95': 'CONCEIVER_TOKEN', 'epidemic_a91': 'EVENT_TOKEN', 'said_a96': 'SIP', 'need_a81': 'CCOMP_TOKEN'}
         :param serif_doc:
@@ -34,6 +35,7 @@ class MatchWrapper():
                                                 for pattern_node_id, match_id in self.pattern_node_id_to_match_node_id.items()}
 
         self.category = category
+        self.nx_graph = nx_graph
 
     def to_pickle(self):
         '''NOTE: serif objects can't be pickled, so pickle docid + sent_no instead for access'''

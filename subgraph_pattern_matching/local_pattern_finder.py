@@ -241,7 +241,9 @@ def read_corpus(corpus_id, parse_types=None):
     elif corpus_id == "AIDA_TEST":
         corpus = EventIngester(parse_types).ingest_aida()
     elif corpus_id == "AIDA_CLAIMS":
-        corpus = ClaimIngester(parse_types).ingest_aida()
+        corpus = ClaimIngester(parse_types).ingest_aida(small=False)
+    elif corpus_id == "AIDA_CLAIMS_SMALL":
+        corpus = ClaimIngester(parse_types).ingest_aida(small=True)
     else:
         raise NotImplementedError("Corpus {} not implemented".format(corpus_id))
 

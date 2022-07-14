@@ -132,18 +132,20 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
                                         pattern=pattern,
                                         serif_sentence=serif_sentence,
                                         serif_doc=serif_doc,
-                                        category=pattern.category
+                                        category=pattern.category,
+                                        nx_graph=nx_graph
                                         ) for m in pattern_match_dicts]
 
         if len(pattern_matches) > 0:
             # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
-            logging.info("%s - %d", pattern_id, len(pattern_matches))
+            logging.info("%s, %s - %d", pattern_id, pattern.grid_search, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
     if vis_path:
+        graph_viewer = GraphViewer()
+        graph_viewer.prepare_networkx_for_visualization(nx_graph)
         if len(matches) > 0:
-
             html_file = os.path.join(vis_path, "nx_graph_{}.html".format(serif_sentence.id))
             graph_viewer.visualize_networkx_graph(nx_graph, html_file=html_file)
             sentence_path = os.path.join(vis_path, "{}".format(serif_sentence.id))
@@ -165,8 +167,9 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
 
             for pattern_id, graphs in pattern_to_graph.items():
                 for i, graph in enumerate(graphs):
-                    html_file = os.path.join(sentence_path, "{}_{}_{}.html".format(pattern_id, i, pattern_id_to_pattern[
-                        pattern_id].category))
+                    html_file = os.path.join(sentence_path, "{}_{}_{}.html".format(pattern_id, i,
+                                                                                   pattern_id_to_pattern[
+                                                                                       pattern_id].category))
                     graph_viewer.visualize_networkx_graph(graph, html_file=html_file)
 
     return matches
@@ -186,7 +189,7 @@ def main(args):
     if args.config:
         GB = GraphBuilder(get_parse_type_kwargs(args.config))
     else:
-        GB = GraphBuilder(dp=True, amr=False, mdp=True, tdp=False)  # DP+MDP (for claim extraction) by default
+        GB = GraphBuilder(dp=True, amr=True, mdp=True, tdp=False)  # DP+MDP (for claim extraction) by default
 
     # create patterns
     if args.patterns_path:
@@ -263,13 +266,12 @@ if __name__ == '__main__':
 
     # extract named entities with inferred serialized patterns
     '''
-    PYTHONPATH=/nfs/raid66/u11/users/brozonoy-ad/text-open/src/python \
+    PYTHONPATH=/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching:/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python \
     python3 \
     /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/subgraph_pattern_matching/decode.py \
-    -i /nfs/raid83/u13/caml/users/mselvagg_ad/data/conll/eng/eng.testb.xml \
-    -s \
-    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/5-3-2022-conll_combine_patterns/all_patterns.json \
-    -e CONLL_ENGLISH
+    -i /nfs/raid83/u13/caml/users/mselvagg_ad/experiments/expts/doc_processing/LDC2021E11.4-8-2022/text_analytics/serifxml/serif_list_small.train \
+    -s -l -e AIDA_CLAIMS \
+    -p /nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/6-28-spminer-test-v2/grid_config/all_patterns.json \
     '''
 
     parser = argparse.ArgumentParser()
@@ -281,8 +283,8 @@ if __name__ == '__main__':
     parser.add_argument('--isomorphism', action='store_true', help='whether to apply subgraph isomorphism instead of'
                                                             'default subgraph monomorphism during decoding')
     parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
-                        default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
-    parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST'],
+                        default=None)
+    parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST', 'AIDA_CLAIMS'],
                         help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default=None)
     parser.add_argument('-v', '--visualization_path', required=False, default=None)
 

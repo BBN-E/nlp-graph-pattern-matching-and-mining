@@ -35,6 +35,11 @@ def evaluate(evaluation_corpus, matches_by_serif_id, annotation_scheme=Annotatio
                   SPLIT='TEST',
                   annotation_scheme=AnnotationScheme[annotation_scheme])
 
+    elif evaluation_corpus == "AIDA_CLAIMS":
+
+        from evaluation.datasets.aida import score_aida
+        score_aida(matches_by_serif_id=matches_by_serif_id, SPLIT='TRAIN')
+
     else:
         raise NotImplementedError("Corpus {} not implemented".format(args.evaluation_corpus))
 
