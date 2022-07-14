@@ -34,7 +34,7 @@ def score_aida(matches_by_serif_id, SPLIT='TEST'):
     :param SPLIT: 'TRAIN', 'DEV', 'TEST'
     :return:
     '''
-    aida_corpus = ClaimIngester().ingest_aida(small=True)
+    aida_corpus = ClaimIngester().ingest_aida(small=False)
 
     serif_docs = {}
 
@@ -57,7 +57,7 @@ def score_aida(matches_by_serif_id, SPLIT='TEST'):
 
     new_claims_found = 0
     old_claims_found = 0
-    found_claims = []
+    found_claims = set()
 
     for serif_doc_id, serif_sentence_to_annotation_list in serif_docs.items():
 
@@ -92,6 +92,10 @@ def score_aida(matches_by_serif_id, SPLIT='TEST'):
                         print("Match found!")
                         break
 
+                claim_tuple = (governed_author, event_trigger_serif_token.text, governed_text, match.serif_sentence.text, existing_claim, match.pattern.pattern_id, match.pattern.grid_search)
+                if claim_tuple in found_claims:
+                    continue
+
                 if existing_claim:
                     old_claims_found += 1
                     # print("Old claim:")
@@ -100,16 +104,16 @@ def score_aida(matches_by_serif_id, SPLIT='TEST'):
                     new_claims_found += 1
                     # print("New claim:")
 
-                found_claims.append((governed_author, event_trigger_serif_token.text, governed_text, match.serif_sentence.text, existing_claim, match.pattern.pattern_id))
+                found_claims.add(claim_tuple)
 
     print("New claims found: {}".format(new_claims_found))
     print("Old claims found: {}".format(old_claims_found))
 
-    output_csv = "/nfs/raid83/u13/caml/users/mselvagg_ad/aida-misc/output_csvs/claims.csv"
+    output_csv = "/nfs/raid83/u13/caml/users/mselvagg_ad/aida-misc/output_csvs/amr_all.csv"
     import csv
     with open(output_csv, 'w') as f:
         csvwriter = csv.writer(f, delimiter="|")
-        for claim in found_claims:
+        for claim in list(found_claims):
             csvwriter.writerow(claim)
 
 

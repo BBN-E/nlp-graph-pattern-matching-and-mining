@@ -138,7 +138,7 @@ def extract_patterns_from_nx_graph(nx_graph, patterns, serif_doc, serif_sentence
 
         if len(pattern_matches) > 0:
             # logging.info("doc:{}/sentence:{}".format(serif_doc.docid, serif_sentence.id))
-            logging.info("%s - %d", pattern_id, len(pattern_matches))
+            logging.info("%s, %s - %d", pattern_id, pattern.grid_search, len(pattern_matches))
 
         matches.extend(pattern_matches)
 
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     parser.add_argument('--isomorphism', action='store_true', help='whether to apply subgraph isomorphism instead of'
                                                             'default subgraph monomorphism during decoding')
     parser.add_argument('-p', '--patterns_path', help='path to serialized patterns to use for extraction',
-                        default='/nfs/raid83/u13/caml/users/mselvagg_ad/subgraph-pattern-matching/experiments/expts/4-26-22-conll-edge/all_patterns.json')
+                        default=None)
     parser.add_argument('-e', '--evaluation_corpus', choices=['TACRED', 'CONLL_ENGLISH', 'ACE_ENGLISH', 'AIDA_TEST', 'AIDA_CLAIMS'],
                         help='if decoding over an annotated corpus, evaluate accuracy over that dataset',  required=False, default=None)
     parser.add_argument('-v', '--visualization_path', required=False, default=None)
