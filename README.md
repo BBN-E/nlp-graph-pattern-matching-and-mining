@@ -2,7 +2,9 @@
 
 Using subgraph pattern matching over compositions of multifarious linguistic parses to extract meaningful knowledge elements. 
 
-Requires `networkx` and `penman` (for matching over AMR graphs) to be installed in the environment.
+Requires `networkx`, `tqdm`, `pyvis`  and `penman` (for matching over AMR graphs) to be installed in the environment for matching.
+
+For pattern mining with SPMiner, see the requirements in the SPMiner repo.
 
 ```
 PYTHONPATH=<TEXT_OPEN_PYTHONPATH> \
