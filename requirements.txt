@@ -1,0 +1,4 @@
+networkx == 2.8
+pyvis == 0.3.0
+penman
+tqdm
