@@ -58,7 +58,7 @@ if ($p->{SPLIT_BY_CATEGORY}) {
     if (not($annotation_categories_path)) {
         $annotation_categories_path = "$expt_dir/annotation_categories.list";
         my $get_annotated_categories_job = runjobs([], "$JOB_NAME/get_annotated_categories", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
-                                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/get_annotation_categories.py " .
+                                                    ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/runjobs_helper_scripts/get_annotation_categories.py " .
                                                      "--annotation_corpus $p->{ANNOTATION_CORPUS} --output $annotation_categories_path"]);
         push(@setup_jobs, $get_annotated_categories_job);
         dojobs();
@@ -130,7 +130,7 @@ for ($i=0; $i<$config_size; ++$i) {
 
                     my $find_local_patterns_job = runjobs(\@category_setup_jobs, "$experiment_prefix/find_local_patterns", {SGE_VIRTUAL_FREE => ["4G", "8G", "32G"]},
                                                           ["mkdir -p $grid_config_dir"],
-                                                          ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
+                                                          ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/local_pattern_finder.py --annotation_corpus $p->{ANNOTATION_CORPUS} " .
                                                            "-k $k --parse_types $parse_types --search_direction $search_direction --output $serialized_local_patterns_path " .
                                                            "--annotation_category $category $all_attrs"]);
 
@@ -144,30 +144,30 @@ for ($i=0; $i<$config_size; ++$i) {
                         for (my $i = 0; $i < $p->{NUM_BATCHES}; $i++) {
 
                             my $dist_matrix_batch_job = runjobs([$create_batch_output_dir], "$experiment_prefix/dist_matrix_batch/$i", {SGE_VIRTUAL_FREE => ["4G", "8G"]},
-                                                    ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/distance_matrix_batch.py --num_batches $p->{NUM_BATCHES} " .
+                                                    ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/clustering/distance_matrix_batch.py --num_batches $p->{NUM_BATCHES} " .
                                                      "--stripe $i --output_file_path $batch_subdir/dist_matrix_split_$i --input_graphs $serialized_local_patterns_path"]);
                             push(@dist_matrix_batch_jobs, $dist_matrix_batch_job);
                         }
 
                         my $combine_matrices_job = runjobs(\@dist_matrix_batch_jobs, "$experiment_prefix/combine_matrices",
                                                           {SGE_VIRTUAL_FREE => ["8G", "16G"]},
-                                                          ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/combine_distance_matrices.py --num_batches $p->{NUM_BATCHES} " .
+                                                          ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/clustering/combine_distance_matrices.py --num_batches $p->{NUM_BATCHES} " .
                                                            "--input_dir_path $batch_subdir --output_file_path $grid_config_dir/combined_distance_matrix.np"]);
 
                         my $clustering_job = runjobs([$combine_matrices_job], "$experiment_prefix/cluster_graphs", {SGE_VIRTUAL_FREE => ["4G"]},
-                                                     ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/clustering/cluster_graphs.py  " .
+                                                     ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/clustering/cluster_graphs.py  " .
                                                      "--distance_matrix $grid_config_dir/combined_distance_matrix.np " .
                                                       "--output $grid_config_dir/labels.json --cluster_option $p->{CLUSTER_ALGORITHM} "]);
 
                         my $generalize_patterns_job = runjobs([$clustering_job], "$experiment_prefix/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
-                                     ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/generalize_patterns.py  " .
+                                     ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/generalize_patterns.py  " .
                                      "--local_patterns_json $serialized_local_patterns_path --distance_matrix $grid_config_dir/combined_distance_matrix.np " .
                                       "--labels $grid_config_dir/labels.json --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY} " .
                                       "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES}"]);
                         push(@generalized_patterns_jobs, $generalize_patterns_job);
                     } else {
                         my $generalize_patterns_job = runjobs([$find_local_patterns_job], "$experiment_prefix/generalize_patterns", {SGE_VIRTUAL_FREE => ["4G"]},
-                                         ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/generalize_patterns.py  " .
+                                         ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/generalize_patterns.py  " .
                                          "--local_patterns_json $serialized_local_patterns_path --output $grid_config_dir/patterns --strategy $p->{GENERALIZATION_STRATEGY} " .
                                          "$p->{MIN_SUPPORT_VECTORS} $p->{MIN_NUM_VERTICES} $p->{MAX_NUM_VERTICES} --spminer_config $spm_config_path"]);
                         push(@generalized_patterns_jobs, $generalize_patterns_job);
@@ -182,12 +182,12 @@ for ($i=0; $i<$config_size; ++$i) {
 
     my $combine_pattern_lists_job = runjobs([$list_pattern_paths_job], "$JOB_NAME/$i/combine_pattern_paths",
                                            {SCRIPT => 1, SGE_VIRTUAL_FREE => ["4G"]},
-                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/runjobs_helper_scripts/combine_pattern_jsons.py " .
+                                           ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/runjobs_helper_scripts/combine_pattern_jsons.py " .
                                             "--input_list $grid_config_dir/pattern_paths.list --output $grid_config_dir/all_patterns.json"]);
 
     my $visualize_all_patterns_job = runjobs([$combine_pattern_lists_job], "$JOB_NAME/$i/visualize_patterns",
                                            {SCRIPT => 1},
-                                           ["$p->{PYTHON3} $p->{SUBGRAPH_PATTERN_MATCHING_RELEASE}/view_utils/quick_visualize.py " .
+                                           ["$p->{PYTHON3} $p->{$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH}/view_utils/quick_visualize.py " .
                                             "--visualization_dir $grid_config_dir/visualizations --generalized_patterns $grid_config_dir/all_patterns.json"]);
 }
 

@@ -6,9 +6,10 @@ my $SUBGRAPH_PATTERN_MATCHING_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/
 my $GSPAN = "/home/dzajic/dev/projects/graph/gSpan";
 my $NEURAL_SUBGRAPH_LEARNING_GNN = "/nfs/raid83/u13/caml/users/mselvagg_ad/spminer";
 my $TEXT_OPEN_RELEASE = "/nfs/raid83/u13/caml/users/mselvagg_ad/text-open-2/src/python";
+my $SUBGRAPH_PATTERN_MATCHING_PYTHONPATH = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/python/subgraph_pattern_matching";
 
-my $PYTHON3= "env PYTHONPATH=$TEXT_OPEN_RELEASE:$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching:$GSPAN:$NEURAL_SUBGRAPH_LEARNING_GNN " .
-    "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/gnn-2/bin/python";
+my $PYTHON3= "env PYTHONPATH=$TEXT_OPEN_RELEASE:$SUBGRAPH_PATTERN_MATCHING_PYTHONPATH:$GSPAN:$NEURAL_SUBGRAPH_LEARNING_GNN " .
+    "/nfs/raid83/u13/caml/users/mselvagg_ad/miniconda/envs/py39/bin/python";
 
 # CONLL_ENGLISH, ACE_ENGLISH, TACRED
 my $ANNOTATION_CORPUS = "AIDA_CLAIMS";
@@ -16,17 +17,17 @@ my $ANNOTATION_CATEGORIES = "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern
 my $SPLIT_BY_CATEGORY = 0;
 
 # grid search parameters
-my @K_VALUES = (5);
+my @K_VALUES = (2);
 my @SEARCH_DIRECTIONS = ("BOTH");
 my @PARSE_TYPE_COMBINATIONS = ("AMR DP", "DP", "AMR");
 
 # leave undefined if not using MajorityWins or CentralGraph strategy
 # DBSCAN, IdenticalStructures
 my $CLUSTER_ALGORITHM;
+my $NUM_BATCHES = 1;
 
 # Ungeneralized, MajorityWins, CentralGraph, GSpan, SPMiner
 my $GENERALIZATION_STRATEGY = "SPMiner";
-my $NUM_BATCHES = 1;
 
 # GSpan parameters. Irrelevant if not using GSpan strategy
 my $MIN_SUPPORT_VECTORS = "--min_support 10";
@@ -40,6 +41,7 @@ my @SPMINER_CONFIGURATIONS = ("$SUBGRAPH_PATTERN_MATCHING_RELEASE/experiments/te
 return {
     PYTHON3 => $PYTHON3,
     SUBGRAPH_PATTERN_MATCHING_RELEASE => "$SUBGRAPH_PATTERN_MATCHING_RELEASE/subgraph_pattern_matching",
+    SUBGRAPH_PATTERN_MATCHING_PYTHONPATH => $SUBGRAPH_PATTERN_MATCHING_PYTHONPATH,
     ANNOTATION_CORPUS => $ANNOTATION_CORPUS,
     K_VALUES => \@K_VALUES,
     SEARCH_DIRECTIONS => \@SEARCH_DIRECTIONS,
